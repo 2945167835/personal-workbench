@@ -184,8 +184,27 @@ body{
 .alert-badge{display:inline-block;background:var(--danger);color:#fff;font-size:9px;padding:1px 5px;border-radius:8px;margin-left:4px;animation:pulse 2s infinite;}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.6}}
 
-/* FAB */
-.fab{
+/* Account cards */
+.acc-section{margin-bottom:12px;}
+.acc-section .acc-label{font-size:12px;color:var(--text2);margin-bottom:8px;font-weight:600;}
+.acc-row{display:flex;gap:10px;overflow-x:auto;padding-bottom:4px;}
+.acc-card{
+  min-width:110px;background:var(--card);border-radius:14px;padding:14px 12px;
+  text-align:center;box-shadow:0 2px 8px rgba(0,0,0,0.05);cursor:pointer;transition:transform .15s;
+  flex-shrink:0;border:2px solid transparent;
+}
+.acc-card:active{transform:scale(.96);}
+.acc-card .ac-icon{font-size:22px;margin-bottom:4px;}
+.acc-card .ac-name{font-size:13px;font-weight:600;margin-bottom:2px;}
+.acc-card .ac-bal{font-size:12px;word-break:break-all;}
+.acc-card .ac-del{position:absolute;top:4px;right:4px;width:20px;height:20px;border-radius:50%;border:none;background:rgba(231,76,60,.1);color:var(--danger);font-size:10px;cursor:pointer;display:none;align-items:center;justify-content:center;}
+.acc-card:active .ac-del{display:flex;}
+.acc-add{
+  min-width:60px;border:2px dashed #ddd;border-radius:14px;display:flex;
+  align-items:center;justify-content:center;font-size:24px;color:var(--text3);
+  cursor:pointer;flex-shrink:0;background:transparent;
+}
+.acc-add:active{background:#f5f5f5;}
   position:fixed;bottom:calc(var(--safe-bottom) + 24px);right:24px;z-index:50;
   width:52px;height:52px;border-radius:50%;
   background:linear-gradient(135deg,var(--primary),#357ABD);
@@ -307,7 +326,7 @@ function getWeightGoal(){try{return JSON.parse(localStorage.getItem('wb_wtGoal')
 function setWeightGoal(d){localStorage.setItem('wb_wtGoal',JSON.stringify(d))}
 
 // ==================== Router ====================
-function go(p,s_=''){page=p;sub=s_;searchQ='';ledgerFilter='all';carTab='fuel';render()}
+function go(p,s_=''){page=p;sub=s_;searchQ='';ledgerFilter='all';carTab='fuel';ledgerAcc=null;render()}
 function goCar(t){page='car';carTab=t;render()}
 
 // ==================== Render ====================
@@ -398,6 +417,8 @@ async function renderHome(app,fab){
 }
 
 // ==================== LEDGER ====================
+let ledgerAcc=null; // selected account filter, null = show all
+
 async function renderLedger(app,fab){
   fab.classList.remove('hidden');fab.onclick=()=>showLedgerForm();
   const m=month();
@@ -406,7 +427,11 @@ async function renderLedger(app,fab){
   const income=mRecs.filter(r=>r.type==='income'||r.type==='loan_in').reduce((s,r)=>s+r.amount,0);
   const expense=mRecs.filter(r=>r.type==='expense'||r.type==='loan_out').reduce((s,r)=>s+r.amount,0);
   const reimbSum=records.filter(r=>r.reimbursable&&!r.reimbursed).reduce((s,r)=>s+r.amount,0);
+  const accts=getAccounts();
+
+  // Filter by selected account
   let disp=records;
+  if(ledgerAcc)disp=disp.filter(r=>r.account===ledgerAcc);
   if(ledgerFilter==='expense')disp=disp.filter(r=>r.type==='expense'||r.type==='loan_out');
   else if(ledgerFilter==='income')disp=disp.filter(r=>r.type==='income'||r.type==='loan_in');
   else if(ledgerFilter==='reimb')disp=disp.filter(r=>r.reimbursable&&!r.reimbursed);
@@ -414,18 +439,37 @@ async function renderLedger(app,fab){
   else if(ledgerFilter==='install')disp=disp.filter(r=>r.installment);
   if(searchQ){const q=searchQ.toLowerCase();disp=disp.filter(r=>(r.category||'').includes(q)||(r.note||'').toLowerCase().includes(q)||String(r.amount).includes(q)||(r.account||'').includes(q));}
 
+  // Per-account balances (all time)
+  const accBalances={};accts.forEach(a=>{let bal=0;records.filter(r=>r.account===a).forEach(r=>{if(r.type==='income'||r.type==='loan_in')bal+=r.amount;else bal-=r.amount});accBalances[a]=bal;});
+  const totalBal=Object.values(accBalances).reduce((s,v)=>s+v,0);
+
   app.innerHTML=`
-    <div class="header"><button class="back" onclick="go('home')">←</button><h1>记账</h1></div>
+    <div class="header"><button class="back" onclick="go('home')">←</button><h1>记账${ledgerAcc?' · '+ledgerAcc:''}</h1>${ledgerAcc?`<button class="h-btn" onclick="ledgerAcc=null;render()" style="font-size:12px;width:auto;padding:4px 10px;border-radius:12px;background:var(--card);border:1px solid #ddd;cursor:pointer">全部</button>`:''}</div>
     <div class="main">
-      <div class="summary-row">
-        <div class="summary-card"><div class="sc-label">本月收入</div><div class="sc-val sc-green">${fm(income)}</div></div>
-        <div class="summary-card"><div class="sc-label">本月支出</div><div class="sc-val sc-red">${fm(expense)}</div></div>
-        <div class="summary-card"><div class="sc-label">结余</div><div class="sc-val sc-blue">${fm(income-expense)}</div></div>
+      <div class="widget">
+        <div class="widget-title">📊 资产总览</div>
+        <div style="font-size:28px;font-weight:700;margin-bottom:2px;color:${totalBal>=0?'var(--success)':'var(--danger)'}">${fm(totalBal)}</div>
+        <div style="font-size:11px;color:var(--text2)">总资产 · 本月 ${fm(income)} / ${fm(expense)}</div>
+        ${reimbSum>0?`<div style="margin-top:6px;font-size:11px;color:var(--warning)">🧾 待报销 ${fm(reimbSum)}</div>`:''}
       </div>
-      ${reimbSum>0?`<div class="summary-card" style="background:#fff8e1;border:1px solid rgba(243,156,18,.15);margin-bottom:12px"><div class="sc-label">🧾 待报销</div><div class="sc-val" style="color:var(--warning)">${fm(reimbSum)}</div></div>`:''}
+      ${records.length>=3?`<div class="chart-box"><canvas id="assetTrend"></canvas></div>`:''}
+
+      <div class="acc-section">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px"><span class="acc-label">💳 账户</span>${ledgerAcc?`<span style="font-size:11px;color:var(--primary);cursor:pointer" onclick="ledgerAcc=null;render()">查看全部 ›</span>`:''}</div>
+        <div class="acc-row">
+          ${accts.map(a=>{
+            const bal=accBalances[a]||0;
+            return`<div class="acc-card" data-acc="${a}" onclick="ledgerAcc='${a}';render()" style="position:relative;${ledgerAcc===a?'border-color:var(--primary);background:#f0f6ff':''}">
+              <span class="ac-del" data-accdel="${a}" onclick="event.stopPropagation();delAcc('${a}')">✕</span>
+              <div class="ac-icon">${a.slice(0,2)}</div><div class="ac-name">${a.slice(2)}</div>
+              <div class="ac-bal" style="color:${bal>=0?'var(--success)':'var(--danger)'}">${fm(bal)}</div>
+            </div>`;
+          }).join('')}
+          <div class="acc-add" onclick="addAccPrompt()">+</div>
+        </div>
+      </div>
+
       <div class="filter-row">${LEDGER_FILTERS.map(f=>`<span class="filter-chip${f.id===ledgerFilter?' sel':''}" data-fid="${f.id}">${f.label}</span>`).join('')}</div>
-      ${mRecs.filter(r=>r.type==='expense'||r.type==='loan_out').length>0?`<div class="chart-box"><canvas id="ledgerPie"></canvas></div>`:''}
-      <div class="chart-box"><canvas id="ledgerTrend"></canvas></div>
       <div class="search-wrap"><input type="text" id="ledgerSearch" placeholder="🔍 搜索..." value="${searchQ}"></div>
       <div class="section-title">记录 (${disp.length}条)</div>
       ${disp.length===0?'<div class="empty"><div class="eicon">📝</div><p>暂无记录</p></div>':''}
@@ -433,50 +477,61 @@ async function renderLedger(app,fab){
         const tags=[];if(r.reimbursable&&!r.reimbursed)tags.push('<span class="tag tag-reimb">待报销</span>');else if(r.reimbursed)tags.push('<span class="tag tag-reimb">已报销</span>');
         if(r.type==='loan_out')tags.push('<span class="tag tag-loan">借出</span>');else if(r.type==='loan_in')tags.push('<span class="tag tag-loan">借入</span>');
         if(r.installment)tags.push(`<span class="tag tag-inst">${r.installCurrent||1}/${r.installTotal||'?'}期</span>`);
-        if(r.account)tags.push(`<span class="tag tag-acc">${r.account}</span>`);
         const isIn=r.type==='income'||r.type==='loan_in';
-        return`<div class="list-item" data-id="${r.id}"><div class="cat-dot" style="background:${isIn?'rgba(39,174,96,.1)':'rgba(231,76,60,.1)'}">${(r.category||'💸').slice(0,2)}</div><div class="linfo"><div class="ltitle">${r.category||''}${tags.join('')}</div><div class="lsub">${fd(r.date)} ${r.note||''}</div></div><div class="lamount ${isIn?'la-in':'la-out'}">${isIn?'+':'-'}${fm(r.amount)}</div><button class="ldel" data-del="${r.id}">✕</button></div>`;
+        return`<div class="list-item" data-id="${r.id}"><div class="cat-dot" style="background:${isIn?'rgba(39,174,96,.1)':'rgba(231,76,60,.1)'}">${(r.category||'💸').slice(0,2)}</div><div class="linfo"><div class="ltitle">${r.category||''}${tags.join('')}</div><div class="lsub">${fd(r.date)} ${r.account||''} ${r.note||''}</div></div><div class="lamount ${isIn?'la-in':'la-out'}">${isIn?'+':'-'}${fm(r.amount)}</div><button class="ldel" data-del="${r.id}">✕</button></div>`;
       }).join('')}
     </div>
   `;
   bindDel();
   app.querySelectorAll('.filter-chip').forEach(c=>c.onclick=()=>{ledgerFilter=c.dataset.fid;render();});
   $('#ledgerSearch')?.addEventListener('input',e=>{searchQ=e.target.value;render();});
-  if(mRecs.filter(r=>r.type==='expense'||r.type==='loan_out').length>0)setTimeout(()=>drawPie(mRecs.filter(r=>r.type==='expense'||r.type==='loan_out')),100);
-  setTimeout(()=>drawTrend(records),100);
+  if(records.length>=3)setTimeout(()=>drawAssetTrend(records,accts),100);
 }
 
-function drawPie(recs){
-  const c=$('#ledgerPie');if(!c)return;const catMap={};recs.forEach(r=>{catMap[r.category]=catMap[r.category]||[];catMap[r.category].push(r.amount)});
-  const entries=Object.entries(catMap).map(([k,v])=>({cat:k,total:v.reduce((a,b)=>a+b,0)})).sort((a,b)=>b.total-a.total);
-  const colors=['#E74C3C','#F39C12','#3498DB','#2ECC71','#9B59B6','#1ABC9C','#E67E22','#34495E','#95A5A6','#D35400','#C0392B','#2980B9','#27AE60','#8E44AD','#16A085'];
-  const total=entries.reduce((s,e)=>s+e.total,0);const ctx=c.getContext('2d');const dpr=window.devicePixelRatio||1;
-  const W=Math.min(300,c.parentElement.clientWidth-28),H=W;c.width=W*dpr;c.height=H*dpr;c.style.width=W+'px';c.style.height=H+'px';ctx.scale(dpr,dpr);
-  const cx=W*.36,cy=H*.5,r=W*.28;let ang=-Math.PI/2;
-  entries.forEach((e,i)=>{const sl=(e.total/total)*Math.PI*2;ctx.fillStyle=colors[i%colors.length];ctx.beginPath();ctx.moveTo(cx,cy);ctx.arc(cx,cy,r,ang,ang+sl);ctx.fill();ang+=sl});
-  let ly=16;entries.forEach((e,i)=>{ctx.fillStyle=colors[i%colors.length];ctx.fillRect(W*.68,ly,9,9);ctx.fillStyle='#333';ctx.font='10px sans-serif';ctx.textAlign='left';ctx.fillText(`${e.cat} ${(e.total/total*100).toFixed(1)}%`,W*.68+13,ly+8);ly+=16});
-}
+function drawAssetTrend(records,accts){
+  const c=$('#assetTrend');if(!c)return;
+  // Compute monthly cumulative balance
+  const sorted=records.map(r=>({...r})).sort((a,b)=>a.date.localeCompare(b.date));
+  // Get month range
+  const months=[];const now=new Date();
+  for(let i=5;i>=0;i--){const d=new Date(now.getFullYear(),now.getMonth()-i,1);months.push(d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0'));}
+  // Cumulate balance month by month
+  let running=0;const data=[];const events=[];
+  sorted.forEach(r=>{if(r.type==='income'||r.type==='loan_in')running+=r.amount;else running-=r.amount;events.push({date:r.date,bal:running});});
+  months.forEach(m=>{const e=events.filter(x=>x.date.startsWith(m)).pop();data.push({month:m.slice(5),bal:e?e.bal:(data.length?data[data.length-1].bal:0)});});
 
-function drawTrend(records){
-  const c=$('#ledgerTrend');if(!c)return;const months=[],now=new Date();
-  for(let i=5;i>=0;i--){const d=new Date(now.getFullYear(),now.getMonth()-i,1);months.push(d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0'))}
-  const data=months.map(m=>{const recs=records.filter(r=>r.date.startsWith(m));return{month:m.slice(5),income:recs.filter(r=>r.type==='income'||r.type==='loan_in').reduce((s,r)=>s+r.amount,0),expense:recs.filter(r=>r.type==='expense'||r.type==='loan_out').reduce((s,r)=>s+r.amount,0)}});
-  const maxV=Math.max(...data.map(d=>Math.max(d.income,d.expense)),1);const ctx=c.getContext('2d');const dpr=window.devicePixelRatio||1;
+  const ctx=c.getContext('2d');const dpr=window.devicePixelRatio||1;
   const W=c.parentElement.clientWidth-28,H=180;c.width=W*dpr;c.height=H*dpr;c.style.width=W+'px';c.style.height=H+'px';ctx.scale(dpr,dpr);
-  const pad={t:16,r:8,b:28,l:40},pw=W-pad.l-pad.r,ph=H-pad.t-pad.b;
-  for(let i=0;i<=4;i++){const y=pad.t+ph*(1-i/4);ctx.strokeStyle='#eee';ctx.beginPath();ctx.moveTo(pad.l,y);ctx.lineTo(W-pad.r,y);ctx.stroke();ctx.fillStyle='#999';ctx.font='9px sans-serif';ctx.textAlign='right';ctx.fillText(fm(maxV*i/4),pad.l-4,y+3)}
-  const bw=Math.min(18,pw/data.length/3);
-  data.forEach((d,i)=>{const x0=pad.l+(i+.5)*pw/data.length;const hi=(d.income/maxV)*ph;ctx.fillStyle='rgba(39,174,96,.65)';ctx.fillRect(x0-bw,pad.t+ph-hi,bw,hi);const he=(d.expense/maxV)*ph;ctx.fillStyle='rgba(231,76,60,.65)';ctx.fillRect(x0,pad.t+ph-he,bw,he);ctx.fillStyle='#666';ctx.font='9px sans-serif';ctx.textAlign='center';ctx.fillText(d.month,x0,H-pad.b+14)});
-  ctx.fillStyle='rgba(39,174,96,.65)';ctx.fillRect(pad.l,4,8,8);ctx.fillStyle='#666';ctx.font='9px sans-serif';ctx.textAlign='left';ctx.fillText('收入',pad.l+12,12);
-  ctx.fillStyle='rgba(231,76,60,.65)';ctx.fillRect(pad.l+46,4,8,8);ctx.fillText('支出',pad.l+58,12);
+  const pad={t:16,r:12,b:28,l:44},pw=W-pad.l-pad.r,ph=H-pad.t-pad.b;
+  const vals=data.map(d=>d.bal);const minV=Math.min(0,Math.floor(Math.min(...vals)-500)),maxV=Math.ceil(Math.max(...vals)+500)||1;
+  ctx.strokeStyle='#eee';ctx.lineWidth=1;
+  for(let i=0;i<=4;i++){const v=minV+(maxV-minV)*i/4,y=pad.t+ph*(1-i/4);ctx.beginPath();ctx.moveTo(pad.l,y);ctx.lineTo(W-pad.r,y);ctx.stroke();ctx.fillStyle='#999';ctx.font='9px sans-serif';ctx.textAlign='right';ctx.fillText(fm(v),pad.l-4,y+3)}
+  // Area fill
+  const zeroY=pad.t+ph-((0-minV)/(maxV-minV))*ph;
+  ctx.fillStyle='rgba(39,174,96,.08)';ctx.beginPath();data.forEach((d,i)=>{const x=pad.l+(i/(data.length-1))*pw;const y=pad.t+ph-((d.bal-minV)/(maxV-minV))*ph;i===0?ctx.moveTo(x,y):ctx.lineTo(x,y)});ctx.lineTo(pad.l+pw,zeroY);ctx.lineTo(pad.l,zeroY);ctx.fill();
+  // Line
+  ctx.strokeStyle='#27AE60';ctx.lineWidth=3;ctx.lineJoin='round';ctx.beginPath();
+  data.forEach((d,i)=>{const x=pad.l+(i/(data.length-1))*pw;const y=pad.t+ph-((d.bal-minV)/(maxV-minV))*ph;i===0?ctx.moveTo(x,y):ctx.lineTo(x,y)});ctx.stroke();
+  // Dots
+  data.forEach((d,i)=>{const x=pad.l+(i/(data.length-1))*pw;const y=pad.t+ph-((d.bal-minV)/(maxV-minV))*ph;ctx.fillStyle='#27AE60';ctx.beginPath();ctx.arc(x,y,4,0,Math.PI*2);ctx.fill();ctx.fillStyle='#fff';ctx.beginPath();ctx.arc(x,y,2,0,Math.PI*2);ctx.fill();ctx.fillStyle='#666';ctx.font='9px sans-serif';ctx.textAlign='center';ctx.fillText(d.month,x,H-pad.b+14)});
+  ctx.fillStyle='#666';ctx.font='10px sans-serif';ctx.textAlign='center';ctx.fillText('资产趋势',W/2,10);
+}
+
+function addAccPrompt(){
+  const v=prompt('新建账户名称：');if(v&&v.trim()){const a=getAccounts();a.push(v.trim());setAccounts(a);render();}
+}
+function delAcc(name){
+  showConfirm(`确定删除账户「${name}」？不会删除该账户下的记录。`,()=>{const a=getAccounts().filter(x=>x!==name);setAccounts(a);if(ledgerAcc===name)ledgerAcc=null;render();});
 }
 
 function showLedgerForm(){
-  showModal('记一笔',`
+  const preAcc=ledgerAcc; // pre-fill account if viewing a specific one
+  const accts=getAccounts();const preIdx=preAcc?accts.indexOf(preAcc):-1;
+  showModal(preAcc?`记一笔 · ${preAcc}`:'记一笔',`
     <div class="fg"><div class="type-tgl" id="typeTgl"><button class="inc-act" data-t="income">收入</button><button data-t="expense">支出</button></div></div>
     <div class="fg"><label>金额</label><input type="number" id="fAmt" placeholder="0.00" step="0.01" min="0"></div>
     <div class="fg"><label>分类</label><div class="cat-grid" id="catGrid"></div><div style="margin-top:6px"><input type="text" id="newCat" placeholder="+ 新建分类" style="width:100%;padding:6px 10px;border:1px dashed #ccc;border-radius:8px;font-size:12px;outline:none"></div></div>
-    <div class="fg"><label>账户</label><div class="cat-grid" id="accGrid"></div><div style="margin-top:6px"><input type="text" id="newAcc" placeholder="+ 新建账户" style="width:100%;padding:6px 10px;border:1px dashed #ccc;border-radius:8px;font-size:12px;outline:none"></div></div>
+    ${preAcc?`<div class="fg"><label>账户</label><div style="padding:10px 12px;background:#f0f6ff;border-radius:10px;font-size:14px;color:var(--primary);font-weight:500">${preAcc}<input type="hidden" id="fAccVal" value="${preAcc}"></div></div>`:`<div class="fg"><label>账户</label><div class="cat-grid" id="accGrid"></div><div style="margin-top:6px"><input type="text" id="newAcc" placeholder="+ 新建账户" style="width:100%;padding:6px 10px;border:1px dashed #ccc;border-radius:8px;font-size:12px;outline:none"></div></div>`}
     <div class="chk-row"><label><input type="checkbox" id="fReimb"> 可报销</label><label><input type="checkbox" id="fLoan"> 借钱</label><label><input type="checkbox" id="fInst"> 分期</label></div>
     <div id="extraFields"></div>
     <div class="fg"><label>日期</label><input type="date" id="fDate" value="${today()}"></div>
@@ -484,7 +539,7 @@ function showLedgerForm(){
   `,async()=>{
     const tgl=document.querySelector('#typeTgl .inc-act,#typeTgl .exp-act');const isIncome=tgl.classList.contains('inc-act');
     const amt=parseFloat($('#fAmt').value);const cat=document.querySelector('#catGrid .sel')?.dataset.cat;
-    const acc=document.querySelector('#accGrid .sel')?.dataset.acc;
+    const acc=preAcc?$('#fAccVal').value:document.querySelector('#accGrid .sel')?.dataset.acc;
     if(!amt||amt<=0){toast('请输入金额');throw new Error()}if(!cat){toast('请选择分类');throw new Error()}
     const reimb=$('#fReimb').checked,loan=$('#fLoan').checked,inst=$('#fInst').checked;
     let type=isIncome?'income':'expense';const extra={};
@@ -494,13 +549,14 @@ function showLedgerForm(){
     render();
   });
   const tgl=$('#typeTgl');tgl.querySelectorAll('button').forEach(b=>b.onclick=()=>{tgl.querySelectorAll('button').forEach(x=>x.className='');b.className=b.dataset.t==='income'?'inc-act':'exp-act';renderCats(b.dataset.t)});
-  renderCats('income');renderAccs();
+  renderCats('income');
+  if(!preAcc)renderAccs();
   function renderCats(t){const g=$('#catGrid');const cats=t==='income'?getIncCats():getExpCats();g.innerHTML=cats.map((c,i)=>`<span class="cat-chip${i===0?' sel':''}" data-cat="${c}">${c}</span>`).join('');g.querySelectorAll('.cat-chip').forEach(c=>c.onclick=()=>{g.querySelectorAll('.cat-chip').forEach(x=>x.classList.remove('sel'));c.classList.add('sel')})}
-  function renderAccs(){const g=$('#accGrid');const accts=getAccounts();g.innerHTML=accts.map((a,i)=>`<span class="cat-chip${i===0?' sel':''}" data-acc="${a}">${a}</span>`).join('');g.querySelectorAll('.cat-chip').forEach(c=>c.onclick=()=>{g.querySelectorAll('.cat-chip').forEach(x=>x.classList.remove('sel'));c.classList.add('sel')})}
+  function renderAccs(){const g=$('#accGrid');const accts=getAccounts();g.innerHTML=accts.map((a,i)=>`<span class="cat-chip${preIdx===i||(preIdx<0&&i===0)?' sel':''}" data-acc="${a}">${a}</span>`).join('');g.querySelectorAll('.cat-chip').forEach(c=>c.onclick=()=>{g.querySelectorAll('.cat-chip').forEach(x=>x.classList.remove('sel'));c.classList.add('sel')})}
   // Add new category
   $('#newCat').addEventListener('keydown',e=>{if(e.key==='Enter'){const v=$('#newCat').value.trim();if(v){const t=document.querySelector('#typeTgl .inc-act,#typeTgl .exp-act');const isInc=t.classList.contains('inc-act');const cats=isInc?getIncCats():getExpCats();if(!cats.includes(v)){cats.push(v);isInc?setIncCats(cats):setExpCats(cats)}renderCats(isInc?'income':'expense')}$('#newCat').value=''}});
-  // Add new account
-  $('#newAcc').addEventListener('keydown',e=>{if(e.key==='Enter'){const v=$('#newAcc').value.trim();if(v){const accts=getAccounts();if(!accts.includes(v)){accts.push(v);setAccounts(accts)}renderAccs()}$('#newAcc').value=''}});
+  // Add new account (only if not pre-selected)
+  if(!preAcc){$('#newAcc').addEventListener('keydown',e=>{if(e.key==='Enter'){const v=$('#newAcc').value.trim();if(v){const accts=getAccounts();if(!accts.includes(v)){accts.push(v);setAccounts(accts)}renderAccs()}$('#newAcc').value=''}});}
   function upd(){const ef=$('#extraFields');let h='';if($('#fInst').checked)h+=`<div class="fg-row"><div class="fg"><label>总期数</label><input type="number" id="fInstTotal" placeholder="12" min="1"></div><div class="fg"><label>第几期</label><input type="number" id="fInstCurrent" placeholder="1" min="1"></div></div>`;if($('#fLoan').checked)h+=`<div class="fg"><label>对方/用途</label><input type="text" id="fLoanNote" placeholder="例如：借给张三"></div>`;ef.innerHTML=h}
   ['#fReimb','#fLoan','#fInst'].forEach(s=>{const el=document.querySelector(s);if(el)el.onchange=upd});
 }
