@@ -4,745 +4,979 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="工作台">
-<meta name="theme-color" content="#4A90D9">
+<meta name="theme-color" content="#0f1923">
 <link rel="manifest" href="manifest.json">
 <title>个人工作台</title>
 <style>
-*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-:root {
-  --primary: #4A90D9; --primary-dark: #357ABD; --danger: #E74C3C;
-  --success: #27AE60; --warning: #F39C12; --bg: #f0f2f5;
-  --card: #fff; --text: #333; --text-light: #888; --border: #e8e8e8;
-  --shadow: 0 2px 12px rgba(0,0,0,0.08);
-  --radius: 12px; --radius-sm: 8px;
-  --nav-h: 60px; --header-h: 50px; --fab-size: 52px;
-  --safe-bottom: env(safe-area-inset-bottom, 0px);
+/* ====== Reset & Variables ====== */
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --primary:#4A90D9;--primary-dark:#357ABD;--danger:#E74C3C;--success:#27AE60;--warning:#F39C12;
+  --bg:#f0f2f5;--card:#fff;--text:#333;--text2:#666;--text3:#999;--border:#e8e8e8;
+  --shadow:0 2px 12px rgba(0,0,0,0.08);--radius:12px;--radius-sm:8px;
+  --header-h:50px;--fab-size:52px;
+  --sidebar-w:240px;--sidebar-bg:#0f1923;--sidebar-hl:#00d4ff;--sidebar-text:#8899aa;
+  --safe-top:env(safe-area-inset-top,0px);--safe-bottom:env(safe-area-inset-bottom,0px);
 }
-body {
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
-  background: var(--bg); color: var(--text); font-size: 15px;
-  -webkit-tap-highlight-color: transparent; -webkit-font-smoothing: antialiased;
-  overflow: hidden; height: 100dvh; display: flex; justify-content: center;
+body{
+  font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC','Hiragino Sans GB','Microsoft YaHei',sans-serif;
+  background:var(--bg);color:var(--text);font-size:15px;
+  -webkit-tap-highlight-color:transparent;-webkit-font-smoothing:antialiased;
+  overflow:hidden;height:100dvh;display:flex;justify-content:center;
 }
-.app { width: 100%; max-width: 480px; height: 100dvh; display: flex; flex-direction: column; position: relative; overflow: hidden; }
+.app{width:100%;max-width:480px;height:100dvh;display:flex;flex-direction:column;position:relative;overflow:hidden;}
 
-/* Header */
-.header {
-  height: var(--header-h); background: var(--primary); color: #fff;
-  display: flex; align-items: center; justify-content: center;
-  font-size: 17px; font-weight: 600; flex-shrink: 0;
-  padding-top: env(safe-area-inset-top, 0px);
+/* ====== Header ====== */
+.header{
+  height:var(--header-h);padding-top:var(--safe-top);
+  background:var(--sidebar-bg);color:#fff;display:flex;align-items:center;flex-shrink:0;
+  padding-left:12px;padding-right:12px;gap:10px;z-index:50;position:relative;
+}
+.header .menu-btn{
+  width:34px;height:34px;border:none;background:none;color:var(--sidebar-hl);font-size:20px;
+  cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;
+}
+.header .title{font-size:16px;font-weight:600;flex:1;text-align:center;padding-right:34px;}
+.header .title span{color:var(--sidebar-hl);}
+
+/* ====== Sidebar Overlay ====== */
+.sidebar-overlay{
+  position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:90;opacity:0;visibility:hidden;
+  transition:opacity .25s,visibility .25s;
+}
+.sidebar-overlay.show{opacity:1;visibility:visible;}
+
+/* ====== Sidebar ====== */
+.sidebar{
+  position:fixed;top:0;left:0;bottom:0;width:var(--sidebar-w);z-index:100;
+  background:var(--sidebar-bg);display:flex;flex-direction:column;
+  transform:translateX(-100%);transition:transform .25s cubic-bezier(.4,0,.2,1);
+  padding-top:calc(var(--safe-top) + 10px);
+}
+.sidebar.show{transform:translateX(0);}
+/* Sci-fi grid bg */
+.sidebar::before{
+  content:'';position:absolute;inset:0;opacity:.04;
+  background-image:linear-gradient(rgba(0,212,255,.3) 1px,transparent 1px),linear-gradient(90deg,rgba(0,212,255,.3) 1px,transparent 1px);
+  background-size:20px 20px;pointer-events:none;
 }
 
-/* Main Content */
-.main { flex: 1; overflow-y: auto; padding: 12px 16px; padding-bottom: calc(var(--nav-h) + var(--safe-bottom) + 80px); -webkit-overflow-scrolling: touch; }
+.sidebar-brand{
+  padding:16px 20px 20px;display:flex;align-items:center;gap:12px;
+  border-bottom:1px solid rgba(0,212,255,.1);margin-bottom:8px;
+}
+.sidebar-brand .logo{
+  width:42px;height:42px;border-radius:10px;
+  background:linear-gradient(135deg,#0a1628,#0f1923);border:1px solid rgba(0,212,255,.3);
+  display:flex;align-items:center;justify-content:center;font-size:20px;
+  box-shadow:0 0 12px rgba(0,212,255,.15);
+}
+.sidebar-brand .name{color:#fff;font-size:16px;font-weight:700;}
+.sidebar-brand .ver{color:var(--sidebar-text);font-size:11px;}
 
-/* Bottom Nav */
-.nav {
-  position: absolute; bottom: 0; left: 0; right: 0;
-  height: calc(var(--nav-h) + var(--safe-bottom));
-  padding-bottom: var(--safe-bottom);
-  background: var(--card); display: flex;
-  border-top: 1px solid var(--border);
-  box-shadow: 0 -2px 8px rgba(0,0,0,0.04);
-  z-index: 10;
+.sidebar-nav{flex:1;overflow-y:auto;padding:0 10px;}
+.sidebar-item{
+  display:flex;align-items:center;gap:12px;padding:12px 14px;margin-bottom:4px;
+  border-radius:var(--radius-sm);color:var(--sidebar-text);font-size:14px;
+  cursor:pointer;transition:.2s;border:1px solid transparent;position:relative;
 }
-.nav-item {
-  flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center;
-  color: var(--text-light); font-size: 11px; cursor: pointer; transition: color .2s;
-  -webkit-tap-highlight-color: transparent;
+.sidebar-item .sicon{font-size:18px;width:24px;text-align:center;}
+.sidebar-item:hover{color:#fff;background:rgba(0,212,255,.06);}
+.sidebar-item.active{
+  color:var(--sidebar-hl);background:rgba(0,212,255,.08);
+  border-color:rgba(0,212,255,.25);
+  box-shadow:0 0 10px rgba(0,212,255,.08),inset 0 0 10px rgba(0,212,255,.03);
 }
-.nav-item.active { color: var(--primary); font-weight: 600; }
-.nav-item .icon { font-size: 22px; margin-bottom: 2px; }
+.sidebar-item.active::after{
+  content:'';position:absolute;left:0;top:50%;transform:translateY(-50%);
+  width:3px;height:20px;background:var(--sidebar-hl);border-radius:0 3px 3px 0;
+  box-shadow:0 0 6px var(--sidebar-hl);
+}
 
-/* FAB */
-.fab {
-  position: absolute; bottom: calc(var(--nav-h) + var(--safe-bottom) + 16px); right: 16px;
-  width: var(--fab-size); height: var(--fab-size); border-radius: 50%;
-  background: var(--primary); color: #fff; border: none; font-size: 28px;
-  box-shadow: 0 4px 16px rgba(74,144,217,0.4);
-  display: flex; align-items: center; justify-content: center;
-  cursor: pointer; z-index: 20; transition: transform .2s, box-shadow .2s;
-  -webkit-tap-highlight-color: transparent;
+.sidebar-footer{
+  padding:16px;border-top:1px solid rgba(0,212,255,.1);font-size:11px;color:var(--sidebar-text);
+  display:flex;justify-content:space-between;
 }
-.fab:active { transform: scale(0.92); }
 
-/* Summary Cards */
-.summary-row { display: flex; gap: 10px; margin-bottom: 16px; }
-.summary-card {
-  flex: 1; background: var(--card); border-radius: var(--radius);
-  padding: 14px; text-align: center; box-shadow: var(--shadow);
+/* ====== Main Content ====== */
+.main{
+  flex:1;overflow-y:auto;padding:12px 14px;
+  padding-bottom:calc(var(--safe-bottom) + 80px);
+  -webkit-overflow-scrolling:touch;
 }
-.summary-card .label { font-size: 12px; color: var(--text-light); margin-bottom: 4px; }
-.summary-card .value { font-size: 22px; font-weight: 700; }
-.summary-card .value.income { color: var(--success); }
-.summary-card .value.expense { color: var(--danger); }
-.summary-card .value.balance { color: var(--primary); }
 
-/* List */
-.list-item {
-  background: var(--card); border-radius: var(--radius-sm); padding: 14px;
-  margin-bottom: 8px; box-shadow: 0 1px 4px rgba(0,0,0,0.04);
-  display: flex; align-items: center; gap: 12px; position: relative;
+/* ====== Summary Cards ====== */
+.stat-row{display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap;}
+.stat-card{
+  flex:1;min-width:0;background:var(--card);border-radius:var(--radius);
+  padding:12px 10px;text-align:center;box-shadow:var(--shadow);
 }
-.list-item .cat-icon {
-  width: 40px; height: 40px; border-radius: 50%; display: flex;
-  align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0;
-}
-.list-item .info { flex: 1; min-width: 0; }
-.list-item .info .title { font-size: 14px; font-weight: 500; }
-.list-item .info .sub { font-size: 12px; color: var(--text-light); margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.list-item .amount { font-size: 16px; font-weight: 600; white-space: nowrap; }
-.list-item .amount.income { color: var(--success); }
-.list-item .amount.expense { color: var(--danger); }
-.list-item .del-btn {
-  position: absolute; right: 8px; top: 50%; transform: translateY(-50%);
-  width: 28px; height: 28px; border-radius: 50%; border: none;
-  background: rgba(231,76,60,0.1); color: var(--danger); font-size: 14px;
-  cursor: pointer; display: none; align-items: center; justify-content: center;
-}
-.list-item:active .del-btn, .list-item:hover .del-btn { display: flex; }
+.stat-card .slabel{font-size:11px;color:var(--text3);margin-bottom:3px;}
+.stat-card .svalue{font-size:20px;font-weight:700;}
+.stat-card .ssub{font-size:11px;color:var(--text3);margin-top:2px;}
+.c-income{color:var(--success)}.c-expense{color:var(--danger)}.c-primary{color:var(--primary)}
 
-/* Modal */
-.modal-overlay {
-  position: fixed; inset: 0; background: rgba(0,0,0,0.4);
-  z-index: 100; display: flex; align-items: flex-end; justify-content: center;
-  animation: fadeIn .2s;
+/* ====== Chart ====== */
+.chart-box{
+  background:var(--card);border-radius:var(--radius);padding:14px;
+  margin-bottom:12px;box-shadow:var(--shadow);
 }
-@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-.modal {
-  background: var(--card); border-radius: var(--radius) var(--radius) 0 0;
-  width: 100%; max-width: 480px; max-height: 85vh; overflow-y: auto;
-  padding: 20px 20px calc(20px + env(safe-area-inset-bottom));
-  animation: slideUp .25s;
+.chart-box canvas{width:100%;height:200px;}
+
+/* ====== Quick Add ====== */
+.quick-row{display:flex;gap:6px;margin-bottom:12px;flex-wrap:wrap;}
+.quick-btn{
+  padding:6px 12px;border-radius:16px;border:1px solid var(--border);background:var(--card);
+  font-size:13px;cursor:pointer;transition:.2s;font-family:inherit;color:var(--text);
 }
-@keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
-.modal h3 { font-size: 18px; margin-bottom: 16px; text-align: center; }
+.quick-btn:active{background:var(--primary);color:#fff;border-color:var(--primary);}
+
+/* ====== Search ====== */
+.search-wrap{margin-bottom:12px;}
+.search-wrap input{
+  width:100%;padding:8px 14px;border:1px solid var(--border);border-radius:20px;
+  font-size:14px;outline:none;background:var(--card);font-family:inherit;
+}
+.search-wrap input:focus{border-color:var(--primary);}
+
+/* ====== List Item ====== */
+.list-item{
+  background:var(--card);border-radius:var(--radius-sm);padding:12px 14px;
+  margin-bottom:6px;box-shadow:0 1px 3px rgba(0,0,0,0.04);
+  display:flex;align-items:center;gap:10px;position:relative;transition:.15s;
+}
+.list-item:active{background:#f8f8f8;}
+.list-item .cat-dot{
+  width:38px;height:38px;border-radius:50%;display:flex;align-items:center;
+  justify-content:center;font-size:16px;flex-shrink:0;
+}
+.list-item .linfo{flex:1;min-width:0;}
+.list-item .ltitle{font-size:14px;font-weight:500;}
+.list-item .lsub{font-size:12px;color:var(--text3);margin-top:1px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.list-item .lamount{font-size:16px;font-weight:600;white-space:nowrap;}
+.list-item .lamount.in{color:var(--success)}
+.list-item .lamount.out{color:var(--danger)}
+.list-item .ldel{
+  position:absolute;right:6px;top:50%;transform:translateY(-50%);
+  width:26px;height:26px;border-radius:50%;border:none;
+  background:rgba(231,76,60,.08);color:var(--danger);font-size:12px;
+  cursor:pointer;display:none;align-items:center;justify-content:center;
+}
+.list-item:active .ldel,.list-item:hover .ldel{display:flex;}
+
+/* Alert badge */
+.alert-badge{
+  display:inline-block;background:var(--danger);color:#fff;font-size:10px;
+  padding:1px 6px;border-radius:10px;margin-left:6px;animation:pulse 2s infinite;
+}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.6}}
+
+/* ====== FAB ====== */
+.fab{
+  position:absolute;bottom:calc(var(--safe-bottom) + 20px);right:16px;
+  width:var(--fab-size);height:var(--fab-size);border-radius:50%;
+  background:linear-gradient(135deg,var(--primary),var(--primary-dark));
+  color:#fff;border:none;font-size:26px;
+  box-shadow:0 4px 16px rgba(74,144,217,.4);
+  display:flex;align-items:center;justify-content:center;
+  cursor:pointer;z-index:20;transition:transform .2s,box-shadow .2s;
+}
+.fab:active{transform:scale(.92);}
+
+/* ====== Modal ====== */
+.modal-overlay{
+  position:fixed;inset:0;background:rgba(0,0,0,0.45);z-index:200;
+  display:flex;align-items:flex-end;justify-content:center;animation:fadeIn .2s;
+}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+.modal{
+  background:var(--card);border-radius:var(--radius) var(--radius) 0 0;
+  width:100%;max-width:480px;max-height:85vh;overflow-y:auto;
+  padding:20px 18px calc(20px + var(--safe-bottom));animation:slideUp .25s;
+}
+@keyframes slideUp{from{transform:translateY(100%)}to{transform:translateY(0)}}
+.modal h3{font-size:17px;margin-bottom:14px;text-align:center;}
 
 /* Form */
-.form-group { margin-bottom: 14px; }
-.form-group label { display: block; font-size: 13px; color: var(--text-light); margin-bottom: 6px; font-weight: 500; }
-.form-group input, .form-group select, .form-group textarea {
-  width: 100%; padding: 10px 12px; border: 1px solid var(--border);
-  border-radius: var(--radius-sm); font-size: 15px; outline: none;
-  background: var(--bg); font-family: inherit; transition: border-color .2s;
-  -webkit-appearance: none;
+.fg{margin-bottom:12px;}
+.fg label{display:block;font-size:12px;color:var(--text2);margin-bottom:4px;font-weight:500;}
+.fg input,.fg select,.fg textarea{
+  width:100%;padding:9px 12px;border:1px solid var(--border);border-radius:var(--radius-sm);
+  font-size:14px;outline:none;background:var(--bg);font-family:inherit;transition:border-color .2s;
 }
-.form-group input:focus, .form-group select:focus, .form-group textarea:focus { border-color: var(--primary); }
-.form-group textarea { resize: vertical; min-height: 60px; }
-.type-toggle { display: flex; gap: 0; border-radius: var(--radius-sm); overflow: hidden; border: 1px solid var(--border); }
-.type-toggle button {
-  flex: 1; padding: 10px; border: none; background: var(--bg); font-size: 14px;
-  cursor: pointer; transition: .2s; font-family: inherit;
-}
-.type-toggle button.active.income-btn { background: var(--success); color: #fff; }
-.type-toggle button.active.expense-btn { background: var(--danger); color: #fff; }
+.fg input:focus,.fg select:focus,.fg textarea:focus{border-color:var(--primary);}
+.fg textarea{resize:vertical;min-height:50px;}
+.fg-row{display:flex;gap:8px;}
+.fg-row .fg{flex:1;}
 
-/* Category Chips */
-.cat-chips { display: flex; flex-wrap: wrap; gap: 8px; }
-.cat-chip {
-  padding: 6px 14px; border-radius: 20px; border: 1px solid var(--border);
-  font-size: 13px; cursor: pointer; background: var(--bg); transition: .2s;
+/* Type Toggle */
+.type-tgl{display:flex;border-radius:var(--radius-sm);overflow:hidden;border:1px solid var(--border);}
+.type-tgl button{
+  flex:1;padding:9px;border:none;background:var(--bg);font-size:14px;cursor:pointer;font-family:inherit;transition:.2s;
 }
-.cat-chip.selected { background: var(--primary); color: #fff; border-color: var(--primary); }
+.type-tgl button.inc-act{background:var(--success);color:#fff;}
+.type-tgl button.exp-act{background:var(--danger);color:#fff;}
 
-/* Sub-tabs for car module */
-.sub-tabs { display: flex; gap: 6px; margin-bottom: 16px; }
-.sub-tab {
-  flex: 1; padding: 8px; text-align: center; border-radius: 20px;
-  font-size: 13px; cursor: pointer; background: var(--card); border: 1px solid var(--border);
-  transition: .2s;
+/* Cat chips */
+.cat-grid{display:flex;flex-wrap:wrap;gap:6px;}
+.cat-chip{
+  padding:5px 12px;border-radius:16px;border:1px solid var(--border);
+  font-size:12px;cursor:pointer;background:var(--bg);transition:.2s;
 }
-.sub-tab.active { background: var(--primary); color: #fff; border-color: var(--primary); }
+.cat-chip.sel{background:var(--primary);color:#fff;border-color:var(--primary);}
 
-/* BMI */
-.bmi-display {
-  background: var(--card); border-radius: var(--radius); padding: 20px;
-  text-align: center; margin-bottom: 16px; box-shadow: var(--shadow);
+/* Sub tabs */
+.subtabs{display:flex;gap:6px;margin-bottom:12px;overflow-x:auto;}
+.subtab{
+  padding:7px 14px;border-radius:16px;font-size:13px;cursor:pointer;
+  background:var(--card);border:1px solid var(--border);white-space:nowrap;transition:.2s;
 }
-.bmi-value { font-size: 36px; font-weight: 700; color: var(--primary); }
-.bmi-label { font-size: 13px; color: var(--text-light); margin-top: 4px; }
+.subtab.act{background:var(--primary);color:#fff;border-color:var(--primary);}
 
-/* Chart Container */
-.chart-container {
-  background: var(--card); border-radius: var(--radius); padding: 16px;
-  margin-bottom: 16px; box-shadow: var(--shadow);
+/* BMI display */
+.bmi-box{
+  background:var(--card);border-radius:var(--radius);padding:18px;text-align:center;
+  margin-bottom:12px;box-shadow:var(--shadow);
 }
-.chart-container canvas { width: 100%; height: 200px; }
+.bmi-box .bmi-big{font-size:32px;font-weight:700;color:var(--primary);}
+.bmi-box .bmi-tag{font-size:12px;color:var(--text3);margin-top:2px;}
 
-/* Car fuel stat */
-.fuel-stat {
-  background: var(--card); border-radius: var(--radius); padding: 16px;
-  margin-bottom: 16px; box-shadow: var(--shadow); text-align: center;
+/* Car info card */
+.carinfo-card{
+  background:var(--card);border-radius:var(--radius);padding:16px;margin-bottom:12px;box-shadow:var(--shadow);
 }
-.fuel-stat .big { font-size: 28px; font-weight: 700; color: var(--primary); }
-.fuel-stat .unit { font-size: 13px; color: var(--text-light); }
+.carinfo-card .ci-row{display:flex;justify-content:space-between;padding:4px 0;font-size:13px;}
+.carinfo-card .ci-label{color:var(--text3);}
+.carinfo-card .ci-edit{color:var(--primary);font-size:12px;cursor:pointer;margin-top:8px;display:inline-block;}
+
+/* Section */
+.section-title{font-size:13px;font-weight:600;color:var(--text2);margin:14px 0 8px;}
+.section-title:first-child{margin-top:0;}
+
+/* Confirm */
+.confirm-overlay{
+  position:fixed;inset:0;background:rgba(0,0,0,0.45);z-index:300;
+  display:flex;align-items:center;justify-content:center;
+}
+.confirm-box{background:var(--card);border-radius:var(--radius);padding:22px;width:280px;text-align:center;}
+.confirm-box p{margin-bottom:18px;font-size:15px;}
+.confirm-box .cbtns{display:flex;gap:10px;}
+.confirm-box button{flex:1;padding:10px;border-radius:var(--radius-sm);border:none;font-size:14px;cursor:pointer;font-family:inherit;}
+.btn-cancel{background:var(--bg);color:var(--text);}
+.btn-danger{background:var(--danger);color:#fff;}
+.btn-primary{
+  display:block;width:100%;padding:11px;border:none;border-radius:var(--radius-sm);
+  background:var(--primary);color:#fff;font-size:15px;font-weight:600;cursor:pointer;font-family:inherit;margin-top:6px;
+}
+
+/* Settings */
+.setting-group{margin-bottom:18px;}
+.setting-group h4{font-size:14px;margin-bottom:8px;color:var(--text);}
+.setting-item{
+  background:var(--card);border-radius:var(--radius-sm);padding:12px 14px;margin-bottom:6px;
+  display:flex;justify-content:space-between;align-items:center;box-shadow:0 1px 3px rgba(0,0,0,0.04);
+}
+.setting-item .si-label{font-size:14px;}
+.setting-item .si-val{font-size:13px;color:var(--text3);}
+.setting-item .si-btn{
+  padding:6px 14px;border-radius:14px;border:none;font-size:12px;cursor:pointer;font-family:inherit;
+  background:var(--bg);color:var(--text);
+}
+.setting-item .si-btn.danger{background:rgba(231,76,60,.1);color:var(--danger);}
+
+/* Toast */
+.toast{
+  position:fixed;bottom:80px;left:50%;transform:translateX(-50%);z-index:400;
+  background:rgba(0,0,0,.78);color:#fff;padding:8px 20px;border-radius:20px;font-size:13px;
+  opacity:0;transition:opacity .3s;pointer-events:none;
+}
+.toast.show{opacity:1;}
 
 /* Empty state */
-.empty { text-align: center; padding: 40px 20px; color: var(--text-light); }
-.empty .icon { font-size: 48px; margin-bottom: 12px; }
-.empty p { font-size: 14px; }
+.empty{text-align:center;padding:40px 20px;color:var(--text3);}
+.empty .eicon{font-size:44px;margin-bottom:10px;}
+.empty p{font-size:14px;}
 
-/* Confirm dialog */
-.confirm-overlay {
-  position: fixed; inset: 0; background: rgba(0,0,0,0.4); z-index: 200;
-  display: flex; align-items: center; justify-content: center;
-}
-.confirm-box {
-  background: var(--card); border-radius: var(--radius); padding: 24px;
-  width: 280px; text-align: center;
-}
-.confirm-box p { margin-bottom: 20px; font-size: 15px; }
-.confirm-box .btns { display: flex; gap: 10px; }
-.confirm-box button {
-  flex: 1; padding: 10px; border-radius: var(--radius-sm); border: none;
-  font-size: 14px; cursor: pointer; font-family: inherit;
-}
-.btn-cancel { background: var(--bg); color: var(--text); }
-.btn-confirm { background: var(--danger); color: #fff; }
-.btn-primary {
-  display: block; width: 100%; padding: 12px; border: none;
-  border-radius: var(--radius-sm); background: var(--primary); color: #fff;
-  font-size: 15px; font-weight: 600; cursor: pointer; font-family: inherit;
-  margin-top: 4px;
-}
-
-/* Section title */
-.section-title { font-size: 14px; font-weight: 600; color: var(--text-light); margin-bottom: 8px; margin-top: 16px; }
-.section-title:first-child { margin-top: 0; }
-
-.hidden { display: none !important; }
+.hidden{display:none!important;}
 </style>
 </head>
 <body>
 <div class="app" id="app">
-  <div class="header" id="header">个人工作台</div>
+  <div class="header" id="header">
+    <button class="menu-btn" id="menuBtn">☰</button>
+    <div class="title" id="headerTitle"><span>◆</span> 个人工作台</div>
+  </div>
   <div class="main" id="main"></div>
-  <button class="fab" id="fab" title="添加记录">+</button>
-  <nav class="nav" id="nav"></nav>
+  <button class="fab" id="fab">+</button>
 </div>
 
+<!-- Sidebar -->
+<div class="sidebar-overlay" id="sidebarOverlay"></div>
+<nav class="sidebar" id="sidebar">
+  <div class="sidebar-brand">
+    <div class="logo">◆</div>
+    <div><div class="name">工作台</div><div class="ver">v2.0 · 离线版</div></div>
+  </div>
+  <div class="sidebar-nav" id="sidebarNav"></div>
+  <div class="sidebar-footer" id="sidebarFooter"></div>
+</nav>
+
+<!-- Modal & Confirm -->
 <div class="modal-overlay hidden" id="modalOverlay"></div>
 <div class="confirm-overlay hidden" id="confirmOverlay"></div>
+<div class="toast" id="toast"></div>
 
 <script>
 // ==================== IndexedDB ====================
-const DB_NAME = 'WorkbenchDB', DB_VER = 1;
-let db;
-
-function openDB() {
-  return new Promise((resolve, reject) => {
-    const req = indexedDB.open(DB_NAME, DB_VER);
-    req.onupgradeneeded = e => {
-      const d = e.target.result;
-      if (!d.objectStoreNames.contains('ledger')) {
-        const s = d.createObjectStore('ledger', { keyPath: 'id', autoIncrement: true });
-        s.createIndex('date', 'date', { unique: false });
-        s.createIndex('type', 'type', { unique: false });
-      }
-      if (!d.objectStoreNames.contains('weight')) {
-        const s = d.createObjectStore('weight', { keyPath: 'id', autoIncrement: true });
-        s.createIndex('date', 'date', { unique: true });
-      }
-      if (!d.objectStoreNames.contains('car')) {
-        const s = d.createObjectStore('car', { keyPath: 'id', autoIncrement: true });
-        s.createIndex('date', 'date', { unique: false });
-        s.createIndex('carType', 'carType', { unique: false });
-      }
+const DB_NAME='WorkbenchDB',DB_VER=2;let db;
+function openDB(){
+  return new Promise((resolve,reject)=>{
+    const req=indexedDB.open(DB_NAME,DB_VER);
+    req.onupgradeneeded=e=>{
+      const d=e.target.result;
+      if(!d.objectStoreNames.contains('ledger')){const s=d.createObjectStore('ledger',{keyPath:'id',autoIncrement:true});s.createIndex('date','date');s.createIndex('type','type');}
+      if(!d.objectStoreNames.contains('weight')){const s=d.createObjectStore('weight',{keyPath:'id',autoIncrement:true});s.createIndex('date','date',{unique:true});}
+      if(!d.objectStoreNames.contains('car')){const s=d.createObjectStore('car',{keyPath:'id',autoIncrement:true});s.createIndex('date','date');s.createIndex('carType','carType');}
     };
-    req.onsuccess = e => { db = e.target.result; resolve(db); };
-    req.onerror = () => reject(req.error);
+    req.onsuccess=e=>{db=e.target.result;resolve(db);};
+    req.onerror=()=>reject(req.error);
   });
 }
-
-function dbAdd(store, data) {
-  return new Promise((resolve, reject) => {
-    const tx = db.transaction(store, 'readwrite');
-    const req = tx.objectStore(store).add(data);
-    req.onsuccess = () => resolve(req.result);
-    req.onerror = () => reject(req.error);
-  });
-}
-
-function dbPut(store, data) {
-  return new Promise((resolve, reject) => {
-    const tx = db.transaction(store, 'readwrite');
-    const req = tx.objectStore(store).put(data);
-    req.onsuccess = () => resolve(req.result);
-    req.onerror = () => reject(req.error);
-  });
-}
-
-function dbGetAll(store, indexName) {
-  return new Promise((resolve, reject) => {
-    const tx = db.transaction(store, 'readonly');
-    const s = tx.objectStore(store);
-    const req = indexName ? s.index(indexName).getAll() : s.getAll();
-    req.onsuccess = () => resolve(req.result);
-    req.onerror = () => reject(req.error);
-  });
-}
-
-function dbDelete(store, id) {
-  return new Promise((resolve, reject) => {
-    const tx = db.transaction(store, 'readwrite');
-    const req = tx.objectStore(store).delete(id);
-    req.onsuccess = () => resolve();
-    req.onerror = () => reject(req.error);
-  });
-}
+function dbAdd(s,d){return new Promise((r,j)=>{const t=db.transaction(s,'readwrite');const q=t.objectStore(s).add(d);q.onsuccess=()=>r(q.result);q.onerror=()=>j(q.error);});}
+function dbPut(s,d){return new Promise((r,j)=>{const t=db.transaction(s,'readwrite');const q=t.objectStore(s).put(d);q.onsuccess=()=>r(q.result);q.onerror=()=>j(q.error);});}
+function dbAll(s,n){return new Promise((r,j)=>{const t=db.transaction(s,'readonly');const o=t.objectStore(s);const q=n?o.index(n).getAll():o.getAll();q.onsuccess=()=>r(q.result);q.onerror=()=>j(q.error);});}
+function dbDel(s,id){return new Promise((r,j)=>{const t=db.transaction(s,'readwrite');const q=t.objectStore(s).delete(id);q.onsuccess=()=>r();q.onerror=()=>j(q.error);});}
 
 // ==================== Config ====================
-const LEDGER_CATS = {
-  expense: ['🍜 餐饮','🚌 交通','🛒 购物','🎮 娱乐','🏠 住房','💊 医疗','📦 其他'],
-  income: ['💰 工资','🎁 奖金','💼 兼职','📈 投资','📦 其他']
-};
+const EXP_CATS=['🍜 餐饮','🚌 交通','🛒 购物','👗 服饰','🏠 居家','🎮 娱乐','📱 通讯','💊 医疗','📚 教育','🎁 人情','🐱 宠物','💻 数码','💄 美妆','🏃 运动','✈️ 旅行','📦 其他'];
+const INC_CATS=['💰 工资','🎁 奖金','💼 兼职','📈 投资','↩️ 退款','🧾 报销','🧧 红包','📦 其他'];
+const CAR_SUBTABS=[
+  {id:'fuel',label:'⛽ 加油',icon:'⛽'},
+  {id:'maintenance',label:'🔧 保养',icon:'🔧'},
+  {id:'other',label:'📦 其他',icon:'📦'},
+  {id:'all',label:'📋 全部',icon:'📋'}
+];
+const OTHER_CATS=['🛡️ 保险','🅿️ 停车','🛣️ 过路费','🧼 洗车','🔩 维修','📋 年检','🔧 改装','📦 其他'];
 
-const CAR_CATS = ['⛽ 加油','🔧 保养','🛡️ 保险','🅿️ 停车','🛣️ 过路费','🧼 洗车','📦 其他'];
-
-const MODULES = [
-  { id: 'ledger', label: '记账', icon: '💰' },
-  { id: 'weight', label: '体重', icon: '⚖️' },
-  { id: 'car', label: '用车', icon: '🚗' }
+const MENU=[
+  {id:'ledger',label:'记账',icon:'💰'},
+  {id:'weight',label:'体重',icon:'⚖️'},
+  {id:'car',label:'用车',icon:'🚗'},
+  {id:'settings',label:'设置',icon:'⚙️'}
 ];
 
 // ==================== State ====================
-let currentModule = 'ledger';
-let carSubTab = 'fuel';
-let editingId = null;
-let deleteTarget = null;
+let curMod='ledger',carTab='fuel',searchQ='';
 
-// ==================== UI Helpers ====================
-const $ = s => document.querySelector(s);
-const $$ = s => document.querySelectorAll(s);
+// ==================== Helpers ====================
+const $=s=>document.querySelector(s);
+function fd(d){return d.slice(0,10);}
+function fm(n){return'¥'+Number(n).toFixed(2);}
+function today(){return new Date().toISOString().slice(0,10);}
+function month(){const n=new Date();return n.getFullYear()+'-'+String(n.getMonth()+1).padStart(2,'0');}
 
-function formatDate(d) { return d.slice(0, 10); }
-function fmtMoney(n) { return '¥' + Number(n).toFixed(2); }
-function today() { return new Date().toISOString().slice(0, 10); }
-
-// ==================== Render ====================
-function renderNav() {
-  const nav = $('#nav');
-  nav.innerHTML = MODULES.map(m => `
-    <div class="nav-item${m.id === currentModule ? ' active' : ''}" data-module="${m.id}">
-      <span class="icon">${m.icon}</span>
-      <span>${m.label}</span>
-    </div>
-  `).join('');
-  nav.querySelectorAll('.nav-item').forEach(el => {
-    el.addEventListener('click', () => switchModule(el.dataset.module));
-  });
+function toast(msg){
+  const t=$('#toast');t.textContent=msg;t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'),1800);
 }
 
-function switchModule(id) {
-  currentModule = id;
-  carSubTab = 'fuel';
-  renderNav();
+function getCarInfo(){
+  try{return JSON.parse(localStorage.getItem('wb_carInfo')||'null');}catch{return null;}
+}
+function setCarInfo(d){localStorage.setItem('wb_carInfo',JSON.stringify(d));}
+function getWeightGoal(){
+  try{return JSON.parse(localStorage.getItem('wb_wtGoal')||'null');}catch{return null;}
+}
+function setWeightGoal(d){localStorage.setItem('wb_wtGoal',JSON.stringify(d));}
+
+// ==================== Sidebar ====================
+function renderSidebar(){
+  const nav=$('#sidebarNav');
+  nav.innerHTML=MENU.map(m=>`
+    <div class="sidebar-item${m.id===curMod?' active':''}" data-mid="${m.id}">
+      <span class="sicon">${m.icon}</span><span>${m.label}</span>
+    </div>
+  `).join('');
+  nav.querySelectorAll('.sidebar-item').forEach(el=>{
+    el.addEventListener('click',()=>{switchMod(el.dataset.mid);closeSidebar();});
+  });
+  // Footer
+  updateStorageInfo();
+}
+
+async function updateStorageInfo(){
+  let total=0;
+  try{
+    const l=(await dbAll('ledger')).length,w=(await dbAll('weight')).length,c=(await dbAll('car')).length;
+    total=l+w+c;
+  }catch{}
+  $('#sidebarFooter').innerHTML=`<span>📊 ${total} 条记录</span><span>v2.0</span>`;
+}
+
+function toggleSidebar(){
+  const s=$('#sidebar'),o=$('#sidebarOverlay');
+  const show=!s.classList.contains('show');
+  s.classList.toggle('show',show);o.classList.toggle('show',show);
+}
+function closeSidebar(){$('#sidebar').classList.remove('show');$('#sidebarOverlay').classList.remove('show');}
+
+function switchMod(id){
+  curMod=id;carTab='fuel';searchQ='';
+  updateStorageInfo();
   renderMain();
 }
 
-async function renderMain() {
-  const main = $('#main');
-  const header = $('#header');
-  const fab = $('#fab');
-  const mod = MODULES.find(m => m.id === currentModule);
-  header.textContent = mod.label;
+// ==================== Main Render ====================
+async function renderMain(){
+  const main=$('#main'),fab=$('#fab'),ht=$('#headerTitle');
+  const m=MENU.find(x=>x.id===curMod)||MENU[0];
+  ht.innerHTML=`<span>◆</span> ${m.label}`;
   fab.classList.remove('hidden');
-
-  if (currentModule === 'ledger') await renderLedger(main);
-  else if (currentModule === 'weight') await renderWeight(main);
-  else if (currentModule === 'car') await renderCar(main);
+  if(curMod==='ledger')await renderLedger(main);
+  else if(curMod==='weight')await renderWeight(main);
+  else if(curMod==='car')await renderCar(main);
+  else if(curMod==='settings')await renderSettings(main);
 }
 
-// ---- Ledger ----
-async function renderLedger(main) {
-  const now = new Date();
-  const month = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
-  const records = (await dbGetAll('ledger')).sort((a,b) => b.date.localeCompare(a.date) || b.id - a.id);
-  const monthRecords = records.filter(r => r.date.startsWith(month));
+// ==================== LEDGER ====================
+async function renderLedger(main){
+  const m=month();
+  const records=(await dbAll('ledger')).sort((a,b)=>b.date.localeCompare(a.date)||b.id-a.id);
+  const mRecs=records.filter(r=>r.date.startsWith(m));
+  const income=mRecs.filter(r=>r.type==='income').reduce((s,r)=>s+r.amount,0);
+  const expense=mRecs.filter(r=>r.type==='expense').reduce((s,r)=>s+r.amount,0);
 
-  const income = monthRecords.filter(r => r.type==='income').reduce((s,r) => s+r.amount, 0);
-  const expense = monthRecords.filter(r => r.type==='expense').reduce((s,r) => s+r.amount, 0);
+  // Filter by search
+  let disp=records;
+  if(searchQ){const q=searchQ.toLowerCase();disp=records.filter(r=>r.category.includes(q)||(r.note||'').toLowerCase().includes(q)||String(r.amount).includes(q));}
 
-  main.innerHTML = `
-    <div class="summary-row">
-      <div class="summary-card"><div class="label">本月收入</div><div class="value income">${fmtMoney(income)}</div></div>
-      <div class="summary-card"><div class="label">本月支出</div><div class="value expense">${fmtMoney(expense)}</div></div>
-      <div class="summary-card"><div class="label">结余</div><div class="value balance">${fmtMoney(income-expense)}</div></div>
+  main.innerHTML=`
+    <div class="stat-row">
+      <div class="stat-card"><div class="slabel">本月收入</div><div class="svalue c-income">${fm(income)}</div></div>
+      <div class="stat-card"><div class="slabel">本月支出</div><div class="svalue c-expense">${fm(expense)}</div></div>
+      <div class="stat-card"><div class="slabel">结余</div><div class="svalue c-primary">${fm(income-expense)}</div></div>
     </div>
-    <div class="section-title">${month} 记录</div>
-    ${records.length === 0 ? '<div class="empty"><div class="icon">📝</div><p>还没有记录，点击右下角 + 开始记账</p></div>' : ''}
-    ${records.map(r => `
+    <div class="quick-row">
+      ${[10,20,50,100,200,500].map(v=>`<button class="quick-btn" data-amt="${v}">¥${v}</button>`).join('')}
+    </div>
+    ${mRecs.filter(r=>r.type==='expense').length>0?`
+      <div class="chart-box"><canvas id="ledgerPie"></canvas></div>
+    `:''}
+    <div class="chart-box"><canvas id="ledgerTrend"></canvas></div>
+    <div class="search-wrap"><input type="text" id="ledgerSearch" placeholder="🔍 搜索记录..." value="${searchQ}"></div>
+    <div class="section-title">${m} 记录 (${disp.length}条)</div>
+    ${disp.length===0?'<div class="empty"><div class="eicon">📝</div><p>暂无记录</p></div>':''}
+    ${disp.map(r=>`
       <div class="list-item" data-id="${r.id}">
-        <div class="cat-icon" style="background:${r.type==='income'?'rgba(39,174,96,0.12)':'rgba(231,76,60,0.12)'}">${r.category.slice(0,2)}</div>
-        <div class="info">
-          <div class="title">${r.category.slice(2)}</div>
-          <div class="sub">${formatDate(r.date)} ${r.note||''}</div>
-        </div>
-        <div class="amount ${r.type}">${r.type==='income'?'+':'-'}${fmtMoney(r.amount)}</div>
-        <button class="del-btn" data-del="${r.id}">✕</button>
+        <div class="cat-dot" style="background:${r.type==='income'?'rgba(39,174,96,.12)':'rgba(231,76,60,.12)'}">${r.category.slice(0,2)}</div>
+        <div class="linfo"><div class="ltitle">${r.category.slice(2)}</div><div class="lsub">${fd(r.date)} ${r.note||''}</div></div>
+        <div class="lamount ${r.type==='income'?'in':'out'}">${r.type==='income'?'+':'-'}${fm(r.amount)}</div>
+        <button class="ldel" data-del="${r.id}">✕</button>
       </div>
     `).join('')}
   `;
-  bindDelete(main);
+  bindDel(main);
+  main.querySelectorAll('.quick-btn').forEach(b=>b.addEventListener('click',()=>showLedgerForm(Number(b.dataset.amt))));
+  $('#ledgerSearch')?.addEventListener('input',e=>{searchQ=e.target.value;renderMain();});
+  if(mRecs.filter(r=>r.type==='expense').length>0)setTimeout(()=>drawPie(mRecs.filter(r=>r.type==='expense')),50);
+  setTimeout(()=>drawTrend(records),50);
 }
 
-// ---- Weight ----
-async function renderWeight(main) {
-  const records = (await dbGetAll('weight')).sort((a,b) => a.date.localeCompare(b.date));
-  const latest = records[records.length - 1];
-  const height = localStorage.getItem('wb_height') || '';
-  let bmi = '';
-  if (latest && height) {
-    const h = parseFloat(height) / 100;
-    bmi = (latest.weight / (h * h)).toFixed(1);
-  }
+function drawPie(recs){
+  const c=$('#ledgerPie');if(!c)return;
+  const catMap={};recs.forEach(r=>{catMap[r.category]=catMap[r.category]||[];catMap[r.category].push(r.amount);});
+  const entries=Object.entries(catMap).map(([k,v])=>({cat:k.slice(2),total:v.reduce((a,b)=>a+b,0)})).sort((a,b)=>b.total-a.total);
+  const colors=['#E74C3C','#F39C12','#3498DB','#2ECC71','#9B59B6','#1ABC9C','#E67E22','#34495E','#95A5A6','#D35400','#C0392B','#2980B9','#27AE60','#8E44AD','#16A085'];
+  const total=entries.reduce((s,e)=>s+e.total,0);
+  const ctx=c.getContext('2d');
+  const dpr=window.devicePixelRatio||1;
+  const W=Math.min(320,c.parentElement.clientWidth-28),H=W;
+  c.width=W*dpr;c.height=H*dpr;c.style.width=W+'px';c.style.height=H+'px';
+  ctx.scale(dpr,dpr);
+  const cx=W*.38,cy=H*.5,r=W*.28;
+  let ang=-Math.PI/2;
+  entries.forEach((e,i)=>{
+    const slice=(e.total/total)*Math.PI*2;
+    ctx.fillStyle=colors[i%colors.length];ctx.beginPath();ctx.moveTo(cx,cy);ctx.arc(cx,cy,r,ang,ang+slice);ctx.fill();
+    ang+=slice;
+  });
+  // Legend
+  let ly=20;
+  entries.forEach((e,i)=>{
+    ctx.fillStyle=colors[i%colors.length];ctx.fillRect(W*.7,ly,10,10);
+    ctx.fillStyle='#333';ctx.font='11px sans-serif';ctx.textAlign='left';
+    ctx.fillText(`${e.cat} ${(e.total/total*100).toFixed(1)}%`,W*.7+16,ly+9);
+    ly+=18;
+  });
+}
 
-  main.innerHTML = `
-    <div class="bmi-display">
-      <div class="bmi-value">${latest ? latest.weight.toFixed(1) + ' kg' : '-- kg'}</div>
-      <div class="bmi-label">最新体重${bmi ? ' · BMI ' + bmi + ' (' + bmiLabel(bmi) + ')' : ''}</div>
-      <div style="margin-top:12px;font-size:12px;color:var(--text-light)">
-        身高 <input type="number" id="heightInput" value="${height}" placeholder="cm"
-          style="width:70px;padding:4px 8px;border:1px solid var(--border);border-radius:6px;font-size:13px;text-align:center"> cm
-      </div>
-    </div>
-    ${records.length >= 2 ? `
-      <div class="chart-container"><canvas id="weightChart"></canvas></div>
-    ` : ''}
-    <div class="section-title">历史记录</div>
-    ${records.length === 0 ? '<div class="empty"><div class="icon">⚖️</div><p>还没有体重记录</p></div>' : ''}
-    ${records.slice().reverse().map(r => {
-      const prev = records[records.indexOf(r)-1];
-      const diff = prev ? (r.weight - prev.weight).toFixed(1) : null;
-      return `
-        <div class="list-item" data-id="${r.id}">
-          <div class="cat-icon" style="background:rgba(74,144,217,0.12)">⚖️</div>
-          <div class="info">
-            <div class="title">${r.weight.toFixed(1)} kg</div>
-            <div class="sub">${formatDate(r.date)} ${r.note||''}</div>
-          </div>
-          <div class="amount" style="color:${diff>0?'var(--danger)':diff<0?'var(--success)':'var(--text-light)'}">
-            ${diff ? (diff>0?'+':'')+diff+' kg' : ''}
-          </div>
-          <button class="del-btn" data-del="${r.id}">✕</button>
-        </div>
-      `;
-    }).join('')}
-  `;
+function drawTrend(records){
+  const c=$('#ledgerTrend');if(!c)return;
+  const months=[];const now=new Date();
+  for(let i=5;i>=0;i--){const d=new Date(now.getFullYear(),now.getMonth()-i,1);months.push(d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0'));}
+  const data=months.map(m=>{
+    const recs=records.filter(r=>r.date.startsWith(m));
+    return{month:m.slice(5),income:recs.filter(r=>r.type==='income').reduce((s,r)=>s+r.amount,0),expense:recs.filter(r=>r.type==='expense').reduce((s,r)=>s+r.amount,0)};
+  });
+  const maxVal=Math.max(...data.map(d=>Math.max(d.income,d.expense)),1);
+  const ctx=c.getContext('2d');
+  const dpr=window.devicePixelRatio||1;
+  const W=c.parentElement.clientWidth-28,H=200;
+  c.width=W*dpr;c.height=H*dpr;c.style.width=W+'px';c.style.height=H+'px';
+  ctx.scale(dpr,dpr);
+  const pad={t:20,r:8,b:30,l:44},pw=W-pad.l-pad.r,ph=H-pad.t-pad.b;
+  // Grid
+  for(let i=0;i<=4;i++){const y=pad.t+ph*(1-i/4);ctx.strokeStyle='#eee';ctx.beginPath();ctx.moveTo(pad.l,y);ctx.lineTo(W-pad.r,y);ctx.stroke();ctx.fillStyle='#999';ctx.font='10px sans-serif';ctx.textAlign='right';ctx.fillText(fm(maxVal*i/4),pad.l-6,y+4);}
+  // Bars
+  const bw=Math.min(20,pw/data.length/3);
+  data.forEach((d,i)=>{
+    const x0=pad.l+(i+.5)*pw/data.length;
+    // Income
+    const hi=(d.income/maxVal)*ph;
+    ctx.fillStyle='rgba(39,174,96,.7)';ctx.fillRect(x0-bw,pad.t+ph-hi,bw,hi);
+    // Expense
+    const he=(d.expense/maxVal)*ph;
+    ctx.fillStyle='rgba(231,76,60,.7)';ctx.fillRect(x0,pad.t+ph-he,bw,he);
+    // Label
+    ctx.fillStyle='#666';ctx.font='10px sans-serif';ctx.textAlign='center';ctx.fillText(d.month,x0,H-pad.b+14);
+  });
+  // Legend
+  ctx.fillStyle='rgba(39,174,96,.7)';ctx.fillRect(pad.l,8,8,8);
+  ctx.fillStyle='#666';ctx.font='10px sans-serif';ctx.textAlign='left';ctx.fillText('收入',pad.l+12,16);
+  ctx.fillStyle='rgba(231,76,60,.7)';ctx.fillRect(pad.l+50,8,8,8);
+  ctx.fillText('支出',pad.l+62,16);
+}
 
-  bindDelete(main);
-  $('#heightInput')?.addEventListener('change', e => {
-    localStorage.setItem('wb_height', e.target.value);
+function showLedgerForm(preAmt){
+  showModal('记一笔',`
+    <div class="fg"><div class="type-tgl" id="typeTgl"><button class="inc-act" data-t="income">收入</button><button data-t="expense">支出</button></div></div>
+    <div class="fg"><label>金额</label><input type="number" id="fAmt" placeholder="0.00" step="0.01" min="0" value="${preAmt||''}"></div>
+    <div class="fg"><label>分类</label><div class="cat-grid" id="catGrid"></div></div>
+    <div class="fg"><label>日期</label><input type="date" id="fDate" value="${today()}"></div>
+    <div class="fg"><label>备注</label><input type="text" id="fNote" placeholder="可选"></div>
+  `,async()=>{
+    const type=document.querySelector('#typeTgl .inc-act')?'income':'expense';
+    const typeEl=document.querySelector('#typeTgl .inc-act,#typeTgl .exp-act');
+    const amt=parseFloat($('#fAmt').value);
+    const cat=document.querySelector('#catGrid .sel')?.dataset.cat;
+    if(!amt||amt<=0){toast('请输入金额');throw new Error();}
+    if(!cat){toast('请选择分类');throw new Error();}
+    await dbAdd('ledger',{type:typeEl.classList.contains('inc-act')?'income':'expense',amount:amt,category:cat,date:$('#fDate').value,note:$('#fNote').value.trim(),createdAt:Date.now()});
     renderMain();
   });
-
-  if (records.length >= 2) setTimeout(() => drawWeightChart(records), 50);
+  const tgl=$('#typeTgl');
+  tgl.querySelectorAll('button').forEach(b=>b.addEventListener('click',()=>{tgl.querySelectorAll('button').forEach(x=>{x.className='';});b.className=b.dataset.t==='income'?'inc-act':'exp-act';renderCats(b.dataset.t);}));
+  renderCats('income');
+  function renderCats(t){const g=$('#catGrid');const cats=t==='income'?INC_CATS:EXP_CATS;g.innerHTML=cats.map((c,i)=>`<span class="cat-chip${i===0?' sel':''}" data-cat="${c}">${c}</span>`).join('');g.querySelectorAll('.cat-chip').forEach(c=>c.addEventListener('click',()=>{g.querySelectorAll('.cat-chip').forEach(x=>x.classList.remove('sel'));c.classList.add('sel');}));}
 }
 
-function bmiLabel(bmi) {
-  const v = parseFloat(bmi);
-  if (v < 18.5) return '偏瘦';
-  if (v < 24) return '正常';
-  if (v < 28) return '偏胖';
-  return '肥胖';
+// ==================== WEIGHT ====================
+async function renderWeight(main){
+  const records=(await dbAll('weight')).sort((a,b)=>a.date.localeCompare(b.date));
+  const latest=records[records.length-1];
+  const goal=getWeightGoal();
+  const height=localStorage.getItem('wb_height')||'170';
+  let bmi='',bmiLabel='';
+  if(latest&&height){const h=parseFloat(height)/100;bmi=(latest.weight/(h*h)).toFixed(1);bmiLabel=bmiTag(bmi);}
+
+  // Stats
+  const first=records[0];
+  const totalChange=first&&latest?(latest.weight-first.weight).toFixed(1):null;
+  const avg7=records.length>=7?avgLast(records,7):null;
+  const avg30=records.length>=2?avgLast(records,30):null;
+  const monthRecs=records.filter(r=>r.date.startsWith(month()));
+  const monthChange=monthRecs.length>=2?(monthRecs[monthRecs.length-1].weight-monthRecs[0].weight).toFixed(1):null;
+
+  // Weekly
+  const weeks=calcWeekly(records);
+
+  main.innerHTML=`
+    <div class="bmi-box">
+      <div class="bmi-big">${latest?latest.weight.toFixed(1)+' kg':'-- kg'}</div>
+      <div class="bmi-tag">最新体重${bmi?' · BMI '+bmi+' '+bmiLabel:''}${goal?' · 目标 '+goal.target+' kg':''}</div>
+    </div>
+    ${goal?`<div class="stat-row">
+      <div class="stat-card"><div class="slabel">距目标</div><div class="svalue ${latest&&latest.weight>goal.target?'c-expense':'c-primary'}">${latest?(latest.weight-goal.target).toFixed(1):'--'} kg</div></div>
+      <div class="stat-card"><div class="slabel">已变化</div><div class="svalue ${totalChange>0?'c-expense':'c-primary'}">${totalChange||'--'} kg</div></div>
+    </div>`:''}
+    <div class="stat-row">
+      <div class="stat-card"><div class="slabel">7日均值</div><div class="svalue c-primary">${avg7||'--'} kg</div></div>
+      <div class="stat-card"><div class="slabel">30日均值</div><div class="svalue c-primary">${avg30||'--'} kg</div></div>
+      <div class="stat-card"><div class="slabel">本月变化</div><div class="svalue ${monthChange>0?'c-expense':'c-primary'}">${monthChange||'--'} kg</div></div>
+    </div>
+    ${weeks.length>0?`
+      <div class="stat-row">
+        ${weeks.map(w=>`<div class="stat-card"><div class="slabel">${w.label}</div><div class="svalue" style="font-size:16px">${w.avg}</div><div class="ssub">${w.diff}</div></div>`).join('')}
+      </div>
+    `:''}
+    ${records.length>=2?`<div class="chart-box"><canvas id="wtChart"></canvas></div>`:''}
+    ${goal&&records.length>=5?`<div class="chart-box" style="text-align:center;padding:14px"><div style="font-size:13px;color:var(--text2)">📈 趋势预测</div><div style="font-size:15px;margin-top:4px">${predictGoal(records,goal)}</div></div>`:''}
+    <div class="section-title">历史记录</div>
+    ${records.length===0?'<div class="empty"><div class="eicon">⚖️</div><p>还没有体重记录</p></div>':''}
+    ${records.slice().reverse().map(r=>{
+      const idx=records.indexOf(r);const prev=records[idx-1];
+      const diff=prev?(r.weight-prev.weight).toFixed(1):null;
+      return`<div class="list-item" data-id="${r.id}">
+        <div class="cat-dot" style="background:rgba(74,144,217,.12)">⚖️</div>
+        <div class="linfo"><div class="ltitle">${r.weight.toFixed(1)} kg</div><div class="lsub">${fd(r.date)} ${r.note||''}</div></div>
+        <div class="lamount" style="color:${diff>0?'var(--danger)':diff<0?'var(--success)':'var(--text3)'}">${diff?(diff>0?'+':'')+diff+' kg':''}</div>
+        <button class="ldel" data-del="${r.id}">✕</button>
+      </div>`;
+    }).join('')}
+  `;
+  bindDel(main);
+  if(records.length>=2)setTimeout(()=>drawWeightChart(records,parseFloat(height)),50);
 }
 
-function drawWeightChart(records) {
-  const canvas = $('#weightChart');
-  if (!canvas) return;
-  const ctx = canvas.getContext('2d');
-  const dpr = window.devicePixelRatio || 1;
-  const rect = canvas.parentElement.getBoundingClientRect();
-  const W = rect.width - 32, H = 200;
-  canvas.width = W * dpr; canvas.height = H * dpr;
-  canvas.style.width = W + 'px'; canvas.style.height = H + 'px';
-  ctx.scale(dpr, dpr);
-
-  const pad = { top: 20, right: 16, bottom: 32, left: 48 };
-  const pw = W - pad.left - pad.right, ph = H - pad.top - pad.bottom;
-  const vals = records.map(r => r.weight);
-  const min = Math.floor(Math.min(...vals) - 2);
-  const max = Math.ceil(Math.max(...vals) + 2);
-
-  // Grid
-  ctx.strokeStyle = '#eee'; ctx.lineWidth = 1;
-  for (let i = min; i <= max; i += 2) {
-    const y = pad.top + ph - ((i-min)/(max-min)) * ph;
-    ctx.beginPath(); ctx.moveTo(pad.left, y); ctx.lineTo(W-pad.right, y); ctx.stroke();
-    ctx.fillStyle = '#999'; ctx.font = '11px sans-serif'; ctx.textAlign = 'right';
-    ctx.fillText(i, pad.left - 6, y + 4);
+function bmiTag(b){const v=parseFloat(b);if(v<18.5)return'偏瘦';if(v<24)return'正常';if(v<28)return'偏胖';return'肥胖';}
+function avgLast(records,n){const s=records.slice(-n);return(s.reduce((a,r)=>a+r.weight,0)/s.length).toFixed(1);}
+function calcWeekly(records){
+  if(records.length<7)return[];
+  const weeks=[];
+  const now=new Date();
+  for(let w=3;w>=0;w--){
+    const end=new Date(now);end.setDate(end.getDate()-w*7);
+    const start=new Date(end);start.setDate(start.getDate()-6);
+    const s=start.toISOString().slice(0,10),e=end.toISOString().slice(0,10);
+    const wk=records.filter(r=>r.date>=s&&r.date<=e);
+    if(wk.length===0)continue;
+    const avg=(wk.reduce((a,r)=>a+r.weight,0)/wk.length).toFixed(1);
+    const prev=weeks[weeks.length-1];
+    const diff=prev?(avg-prev.avg).toFixed(1):null;
+    weeks.push({label:`W${4-w}`,avg:avg+'kg',diff:diff?(diff>0?'+'+diff:diff)+'kg':''});
   }
+  return weeks;
+}
+function predictGoal(records,goal){
+  const last5=records.slice(-5);
+  if(last5.length<2)return '数据不足';
+  let sumX=0,sumY=0,sumXY=0,sumX2=0,n=last5.length;
+  last5.forEach((r,i)=>{sumX+=i;sumY+=r.weight;sumXY+=i*r.weight;sumX2+=i*i;});
+  const slope=(n*sumXY-sumX*sumY)/(n*sumX2-sumX*sumX);
+  if(Math.abs(slope)<0.001)return '体重趋于稳定';
+  const days=(goal.target-last5[n-1].weight)/slope;
+  if(days<=0)return slope<0?'已达成目标！🎉':'体重在上升，暂无法预测';
+  const pred=new Date();pred.setDate(pred.getDate()+Math.round(days));
+  return `预计 ${pred.toLocaleDateString('zh-CN')} 达到目标 ${goal.target} kg（约${Math.round(days)}天后）`;
+}
 
-  // X labels
-  ctx.textAlign = 'center';
-  const step = Math.max(1, Math.floor(records.length / 6));
-  records.forEach((r, i) => {
-    if (i % step === 0 || i === records.length - 1) {
-      const x = pad.left + (i/(records.length-1)) * pw;
-      ctx.fillStyle = '#999'; ctx.font = '10px sans-serif';
-      ctx.fillText(formatDate(r.date).slice(5), x, H - pad.bottom + 16);
-    }
-  });
-
-  // Line
-  ctx.strokeStyle = '#4A90D9'; ctx.lineWidth = 2.5; ctx.lineJoin = 'round';
-  ctx.beginPath();
-  records.forEach((r, i) => {
-    const x = pad.left + (i/(records.length-1)) * pw;
-    const y = pad.top + ph - ((r.weight-min)/(max-min)) * ph;
-    i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
-  });
+function drawWeightChart(records,height){
+  const c=$('#wtChart');if(!c)return;
+  const ctx=c.getContext('2d');
+  const dpr=window.devicePixelRatio||1;
+  const W=c.parentElement.clientWidth-28,H=220;
+  c.width=W*dpr;c.height=H*dpr;c.style.width=W+'px';c.style.height=H+'px';
+  ctx.scale(dpr,dpr);
+  const pad={t:20,r:16,b:32,l:48},pw=W-pad.l-pad.r,ph=H-pad.t-pad.b;
+  const wts=records.map(r=>r.weight);
+  const bmis=height?records.map(r=>(r.weight/((height/100)**2)).toFixed(1)):[];
+  const minW=Math.floor(Math.min(...wts)-2),maxW=Math.ceil(Math.max(...wts)+2);
+  const minB=bmis.length?Math.floor(Math.min(...bmis.map(Number))-2):0;
+  const maxB=bmis.length?Math.ceil(Math.max(...bmis.map(Number))+2):0;
+  // Grid
+  ctx.strokeStyle='#eee';ctx.lineWidth=1;
+  for(let i=minW;i<=maxW;i+=2){
+    const y=pad.t+ph-((i-minW)/(maxW-minW))*ph;
+    ctx.beginPath();ctx.moveTo(pad.l,y);ctx.lineTo(W-pad.r,y);ctx.stroke();
+    ctx.fillStyle='#999';ctx.font='10px sans-serif';ctx.textAlign='right';ctx.fillText(i,pad.l-6,y+4);
+  }
+  // Weight line
+  ctx.strokeStyle='#4A90D9';ctx.lineWidth=2.5;ctx.lineJoin='round';ctx.beginPath();
+  records.forEach((r,i)=>{const x=pad.l+(i/(records.length-1))*pw;const y=pad.t+ph-((r.weight-minW)/(maxW-minW))*ph;i===0?ctx.moveTo(x,y):ctx.lineTo(x,y);});
   ctx.stroke();
-
+  // BMI line (right axis)
+  if(bmis.length){
+    ctx.strokeStyle='#F39C12';ctx.lineWidth=2;ctx.setLineDash([4,3]);ctx.beginPath();
+    records.forEach((r,i)=>{const x=pad.l+(i/(records.length-1))*pw;const bmi=parseFloat(bmis[i]);const y=pad.t+ph-((bmi-minB)/(maxB-minB))*ph;i===0?ctx.moveTo(x,y):ctx.lineTo(x,y);});
+    ctx.stroke();ctx.setLineDash([]);
+    // BMI labels on right
+    for(let i=minB;i<=maxB;i+=2){
+      const y=pad.t+ph-((i-minB)/(maxB-minB))*ph;
+      ctx.fillStyle='#F39C12';ctx.font='9px sans-serif';ctx.textAlign='left';ctx.fillText(i,pad.l+pw+2,y+3);
+    }
+  }
+  // X labels
+  ctx.fillStyle='#999';ctx.font='10px sans-serif';ctx.textAlign='center';
+  const step=Math.max(1,Math.floor(records.length/6));
+  records.forEach((r,i)=>{if(i%step===0||i===records.length-1)ctx.fillText(fd(r.date).slice(5),pad.l+(i/(records.length-1))*pw,H-pad.b+16);});
   // Dots
-  records.forEach((r, i) => {
-    const x = pad.left + (i/(records.length-1)) * pw;
-    const y = pad.top + ph - ((r.weight-min)/(max-min)) * ph;
-    ctx.fillStyle = '#4A90D9'; ctx.beginPath(); ctx.arc(x, y, 4, 0, Math.PI*2); ctx.fill();
-    ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(x, y, 2, 0, Math.PI*2); ctx.fill();
+  records.forEach((r,i)=>{const x=pad.l+(i/(records.length-1))*pw;const y=pad.t+ph-((r.weight-minW)/(maxW-minW))*ph;ctx.fillStyle='#4A90D9';ctx.beginPath();ctx.arc(x,y,3.5,0,Math.PI*2);ctx.fill();ctx.fillStyle='#fff';ctx.beginPath();ctx.arc(x,y,1.5,0,Math.PI*2);ctx.fill();});
+  // Legend
+  ctx.fillStyle='#4A90D9';ctx.fillRect(pad.l,6,10,3);ctx.fillStyle='#666';ctx.font='10px sans-serif';ctx.textAlign='left';ctx.fillText('体重(kg)',pad.l+14,10);
+  if(bmis.length){ctx.fillStyle='#F39C12';ctx.fillRect(pad.l+70,6,10,3);ctx.fillText('BMI',pad.l+84,10);}
+}
+
+function showWeightForm(){
+  showModal('记录体重',`
+    <div class="fg"><label>体重 (kg)</label><input type="number" id="fWt" placeholder="65.0" step="0.1" min="20" max="300"></div>
+    <div class="fg"><label>日期</label><input type="date" id="fDate" value="${today()}"></div>
+    <div class="fg"><label>备注</label><input type="text" id="fNote" placeholder="可选"></div>
+  `,async()=>{
+    const wt=parseFloat($('#fWt').value);if(!wt||wt<20||wt>300){toast('请输入有效体重');throw new Error();}
+    const date=$('#fDate').value;
+    const existing=await dbAll('weight');const dup=existing.find(r=>r.date===date);
+    if(dup)await dbPut('weight',{...dup,weight:wt,note:$('#fNote').value.trim()});
+    else await dbAdd('weight',{weight:wt,date,note:$('#fNote').value.trim(),createdAt:Date.now()});
+    renderMain();
   });
 }
 
-// ---- Car ----
-async function renderCar(main) {
-  const records = (await dbGetAll('car')).sort((a,b) => b.date.localeCompare(a.date) || b.id - a.id);
-  const filtered = carSubTab === 'all' ? records : records.filter(r => r.carType === carSubTab);
+// ==================== CAR ====================
+async function renderCar(main){
+  const info=getCarInfo();
+  const records=(await dbAll('car')).sort((a,b)=>b.date.localeCompare(a.date)||b.id-a.id);
+  const filtered=carTab==='all'?records:records.filter(r=>r.carType===carTab);
+
+  // Maintenance alert
+  const maintAlert=records.filter(r=>r.carType==='maintenance'&&r.nextDate).sort((a,b)=>b.date.localeCompare(a.date))[0];
+  const maintWarn=maintAlert&&maintAlert.nextDate&&maintAlert.nextDate<=new Date().toISOString().slice(0,10);
 
   // Fuel stats
-  const fuelRecords = records.filter(r => r.carType === 'fuel').sort((a,b) => a.date.localeCompare(b.date));
-  let fuelStat = '';
-  if (fuelRecords.length >= 2) {
-    let totalKm = 0, totalL = 0;
-    for (let i = 1; i < fuelRecords.length; i++) {
-      totalKm += fuelRecords[i].mileage - fuelRecords[i-1].mileage;
-      totalL += fuelRecords[i].liters;
-    }
-    const avg = totalKm > 0 ? (totalL / totalKm * 100).toFixed(1) : '--';
-    fuelStat = `<div class="fuel-stat"><div class="big">${avg}</div><div class="unit">百公里油耗 (L/100km)</div></div>`;
+  const fuelRecs=records.filter(r=>r.carType==='fuel').sort((a,b)=>a.date.localeCompare(b.date));
+  let fuelStat='',fuelChart=false;
+  if(fuelRecs.length>=2){
+    let tKm=0,tL=0;
+    for(let i=1;i<fuelRecs.length;i++){tKm+=fuelRecs[i].mileage-fuelRecs[i-1].mileage;tL+=fuelRecs[i].liters;}
+    const avg=tKm>0?(tL/tKm*100).toFixed(1):'--';
+    fuelStat=`<div class="stat-card"><div class="slabel">百公里油耗</div><div class="svalue c-primary">${avg} L</div></div>`;
+    fuelChart=fuelRecs.length>=2;
   }
 
-  const totalExpense = filtered.reduce((s,r) => s + (r.amount||0), 0);
+  const totalExp=filtered.reduce((s,r)=>s+(r.amount||0),0);
+  // Monthly expense
+  const mRecs=filtered.filter(r=>r.date.startsWith(month()));
+  const mExp=mRecs.reduce((s,r)=>s+(r.amount||0),0);
 
-  main.innerHTML = `
-    <div class="sub-tabs">
-      <div class="sub-tab${carSubTab==='fuel'?' active':''}" data-tab="fuel">⛽ 加油</div>
-      <div class="sub-tab${carSubTab==='maintenance'?' active':''}" data-tab="maintenance">🔧 保养</div>
-      <div class="sub-tab${carSubTab==='other'?' active':''}" data-tab="other">📦 其他</div>
-      <div class="sub-tab${carSubTab==='all'?' active':''}" data-tab="all">📋 全部</div>
+  main.innerHTML=`
+    ${info?`
+      <div class="carinfo-card">
+        <div class="ci-row"><span class="ci-label">品牌</span><span>${info.brand} ${info.model}</span></div>
+        <div class="ci-row"><span class="ci-label">车牌</span><span>${info.plate}</span></div>
+        <div class="ci-row"><span class="ci-label">购车日期</span><span>${info.buyDate}</span></div>
+        <div class="ci-row"><span class="ci-label">当前里程</span><span>${info.currentMileage} km</span></div>
+        <span class="ci-edit" id="editCarInfo">✎ 编辑车辆信息</span>
+      </div>
+    `:`<div class="carinfo-card" style="text-align:center"><p style="margin-bottom:8px;color:var(--text3)">尚未设置车辆信息</p><span class="ci-edit" id="editCarInfo" style="font-size:14px">✎ 填写车辆信息</span></div>`}
+    ${maintWarn?`<div class="stat-card" style="margin-bottom:12px;background:#fff3f3;border:1px solid rgba(231,76,60,.2)"><div class="slabel" style="color:var(--danger)">⚠️ 保养提醒</div><div class="svalue" style="font-size:15px;color:var(--danger)">${maintAlert.note||'保养'} · ${maintAlert.nextDate}<span class="alert-badge">到期</span></div></div>`:''}
+    <div class="stat-row">
+      <div class="stat-card"><div class="slabel">本月费用</div><div class="svalue c-expense">${fm(mExp)}</div></div>
+      <div class="stat-card"><div class="slabel">全部记录</div><div class="svalue c-primary">${filtered.length}</div></div>
+      <div class="stat-card"><div class="slabel">总计</div><div class="svalue c-expense">${fm(totalExp)}</div></div>
+      ${fuelStat}
     </div>
-    ${fuelStat}
-    <div class="summary-row">
-      <div class="summary-card"><div class="label">记录数</div><div class="value" style="color:var(--primary)">${filtered.length}</div></div>
-      <div class="summary-card"><div class="label">合计费用</div><div class="value expense">${fmtMoney(totalExpense)}</div></div>
+    ${fuelChart?`<div class="chart-box"><canvas id="fuelChart"></canvas></div>`:''}
+    <div class="subtabs">
+      ${CAR_SUBTABS.map(t=>`<div class="subtab${t.id===carTab?' act':''}" data-tab="${t.id}">${t.icon} ${t.label.replace(/[^\u4e00-\u9fa5]/g,'')}</div>`).join('')}
     </div>
     <div class="section-title">记录列表</div>
-    ${filtered.length === 0 ? '<div class="empty"><div class="icon">🚗</div><p>还没有用车记录</p></div>' : ''}
-    ${filtered.map(r => {
-      const catName = CAR_CATS.find(c => c.includes(r.carType === 'fuel' ? '加油' : r.carType === 'maintenance' ? '保养' : '')) || '📦 其他';
-      return `
-        <div class="list-item" data-id="${r.id}">
-          <div class="cat-icon" style="background:rgba(74,144,217,0.12)">${catName.slice(0,2)}</div>
-          <div class="info">
-            <div class="title">${catName.slice(2)}</div>
-            <div class="sub">${formatDate(r.date)} ${r.note||''}${r.mileage ? ' · ' + r.mileage + 'km' : ''}${r.liters ? ' · ' + r.liters + 'L' : ''}</div>
-          </div>
-          <div class="amount expense">-${fmtMoney(r.amount||0)}</div>
-          <button class="del-btn" data-del="${r.id}">✕</button>
-        </div>
-      `;
+    ${filtered.length===0?'<div class="empty"><div class="eicon">🚗</div><p>暂无记录</p></div>':''}
+    ${filtered.map(r=>{
+      const icon=r.carType==='fuel'?'⛽':r.carType==='maintenance'?'🔧':'📦';
+      const name=r.carType==='fuel'?'加油':r.carType==='maintenance'?'保养':r.note||'其他';
+      return`<div class="list-item" data-id="${r.id}">
+        <div class="cat-dot" style="background:rgba(74,144,217,.12)">${icon}</div>
+        <div class="linfo"><div class="ltitle">${name}${r.nextDate?` <span style="font-size:10px;color:var(--text3)">下次:${r.nextDate}</span>`:''}</div>
+        <div class="lsub">${fd(r.date)} ${r.mileage?r.mileage+'km ':''}${r.liters?r.liters+'L ':''}${r.unitPrice?'单价'+r.unitPrice+' ':''}</div></div>
+        <div class="lamount out">-${fm(r.amount||0)}</div>
+        <button class="ldel" data-del="${r.id}">✕</button>
+      </div>`;
     }).join('')}
   `;
-
-  bindDelete(main);
-  main.querySelectorAll('.sub-tab').forEach(el => {
-    el.addEventListener('click', () => { carSubTab = el.dataset.tab; renderMain(); });
-  });
+  bindDel(main);
+  main.querySelectorAll('.subtab').forEach(el=>el.addEventListener('click',()=>{carTab=el.dataset.tab;renderMain();}));
+  $('#editCarInfo')?.addEventListener('click',showCarInfoForm);
+  if(fuelChart)setTimeout(()=>drawFuelChart(fuelRecs),50);
 }
 
-function bindDelete(container) {
-  container.querySelectorAll('[data-del]').forEach(btn => {
-    btn.addEventListener('click', e => {
-      e.stopPropagation();
-      showConfirm('确定删除这条记录吗？', async () => {
-        const store = currentModule === 'car' ? 'car' : currentModule;
-        await dbDelete(store, Number(btn.dataset.del));
-        renderMain();
-      });
-    });
-  });
-}
-
-// ==================== Modal ====================
-function showModal(title, content, onSubmit) {
-  const overlay = $('#modalOverlay');
-  overlay.innerHTML = `
-    <div class="modal">
-      <h3>${title}</h3>
-      ${content}
-      <button class="btn-primary" id="modalSubmit">确定</button>
-    </div>
-  `;
-  overlay.classList.remove('hidden');
-
-  overlay.addEventListener('click', e => { if (e.target === overlay) closeModal(); });
-  $('#modalSubmit').addEventListener('click', async () => {
-    try { await onSubmit(); closeModal(); } catch(err) { console.error(err); }
-  });
-}
-
-function closeModal() {
-  $('#modalOverlay').classList.add('hidden');
-  editingId = null;
-}
-
-function showConfirm(msg, onConfirm) {
-  const overlay = $('#confirmOverlay');
-  overlay.innerHTML = `
-    <div class="confirm-box">
-      <p>${msg}</p>
-      <div class="btns">
-        <button class="btn-cancel" id="confirmCancel">取消</button>
-        <button class="btn-confirm" id="confirmOk">删除</button>
-      </div>
-    </div>
-  `;
-  overlay.classList.remove('hidden');
-  $('#confirmCancel').onclick = () => overlay.classList.add('hidden');
-  $('#confirmOk').onclick = async () => {
-    overlay.classList.add('hidden');
-    await onConfirm();
-  };
-}
-
-// ==================== Add/Edit Forms ====================
-function showLedgerForm() {
-  showModal('记一笔', `
-    <div class="form-group">
-      <div class="type-toggle" id="typeToggle">
-        <button class="income-btn active" data-type="income">收入</button>
-        <button class="expense-btn" data-type="expense">支出</button>
-      </div>
-    </div>
-    <div class="form-group"><label>金额</label><input type="number" id="fAmount" placeholder="0.00" step="0.01" min="0"></div>
-    <div class="form-group"><label>分类</label><div class="cat-chips" id="catChips"></div></div>
-    <div class="form-group"><label>日期</label><input type="date" id="fDate" value="${today()}"></div>
-    <div class="form-group"><label>备注</label><input type="text" id="fNote" placeholder="可选"></div>
-  `, async () => {
-    const type = document.querySelector('#typeToggle .active').dataset.type;
-    const amount = parseFloat($('#fAmount').value);
-    const cat = document.querySelector('#catChips .selected')?.dataset.cat;
-    if (!amount || amount <= 0) { alert('请输入金额'); throw new Error(); }
-    if (!cat) { alert('请选择分类'); throw new Error(); }
-    await dbAdd('ledger', { type, amount, category: cat, date: $('#fDate').value, note: $('#fNote').value.trim(), createdAt: Date.now() });
-    renderMain();
-  });
-
-  // Type toggle
-  const toggle = $('#typeToggle');
-  toggle.querySelectorAll('button').forEach(b => b.addEventListener('click', () => {
-    toggle.querySelectorAll('button').forEach(x => x.classList.remove('active'));
-    b.classList.add('active');
-    renderCatChips(b.dataset.type);
-  }));
-  renderCatChips('income');
-
-  function renderCatChips(type) {
-    const chips = $('#catChips');
-    const cats = LEDGER_CATS[type];
-    chips.innerHTML = cats.map((c,i) => `<span class="cat-chip${i===0?' selected':''}" data-cat="${c}">${c}</span>`).join('');
-    chips.querySelectorAll('.cat-chip').forEach(c => c.addEventListener('click', () => {
-      chips.querySelectorAll('.cat-chip').forEach(x => x.classList.remove('selected'));
-      c.classList.add('selected');
-    }));
+function drawFuelChart(fuelRecs){
+  const c=$('#fuelChart');if(!c)return;
+  const last=fuelRecs.slice(-10);
+  if(last.length<2)return;
+  const data=[];
+  for(let i=1;i<last.length;i++){
+    const km=last[i].mileage-last[i-1].mileage;
+    const l=last[i].liters;
+    data.push({label:fd(last[i].date).slice(5),val:km>0?(l/km*100).toFixed(1):0});
   }
+  const ctx=c.getContext('2d');
+  const dpr=window.devicePixelRatio||1;
+  const W=c.parentElement.clientWidth-28,H=180;
+  c.width=W*dpr;c.height=H*dpr;c.style.width=W+'px';c.style.height=H+'px';
+  ctx.scale(dpr,dpr);
+  const pad={t:20,r:12,b:30,l:40},pw=W-pad.l-pad.r,ph=H-pad.t-pad.b;
+  const maxV=Math.max(...data.map(d=>parseFloat(d.val)))+2;
+  const minV=Math.max(0,Math.min(...data.map(d=>parseFloat(d.val)))-2);
+  // Grid
+  for(let i=0;i<=4;i++){const v=minV+(maxV-minV)*i/4;const y=pad.t+ph*(1-i/4);ctx.strokeStyle='#eee';ctx.beginPath();ctx.moveTo(pad.l,y);ctx.lineTo(W-pad.r,y);ctx.stroke();ctx.fillStyle='#999';ctx.font='9px sans-serif';ctx.textAlign='right';ctx.fillText(v.toFixed(1),pad.l-4,y+3);}
+  // Line
+  ctx.strokeStyle='#F39C12';ctx.lineWidth=2.5;ctx.lineJoin='round';ctx.beginPath();
+  data.forEach((d,i)=>{const x=pad.l+(i/(data.length-1))*pw;const y=pad.t+ph-((parseFloat(d.val)-minV)/(maxV-minV))*ph;i===0?ctx.moveTo(x,y):ctx.lineTo(x,y);});
+  ctx.stroke();
+  // Dots + labels
+  data.forEach((d,i)=>{const x=pad.l+(i/(data.length-1))*pw;const y=pad.t+ph-((parseFloat(d.val)-minV)/(maxV-minV))*ph;ctx.fillStyle='#F39C12';ctx.beginPath();ctx.arc(x,y,3.5,0,Math.PI*2);ctx.fill();ctx.fillStyle='#666';ctx.font='9px sans-serif';ctx.textAlign='center';ctx.fillText(d.label,x,H-pad.b+14);});
+  ctx.fillStyle='#666';ctx.font='10px sans-serif';ctx.textAlign='center';ctx.fillText('百公里油耗趋势 (L/100km)',W/2,12);
 }
 
-function showWeightForm() {
-  showModal('记录体重', `
-    <div class="form-group"><label>体重 (kg)</label><input type="number" id="fWeight" placeholder="65.0" step="0.1" min="20" max="300"></div>
-    <div class="form-group"><label>日期</label><input type="date" id="fDate" value="${today()}"></div>
-    <div class="form-group"><label>备注</label><input type="text" id="fNote" placeholder="可选"></div>
-  `, async () => {
-    const weight = parseFloat($('#fWeight').value);
-    if (!weight || weight < 20 || weight > 300) { alert('请输入有效体重'); throw new Error(); }
-    const date = $('#fDate').value;
-    // Check duplicate date
-    const existing = await dbGetAll('weight');
-    const dup = existing.find(r => r.date === date);
-    if (dup) {
-      await dbPut('weight', { ...dup, weight, note: $('#fNote').value.trim() });
-    } else {
-      await dbAdd('weight', { weight, date, note: $('#fNote').value.trim(), createdAt: Date.now() });
-    }
-    renderMain();
+function showCarInfoForm(){
+  const info=getCarInfo()||{};
+  showModal(info.brand?'编辑车辆信息':'设置车辆信息',`
+    <div class="fg"><label>品牌</label><input type="text" id="ciBrand" placeholder="例如：丰田" value="${info.brand||''}"></div>
+    <div class="fg"><label>型号</label><input type="text" id="ciModel" placeholder="例如：卡罗拉" value="${info.model||''}"></div>
+    <div class="fg"><label>车牌号</label><input type="text" id="ciPlate" placeholder="例如：京A12345" value="${info.plate||''}"></div>
+    <div class="fg"><label>购车日期</label><input type="date" id="ciBuyDate" value="${info.buyDate||''}"></div>
+    <div class="fg"><label>当前里程 (km)</label><input type="number" id="ciMileage" placeholder="50000" value="${info.currentMileage||''}"></div>
+  `,async()=>{
+    const data={brand:$('#ciBrand').value.trim(),model:$('#ciModel').value.trim(),plate:$('#ciPlate').value.trim(),buyDate:$('#ciBuyDate').value,currentMileage:parseInt($('#ciMileage').value)||0};
+    if(!data.brand||!data.model){toast('请填写品牌和型号');throw new Error();}
+    setCarInfo(data);renderMain();
   });
 }
 
-function showCarForm() {
-  const isFuel = carSubTab === 'fuel';
-  const isMaint = carSubTab === 'maintenance';
-  const type = isFuel ? 'fuel' : isMaint ? 'maintenance' : 'other';
-
-  showModal('添加用车记录', `
-    <div class="form-group"><label>类型</label>
-      <select id="fCarType" style="width:100%;padding:10px;border:1px solid var(--border);border-radius:8px;font-size:15px;background:var(--bg)">
+function showCarForm(){
+  const isFuel=carTab==='fuel',isMaint=carTab==='maintenance';
+  const type=isFuel?'fuel':isMaint?'maintenance':'other';
+  showModal('添加用车记录',`
+    <div class="fg"><label>类型</label>
+      <select id="fCarType" style="width:100%;padding:9px 12px;border:1px solid var(--border);border-radius:var(--radius-sm);font-size:14px;background:var(--bg)">
         <option value="fuel" ${type==='fuel'?'selected':''}>⛽ 加油</option>
         <option value="maintenance" ${type==='maintenance'?'selected':''}>🔧 保养</option>
         <option value="other" ${type==='other'?'selected':''}>📦 其他</option>
       </select>
     </div>
-    ${isFuel ? `
-      <div class="form-group"><label>当前里程 (km)</label><input type="number" id="fMileage" placeholder="50000"></div>
-      <div class="form-group"><label>加油量 (L)</label><input type="number" id="fLiters" placeholder="45" step="0.01"></div>
-    ` : ''}
-    <div class="form-group"><label>金额</label><input type="number" id="fAmount" placeholder="0.00" step="0.01"></div>
-    <div class="form-group"><label>日期</label><input type="date" id="fDate" value="${today()}"></div>
-    <div class="form-group"><label>备注</label><input type="text" id="fNote" placeholder="可选"></div>
-  `, async () => {
-    const carType = $('#fCarType').value;
-    const amount = parseFloat($('#fAmount').value) || 0;
-    const date = $('#fDate').value;
-    const note = $('#fNote').value.trim();
-    const record = { carType, amount, date, note, createdAt: Date.now() };
-    if (carType === 'fuel') {
-      record.mileage = parseFloat($('#fMileage').value) || 0;
-      record.liters = parseFloat($('#fLiters').value) || 0;
+    ${isFuel?`
+      <div class="fg"><label>当前里程 (km)</label><input type="number" id="fMileage" placeholder="50000"></div>
+      <div class="fg-row"><div class="fg"><label>单价 (元/L)</label><input type="number" id="fPrice" placeholder="8.00" step="0.01"></div><div class="fg"><label>加油量 (L)</label><input type="number" id="fLiters" placeholder="45" step="0.01"></div></div>
+      <div class="fg"><label>金额 (元)</label><input type="number" id="fAmt" placeholder="自动计算" step="0.01"></div>
+    `:isMaint?`
+      <div class="fg"><label>保养项目</label><input type="text" id="fNote" placeholder="例如：更换机油"></div>
+      <div class="fg-row"><div class="fg"><label>费用</label><input type="number" id="fAmt" placeholder="0.00" step="0.01"></div><div class="fg"><label>下次保养里程</label><input type="number" id="fNextKm" placeholder="60000"></div></div>
+      <div class="fg"><label>下次保养日期</label><input type="date" id="fNextDate"></div>
+    `:`
+      <div class="fg"><label>费用类别</label><div class="cat-grid" id="otherCatGrid">${OTHER_CATS.map((c,i)=>`<span class="cat-chip${i===0?' sel':''}" data-cat="${c}">${c}</span>`).join('')}</div></div>
+      <div class="fg"><label>金额</label><input type="number" id="fAmt" placeholder="0.00" step="0.01"></div>
+      <div class="fg"><label>备注</label><input type="text" id="fNote" placeholder="可选"></div>
+    `}
+    <div class="fg"><label>日期</label><input type="date" id="fDate" value="${today()}"></div>
+  `,async()=>{
+    const ct=$('#fCarType').value;
+    const amt=parseFloat($('#fAmt').value)||0;
+    const date=$('#fDate').value;
+    const rec={carType:ct,amount:amt,date,note:'',createdAt:Date.now()};
+    if(ct==='fuel'){
+      rec.mileage=parseFloat($('#fMileage').value)||0;
+      const price=parseFloat($('#fPrice').value)||0,liters=parseFloat($('#fLiters').value)||0;
+      if(price&&liters)rec.amount=price*liters;
+      else if(amt&&price)rec.liters=amt/price;
+      else if(amt&&liters)rec.unitPrice=amt/liters;
+      rec.liters=liters||rec.liters||0;rec.unitPrice=price||rec.unitPrice||0;
+      // Update car mileage
+      if(rec.mileage){const info=getCarInfo();if(info){info.currentMileage=rec.mileage;setCarInfo(info);}}
+    }else if(ct==='maintenance'){
+      rec.note=$('#fNote').value.trim();
+      rec.nextMileage=parseInt($('#fNextKm').value)||0;
+      rec.nextDate=$('#fNextDate').value||'';
+    }else{
+      const cat=document.querySelector('#otherCatGrid .sel')?.dataset.cat||OTHER_CATS[0];
+      rec.note=cat+' '+($('#fNote')?.value?.trim()||'');
     }
-    if (!date) { alert('请选择日期'); throw new Error(); }
-    await dbAdd('car', record);
-    renderMain();
+    if(!date){toast('请选择日期');throw new Error();}
+    await dbAdd('car',rec);renderMain();
   });
+  // Fuel auto calc
+  if(isFuel){
+    ['#fPrice','#fLiters'].forEach(s=>{const el=document.querySelector(s);if(el)el.addEventListener('input',()=>{const p=parseFloat($('#fPrice').value)||0,l=parseFloat($('#fLiters').value)||0;if(p&&l)$('#fAmt').value=(p*l).toFixed(2);});});
+    $('#fAmt').addEventListener('input',()=>{const a=parseFloat($('#fAmt').value)||0,p=parseFloat($('#fPrice').value)||0,l=parseFloat($('#fLiters').value)||0;if(a&&p&&!l)$('#fLiters').value=(a/p).toFixed(2);else if(a&&l&&!p)$('#fPrice').value=(a/l).toFixed(2);});
+  }
+  // Other cat chips
+  if(!isFuel&&!isMaint){document.querySelectorAll('#otherCatGrid .cat-chip').forEach(c=>c.addEventListener('click',()=>{document.querySelectorAll('#otherCatGrid .cat-chip').forEach(x=>x.classList.remove('sel'));c.classList.add('sel');}));}
+  // Type change
+  $('#fCarType').addEventListener('change',function(){carTab=this.value;showCarForm();});
+}
+
+// ==================== SETTINGS ====================
+async function renderSettings(main){
+  const info=getCarInfo();
+  const goal=getWeightGoal();
+  const height=localStorage.getItem('wb_height')||'170';
+  main.innerHTML=`
+    <div class="setting-group"><h4>🚗 车辆信息</h4>
+      ${info?`
+        <div class="setting-item"><span class="si-label">${info.brand} ${info.model}</span><span class="si-val">${info.plate}</span><span class="si-btn" id="setCarBtn">编辑</span></div>
+      `:`<div class="setting-item"><span class="si-label">未设置</span><span class="si-btn" id="setCarBtn">设置</span></div>`}
+    </div>
+    <div class="setting-group"><h4>⚖️ 体重设置</h4>
+      <div class="setting-item"><span class="si-label">身高</span><span class="si-val">${height} cm</span><span class="si-btn" id="setHeightBtn">修改</span></div>
+      <div class="setting-item"><span class="si-label">目标体重</span><span class="si-val">${goal?goal.target+' kg':'未设置'}</span><span class="si-btn" id="setGoalBtn">${goal?'修改':'设置'}</span></div>
+    </div>
+    <div class="setting-group"><h4>📦 数据管理</h4>
+      <div class="setting-item"><span class="si-label">导出数据 (CSV)</span><span class="si-btn" id="exportBtn">导出</span></div>
+      <div class="setting-item"><span class="si-label">清除所有数据</span><span class="si-btn danger" id="clearBtn">清除</span></div>
+    </div>
+  `;
+  $('#setCarBtn').addEventListener('click',showCarInfoForm);
+  $('#setHeightBtn').addEventListener('click',()=>{const h=prompt('输入身高 (cm)',height);if(h&&!isNaN(h)&&h>50&&h<250){localStorage.setItem('wb_height',h);renderMain();}});
+  $('#setGoalBtn').addEventListener('click',()=>{const g=prompt('输入目标体重 (kg)',goal?goal.target:'');if(g&&!isNaN(g)&&g>20&&g<300){setWeightGoal({target:parseFloat(g),startDate:today()});renderMain();}});
+  $('#exportBtn').addEventListener('click',exportCSV);
+  $('#clearBtn').addEventListener('click',()=>showConfirm('确定清除所有数据吗？此操作不可恢复！',async()=>{await Promise.all(['ledger','weight','car'].map(s=>dbAll(s).then(rs=>Promise.all(rs.map(r=>dbDel(s,r.id))))));localStorage.clear();toast('数据已清除');renderMain();}));
+}
+
+async function exportCSV(){
+  const ledger=await dbAll('ledger');const weight=await dbAll('weight');const car=await dbAll('car');
+  let csv='\uFEFF';// BOM for Excel Chinese
+  csv+='=== 记账记录 ===\n类型,分类,金额,日期,备注\n';
+  ledger.forEach(r=>csv+=`${r.type==='income'?'收入':'支出'},${r.category},${r.amount},${r.date},${r.note||''}\n`);
+  csv+='\n=== 体重记录 ===\n体重(kg),日期,备注\n';
+  weight.forEach(r=>csv+=`${r.weight},${r.date},${r.note||''}\n`);
+  csv+='\n=== 用车记录 ===\n类型,金额,日期,里程,升数,备注\n';
+  car.forEach(r=>csv+=`${r.carType},${r.amount||0},${r.date},${r.mileage||''},${r.liters||''},${r.note||''}\n`);
+  const blob=new Blob([csv],{type:'text/csv;charset=utf-8'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='workbench_export.csv';a.click();
+  toast('导出成功');
+}
+
+// ==================== Shared ====================
+function showModal(title,content,onSubmit){
+  const o=$('#modalOverlay');
+  o.innerHTML=`<div class="modal"><h3>${title}</h3>${content}<button class="btn-primary" id="modalSubmit">确定</button></div>`;
+  o.classList.remove('hidden');
+  o.addEventListener('click',e=>{if(e.target===o)closeModal();});
+  $('#modalSubmit').addEventListener('click',async()=>{try{await onSubmit();closeModal();}catch(e){}});
+}
+function closeModal(){$('#modalOverlay').classList.add('hidden');}
+function showConfirm(msg,fn){
+  const o=$('#confirmOverlay');
+  o.innerHTML=`<div class="confirm-box"><p>${msg}</p><div class="cbtns"><button class="btn-cancel" id="cfmCancel">取消</button><button class="btn-danger" id="cfmOk">确定</button></div></div>`;
+  o.classList.remove('hidden');
+  $('#cfmCancel').onclick=()=>o.classList.add('hidden');
+  $('#cfmOk').onclick=async()=>{o.classList.add('hidden');await fn();};
+}
+function bindDel(container){
+  container.querySelectorAll('[data-del]').forEach(b=>b.addEventListener('click',e=>{e.stopPropagation();showConfirm('确定删除这条记录吗？',async()=>{const s=curMod==='car'?'car':curMod;await dbDel(s,Number(b.dataset.del));renderMain();});}));
 }
 
 // ==================== Init ====================
-async function init() {
+async function init(){
   await openDB();
-
-  renderNav();
+  renderSidebar();
   renderMain();
-
-  // FAB click
-  $('#fab').addEventListener('click', () => {
-    if (currentModule === 'ledger') showLedgerForm();
-    else if (currentModule === 'weight') showWeightForm();
-    else if (currentModule === 'car') showCarForm();
+  $('#menuBtn').addEventListener('click',toggleSidebar);
+  $('#sidebarOverlay').addEventListener('click',closeSidebar);
+  $('#fab').addEventListener('click',()=>{
+    if(curMod==='ledger')showLedgerForm();
+    else if(curMod==='weight')showWeightForm();
+    else if(curMod==='car')showCarForm();
+    else if(curMod==='settings')renderSettings($('#main'));
   });
-
-  // Register SW
-  if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('sw.js').catch(() => {});
-  }
-
-  // Resize handler for chart
-  window.addEventListener('resize', () => {
-    if (currentModule === 'weight') renderMain();
-  });
+  // Swipe to close sidebar
+  let touchX=0;
+  document.addEventListener('touchstart',e=>{touchX=e.touches[0].clientX;});
+  document.addEventListener('touchend',e=>{if(touchX-e.changedTouches[0].clientX>60)closeSidebar();});
+  if('serviceWorker'in navigator)navigator.serviceWorker.register('sw.js').catch(()=>{});
+  window.addEventListener('resize',()=>{if(curMod==='weight'||curMod==='ledger')renderMain();});
 }
-
-document.addEventListener('DOMContentLoaded', init);
+document.addEventListener('DOMContentLoaded',init);
 </script>
 </body>
 </html>
