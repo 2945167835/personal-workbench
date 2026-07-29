@@ -4,338 +4,270 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="工作台">
-<meta name="theme-color" content="#0f1923">
+<meta name="theme-color" content="#f5f5f5">
 <link rel="manifest" href="manifest.json">
 <title>个人工作台</title>
 <style>
-/* ====== Reset & Variables ====== */
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 :root{
-  --primary:#4A90D9;--primary-dark:#357ABD;--danger:#E74C3C;--success:#27AE60;--warning:#F39C12;
-  --bg:#f0f2f5;--card:#fff;--text:#333;--text2:#666;--text3:#999;--border:#e8e8e8;
-  --shadow:0 2px 12px rgba(0,0,0,0.08);--radius:12px;--radius-sm:8px;
-  --header-h:50px;--fab-size:52px;
-  --sidebar-w:240px;--sidebar-bg:#0f1923;--sidebar-hl:#00d4ff;--sidebar-text:#8899aa;
-  --safe-top:env(safe-area-inset-top,0px);--safe-bottom:env(safe-area-inset-bottom,0px);
+  --primary:#4A90D9;--danger:#E74C3C;--success:#27AE60;--warning:#F39C12;--purple:#9B59B6;
+  --bg:#f2f3f7;--card:#fff;--text:#2c3e50;--text2:#7f8c8d;--text3:#bdc3c7;
+  --shadow:0 2px 16px rgba(0,0,0,0.06);--radius:16px;
+  --header-h:56px;--safe-top:env(safe-area-inset-top,0px);--safe-bottom:env(safe-area-inset-bottom,0px);
 }
 body{
-  font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC','Hiragino Sans GB','Microsoft YaHei',sans-serif;
-  background:var(--bg);color:var(--text);font-size:15px;
+  font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC','Microsoft YaHei',sans-serif;
+  background:var(--bg);color:var(--text);font-size:15px;line-height:1.5;
   -webkit-tap-highlight-color:transparent;-webkit-font-smoothing:antialiased;
-  overflow:hidden;height:100dvh;display:flex;justify-content:center;
+  min-height:100dvh;display:flex;justify-content:center;
 }
-.app{width:100%;max-width:480px;height:100dvh;display:flex;flex-direction:column;position:relative;overflow:hidden;}
+.app{width:100%;max-width:480px;min-height:100dvh;display:flex;flex-direction:column;}
 
-/* ====== Header ====== */
+/* Header */
 .header{
-  height:var(--header-h);padding-top:var(--safe-top);
-  background:var(--sidebar-bg);color:#fff;display:flex;align-items:center;flex-shrink:0;
-  padding-left:12px;padding-right:12px;gap:10px;z-index:50;position:relative;
+  padding:calc(var(--safe-top) + 8px) 16px 8px;
+  display:flex;align-items:center;gap:10px;flex-shrink:0;
 }
-.header .menu-btn{
-  width:34px;height:34px;border:none;background:none;color:var(--sidebar-hl);font-size:20px;
-  cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;
-}
-.header .title{font-size:16px;font-weight:600;flex:1;text-align:center;padding-right:34px;}
-.header .title span{color:var(--sidebar-hl);}
+.header .back{width:36px;height:36px;border:none;background:var(--card);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:18px;cursor:pointer;box-shadow:0 1px 4px rgba(0,0,0,0.06);color:var(--text);}
+.header h1{font-size:20px;font-weight:700;flex:1;}
+.header .h-actions{display:flex;gap:8px;}
+.header .h-btn{width:36px;height:36px;border:none;background:var(--card);border-radius:50%;font-size:16px;cursor:pointer;box-shadow:0 1px 4px rgba(0,0,0,0.06);display:flex;align-items:center;justify-content:center;}
 
-/* ====== Sidebar ====== */
-.sidebar-overlay{
-  position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:90;opacity:0;visibility:hidden;
-  transition:opacity .25s,visibility .25s;
-}
-.sidebar-overlay.show{opacity:1;visibility:visible;}
-.sidebar{
-  position:fixed;top:0;left:0;bottom:0;width:var(--sidebar-w);z-index:100;
-  background:var(--sidebar-bg);display:flex;flex-direction:column;
-  transform:translateX(-100%);transition:transform .25s cubic-bezier(.4,0,.2,1);
-  padding-top:calc(var(--safe-top) + 10px);overflow-y:auto;
-}
-.sidebar.show{transform:translateX(0);}
-.sidebar::before{
-  content:'';position:absolute;inset:0;opacity:.04;pointer-events:none;
-  background-image:linear-gradient(rgba(0,212,255,.3) 1px,transparent 1px),linear-gradient(90deg,rgba(0,212,255,.3) 1px,transparent 1px);
-  background-size:20px 20px;
-}
-.sidebar-brand{
-  padding:16px 20px 20px;display:flex;align-items:center;gap:12px;position:relative;
-  border-bottom:1px solid rgba(0,212,255,.1);margin-bottom:8px;
-}
-.sidebar-brand .logo{
-  width:42px;height:42px;border-radius:10px;
-  background:linear-gradient(135deg,#0a1628,#0f1923);border:1px solid rgba(0,212,255,.3);
-  display:flex;align-items:center;justify-content:center;font-size:20px;
-  box-shadow:0 0 12px rgba(0,212,255,.15);
-}
-.sidebar-brand .name{color:#fff;font-size:16px;font-weight:700;}
-.sidebar-brand .ver{color:var(--sidebar-text);font-size:11px;}
-.sidebar-nav{flex:1;overflow-y:auto;padding:0 10px;position:relative;}
-.sidebar-item{
-  display:flex;align-items:center;gap:12px;padding:12px 14px;margin-bottom:4px;
-  border-radius:var(--radius-sm);color:var(--sidebar-text);font-size:14px;
-  cursor:pointer;transition:.2s;border:1px solid transparent;position:relative;
-}
-.sidebar-item .sicon{font-size:18px;width:24px;text-align:center;}
-.sidebar-item:active{color:#fff;background:rgba(0,212,255,.06);}
-.sidebar-item.active{
-  color:var(--sidebar-hl);background:rgba(0,212,255,.08);
-  border-color:rgba(0,212,255,.25);
-  box-shadow:0 0 10px rgba(0,212,255,.08),inset 0 0 10px rgba(0,212,255,.03);
-}
-.sidebar-item.active::after{
-  content:'';position:absolute;left:0;top:50%;transform:translateY(-50%);
-  width:3px;height:20px;background:var(--sidebar-hl);border-radius:0 3px 3px 0;
-  box-shadow:0 0 6px var(--sidebar-hl);
-}
-.sidebar-footer{
-  padding:16px;border-top:1px solid rgba(0,212,255,.1);font-size:11px;color:var(--sidebar-text);
-  display:flex;justify-content:space-between;position:relative;
-}
+/* Main */
+.main{flex:1;padding:0 16px 80px;}
 
-/* ====== Main Content ====== */
-.main{
-  flex:1;overflow-y:auto;padding:12px 14px;
-  padding-bottom:calc(var(--safe-bottom) + 80px);
-  -webkit-overflow-scrolling:touch;
-}
-
-/* ====== Summary Cards ====== */
-.stat-row{display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap;}
-.stat-card{
-  flex:1;min-width:0;background:var(--card);border-radius:var(--radius);
-  padding:10px 6px;text-align:center;box-shadow:var(--shadow);overflow:hidden;
-}
-.stat-card .slabel{font-size:10px;color:var(--text3);margin-bottom:2px;}
-.stat-card .svalue{font-size:16px;font-weight:700;word-break:break-all;}
-.stat-card .ssub{font-size:10px;color:var(--text3);margin-top:2px;}
-.c-income{color:var(--success)}.c-expense{color:var(--danger)}.c-primary{color:var(--primary)}
-
-/* ====== Chart ====== */
-.chart-box{
-  background:var(--card);border-radius:var(--radius);padding:14px;
+/* Dashboard Widget */
+.widget{
+  background:var(--card);border-radius:var(--radius);padding:18px;
   margin-bottom:12px;box-shadow:var(--shadow);
 }
-.chart-box canvas{width:100%;height:200px;}
+.widget-title{font-size:13px;color:var(--text2);margin-bottom:12px;font-weight:600;text-transform:uppercase;letter-spacing:.5px;}
+.overview-row{display:flex;gap:10px;margin-bottom:12px;}
+.overview-card{
+  flex:1;background:var(--bg);border-radius:12px;padding:14px 10px;text-align:center;
+}
+.overview-card .oc-icon{font-size:22px;margin-bottom:4px;}
+.overview-card .oc-val{font-size:15px;font-weight:700;word-break:break-all;}
+.overview-card .oc-label{font-size:10px;color:var(--text2);margin-top:2px;}
+.oc-green{color:var(--success)}.oc-red{color:var(--danger)}.oc-blue{color:var(--primary)}
 
-/* ====== Quick Add ====== */
+/* Module Entry Cards */
+.mod-entry{
+  display:flex;align-items:center;gap:12px;padding:16px;background:var(--card);
+  border-radius:var(--radius);margin-bottom:8px;box-shadow:0 1px 4px rgba(0,0,0,0.04);
+  cursor:pointer;transition:transform .15s;
+}
+.mod-entry:active{transform:scale(.98);}
+.mod-entry .me-icon{
+  width:44px;height:44px;border-radius:12px;display:flex;align-items:center;
+  justify-content:center;font-size:22px;flex-shrink:0;
+}
+.mod-entry .me-info{flex:1;min-width:0;}
+.mod-entry .me-name{font-size:15px;font-weight:600;}
+.mod-entry .me-desc{font-size:12px;color:var(--text2);margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.mod-entry .me-arrow{color:var(--text3);font-size:16px;}
+.me-ledger{background:rgba(39,174,96,.1)}.me-weight{background:rgba(74,144,217,.1)}.me-car{background:rgba(243,156,18,.1)}
+
+/* Recent List */
+.recent-item{
+  display:flex;align-items:center;gap:10px;padding:10px 0;
+  border-bottom:1px solid #f0f0f0;
+}
+.recent-item:last-child{border-bottom:none;}
+.recent-item .ri-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
+.ri-dot.income{background:var(--success)}.ri-dot.expense{background:var(--danger)}.ri-dot.weight{background:var(--primary)}.ri-dot.car{background:var(--warning)}
+.recent-item .ri-info{flex:1;min-width:0;}
+.recent-item .ri-title{font-size:13px;}
+.recent-item .ri-sub{font-size:11px;color:var(--text3);}
+.recent-item .ri-amount{font-size:14px;font-weight:600;}
+
+/* ====== Module Pages ====== */
+/* Summary */
+.summary-row{display:flex;gap:8px;margin-bottom:12px;}
+.summary-card{
+  flex:1;background:var(--card);border-radius:12px;padding:12px 8px;
+  text-align:center;box-shadow:0 1px 4px rgba(0,0,0,0.04);
+}
+.summary-card .sc-label{font-size:10px;color:var(--text2);margin-bottom:2px;}
+.summary-card .sc-val{font-size:15px;font-weight:700;word-break:break-all;}
+.sc-green{color:var(--success)}.sc-red{color:var(--danger)}.sc-blue{color:var(--primary)}.sc-warn{color:var(--warning)}
+
+/* Quick Amount */
 .quick-row{display:flex;gap:6px;margin-bottom:12px;flex-wrap:wrap;}
 .quick-btn{
-  padding:6px 12px;border-radius:16px;border:1px solid var(--border);background:var(--card);
-  font-size:13px;cursor:pointer;transition:.2s;font-family:inherit;color:var(--text);
+  padding:5px 14px;border-radius:16px;border:1px solid #ddd;background:var(--card);
+  font-size:13px;cursor:pointer;font-family:inherit;
 }
 .quick-btn:active{background:var(--primary);color:#fff;border-color:var(--primary);}
 
-/* ====== Filter Row ====== */
+/* Filter */
 .filter-row{display:flex;gap:6px;margin-bottom:12px;flex-wrap:wrap;}
 .filter-chip{
-  padding:4px 12px;border-radius:14px;font-size:12px;cursor:pointer;
-  border:1px solid var(--border);background:var(--card);transition:.2s;
+  padding:4px 12px;border-radius:14px;font-size:11px;cursor:pointer;
+  border:1px solid #ddd;background:var(--card);
 }
 .filter-chip.sel{background:var(--primary);color:#fff;border-color:var(--primary);}
 
-/* ====== Search ====== */
+/* Search */
 .search-wrap{margin-bottom:12px;}
 .search-wrap input{
-  width:100%;padding:8px 14px;border:1px solid var(--border);border-radius:20px;
-  font-size:14px;outline:none;background:var(--card);font-family:inherit;
+  width:100%;padding:9px 14px;border:1px solid #e0e0e0;border-radius:20px;
+  font-size:13px;outline:none;background:var(--card);font-family:inherit;
 }
 .search-wrap input:focus{border-color:var(--primary);}
 
-/* ====== List Item ====== */
-.list-item{
-  background:var(--card);border-radius:var(--radius-sm);padding:12px 14px;
-  margin-bottom:6px;box-shadow:0 1px 3px rgba(0,0,0,0.04);
-  display:flex;align-items:center;gap:10px;position:relative;transition:.15s;overflow:hidden;
+/* Chart */
+.chart-box{
+  background:var(--card);border-radius:var(--radius);padding:14px;
+  margin-bottom:12px;box-shadow:0 1px 4px rgba(0,0,0,0.04);
 }
-.list-item:active{background:#f8f8f8;}
-.list-item .cat-dot{
-  width:38px;height:38px;border-radius:50%;display:flex;align-items:center;
-  justify-content:center;font-size:16px;flex-shrink:0;
-}
-.list-item .linfo{flex:1;min-width:0;overflow:hidden;padding-right:4px;}
-.list-item .ltitle{font-size:13px;font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
-.list-item .ltitle .tag{
-  font-size:10px;padding:1px 5px;border-radius:8px;margin-left:4px;font-weight:400;
-  vertical-align:middle;white-space:nowrap;
-}
-.tag-reimb{background:rgba(243,156,18,.15);color:var(--warning);}
-.tag-loan{background:rgba(231,76,60,.12);color:var(--danger);}
-.tag-inst{background:rgba(155,89,182,.12);color:#9B59B6;}
-.tag-acc{background:rgba(52,152,219,.12);color:#3498DB;}
-.list-item .lsub{font-size:12px;color:var(--text3);margin-top:1px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
-.list-item .lamount{font-size:14px;font-weight:600;white-space:nowrap;flex-shrink:1;min-width:0;overflow:hidden;text-overflow:ellipsis;}
-.list-item .lamount.in{color:var(--success)}
-.list-item .lamount.out{color:var(--danger)}
-.list-item .ldel{
-  position:absolute;right:6px;top:50%;transform:translateY(-50%);
-  width:26px;height:26px;border-radius:50%;border:none;
-  background:rgba(231,76,60,.08);color:var(--danger);font-size:12px;
-  cursor:pointer;display:none;align-items:center;justify-content:center;
-}
-.list-item:active .ldel,.list-item:hover .ldel{display:flex;}
+.chart-box canvas{width:100%;height:200px;}
 
-.alert-badge{
-  display:inline-block;background:var(--danger);color:#fff;font-size:10px;
-  padding:1px 6px;border-radius:10px;margin-left:6px;animation:pulse 2s infinite;
+/* Sub Tabs */
+.subtabs{display:flex;gap:6px;margin-bottom:12px;}
+.subtab{
+  flex:1;padding:8px;text-align:center;border-radius:10px;font-size:12px;cursor:pointer;
+  background:var(--card);border:1px solid #e0e0e0;
 }
+.subtab.act{background:var(--primary);color:#fff;border-color:var(--primary);}
+
+/* List */
+.list-item{
+  background:var(--card);border-radius:12px;padding:12px 14px;
+  margin-bottom:6px;box-shadow:0 1px 3px rgba(0,0,0,0.03);
+  display:flex;align-items:center;gap:10px;transition:.1s;
+}
+.list-item:active{background:#fafafa;}
+.list-item .cat-dot{
+  width:38px;height:38px;border-radius:10px;display:flex;align-items:center;
+  justify-content:center;font-size:18px;flex-shrink:0;
+}
+.list-item .linfo{flex:1;min-width:0;overflow:hidden;}
+.list-item .ltitle{font-size:13px;font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.list-item .ltitle .tag{font-size:9px;padding:1px 5px;border-radius:6px;margin-left:4px;font-weight:400;vertical-align:middle;}
+.tag-reimb{background:rgba(243,156,18,.12);color:var(--warning)}.tag-loan{background:rgba(231,76,60,.1);color:var(--danger)}.tag-inst{background:rgba(155,89,182,.1);color:var(--purple)}.tag-acc{background:rgba(52,152,219,.1);color:#3498DB}
+.list-item .lsub{font-size:11px;color:var(--text3);margin-top:1px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.list-item .lamount{font-size:14px;font-weight:600;white-space:nowrap;flex-shrink:0;min-width:0;}
+.la-in{color:var(--success)}.la-out{color:var(--danger)}
+.list-item .ldel{
+  position:absolute;right:6px;top:50%;transform:translateY(-50%);width:26px;height:26px;
+  border-radius:50%;border:none;background:rgba(231,76,60,.08);color:var(--danger);
+  font-size:12px;cursor:pointer;display:none;align-items:center;justify-content:center;
+}
+.list-item:active .ldel{display:flex;}
+
+/* BMI */
+.bmi-box{
+  background:var(--card);border-radius:var(--radius);padding:20px;text-align:center;
+  margin-bottom:12px;box-shadow:0 1px 4px rgba(0,0,0,0.04);
+}
+.bmi-box .bmi-big{font-size:30px;font-weight:700;color:var(--primary)}
+.bmi-box .bmi-tag{font-size:11px;color:var(--text2);margin-top:2px;}
+
+/* Car info */
+.car-info{
+  background:var(--card);border-radius:var(--radius);padding:14px;margin-bottom:12px;
+  box-shadow:0 1px 4px rgba(0,0,0,0.04);
+}
+.car-info .ci-row{display:flex;justify-content:space-between;padding:3px 0;font-size:12px;}
+.car-info .ci-l{color:var(--text2)}.car-info .ci-edit{color:var(--primary);font-size:11px;cursor:pointer;margin-top:6px;display:inline-block;}
+
+/* Alert */
+.alert-card{
+  background:#fff3f3;border:1px solid rgba(231,76,60,.15);border-radius:12px;padding:12px;
+  margin-bottom:12px;display:flex;align-items:center;gap:10px;
+}
+.alert-card .al-icon{font-size:20px;}
+.alert-card .al-text{font-size:13px;color:var(--danger);flex:1;}
+.alert-badge{display:inline-block;background:var(--danger);color:#fff;font-size:9px;padding:1px 5px;border-radius:8px;margin-left:4px;animation:pulse 2s infinite;}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.6}}
 
-/* ====== FAB ====== */
+/* FAB */
 .fab{
-  position:absolute;bottom:calc(var(--safe-bottom) + 20px);right:16px;
-  width:var(--fab-size);height:var(--fab-size);border-radius:50%;
-  background:linear-gradient(135deg,var(--primary),var(--primary-dark));
+  position:fixed;bottom:calc(var(--safe-bottom) + 24px);right:24px;z-index:50;
+  width:52px;height:52px;border-radius:50%;
+  background:linear-gradient(135deg,var(--primary),#357ABD);
   color:#fff;border:none;font-size:26px;
-  box-shadow:0 4px 16px rgba(74,144,217,.4);
-  display:flex;align-items:center;justify-content:center;
-  cursor:pointer;z-index:20;transition:transform .2s,box-shadow .2s;
+  box-shadow:0 4px 20px rgba(74,144,217,.35);
+  display:flex;align-items:center;justify-content:center;cursor:pointer;
+  transition:transform .2s;
 }
-.fab:active{transform:scale(.92);}
+.fab:active{transform:scale(.9);}
+
+/* Section */
+.section-title{font-size:12px;font-weight:600;color:var(--text2);margin:14px 0 8px;}
+.section-title:first-child{margin-top:0;}
+
+/* Empty */
+.empty{text-align:center;padding:36px 20px;color:var(--text3);}
+.empty .eicon{font-size:40px;margin-bottom:8px;}
+.empty p{font-size:13px;}
 
 /* ====== Modal ====== */
 .modal-overlay{
-  position:fixed;inset:0;background:rgba(0,0,0,0.45);z-index:200;
+  position:fixed;inset:0;background:rgba(0,0,0,0.4);z-index:200;
   display:flex;align-items:flex-end;justify-content:center;animation:fadeIn .2s;
 }
 @keyframes fadeIn{from{opacity:0}to{opacity:1}}
 .modal{
-  background:var(--card);border-radius:var(--radius) var(--radius) 0 0;
-  width:100%;max-width:480px;max-height:85vh;overflow-y:auto;
-  padding:20px 18px calc(20px + var(--safe-bottom));animation:slideUp .25s;
+  background:var(--card);border-radius:20px 20px 0 0;width:100%;max-width:480px;
+  max-height:88vh;overflow-y:auto;padding:22px 18px calc(20px + var(--safe-bottom));
+  animation:slideUp .25s;
 }
 @keyframes slideUp{from{transform:translateY(100%)}to{transform:translateY(0)}}
-.modal h3{font-size:17px;margin-bottom:14px;text-align:center;}
-
-/* Form */
+.modal h3{font-size:17px;margin-bottom:16px;text-align:center;}
 .fg{margin-bottom:12px;}
 .fg label{display:block;font-size:12px;color:var(--text2);margin-bottom:4px;font-weight:500;}
 .fg input,.fg select,.fg textarea{
-  width:100%;padding:9px 12px;border:1px solid var(--border);border-radius:var(--radius-sm);
-  font-size:14px;outline:none;background:var(--bg);font-family:inherit;transition:border-color .2s;
+  width:100%;padding:10px 12px;border:1px solid #e0e0e0;border-radius:10px;
+  font-size:14px;outline:none;background:#f8f9fa;font-family:inherit;
 }
-.fg input:focus,.fg select:focus,.fg textarea:focus{border-color:var(--primary);}
+.fg input:focus,.fg select:focus,.fg textarea:focus{border-color:var(--primary);background:#fff;}
 .fg textarea{resize:vertical;min-height:50px;}
-.fg-row{display:flex;gap:8px;}
-.fg-row .fg{flex:1;}
-
-/* Type Toggle */
-.type-tgl{display:flex;border-radius:var(--radius-sm);overflow:hidden;border:1px solid var(--border);}
-.type-tgl button{
-  flex:1;padding:9px;border:none;background:var(--bg);font-size:14px;cursor:pointer;font-family:inherit;transition:.2s;
-}
-.type-tgl button.inc-act{background:var(--success);color:#fff;}
-.type-tgl button.exp-act{background:var(--danger);color:#fff;}
-
-/* Cat chips */
+.fg-row{display:flex;gap:8px;}.fg-row .fg{flex:1;}
+.type-tgl{display:flex;border-radius:10px;overflow:hidden;border:1px solid #e0e0e0;}
+.type-tgl button{flex:1;padding:10px;border:none;background:#f8f9fa;font-size:14px;cursor:pointer;font-family:inherit;}
+.type-tgl button.inc-act{background:var(--success);color:#fff}
+.type-tgl button.exp-act{background:var(--danger);color:#fff}
 .cat-grid{display:flex;flex-wrap:wrap;gap:6px;}
-.cat-chip{
-  padding:5px 12px;border-radius:16px;border:1px solid var(--border);
-  font-size:12px;cursor:pointer;background:var(--bg);transition:.2s;
-}
+.cat-chip{padding:5px 12px;border-radius:14px;border:1px solid #e0e0e0;font-size:12px;cursor:pointer;background:#f8f9fa;}
 .cat-chip.sel{background:var(--primary);color:#fff;border-color:var(--primary);}
-
-/* Sub tabs */
-.subtabs{display:flex;gap:6px;margin-bottom:12px;overflow-x:auto;}
-.subtab{
-  padding:7px 14px;border-radius:16px;font-size:13px;cursor:pointer;
-  background:var(--card);border:1px solid var(--border);white-space:nowrap;transition:.2s;
-}
-.subtab.act{background:var(--primary);color:#fff;border-color:var(--primary);}
-
-/* Checkbox row */
 .chk-row{display:flex;gap:16px;flex-wrap:wrap;margin-bottom:12px;}
 .chk-row label{display:flex;align-items:center;gap:4px;font-size:13px;color:var(--text2);cursor:pointer;}
 .chk-row input[type=checkbox]{width:16px;height:16px;accent-color:var(--primary);}
-
-/* BMI */
-.bmi-box{
-  background:var(--card);border-radius:var(--radius);padding:18px;text-align:center;
-  margin-bottom:12px;box-shadow:var(--shadow);overflow:hidden;
-}
-.bmi-box .bmi-big{font-size:32px;font-weight:700;color:var(--primary);overflow:hidden;text-overflow:ellipsis;}
-.bmi-box .bmi-tag{font-size:12px;color:var(--text3);margin-top:2px;overflow:hidden;text-overflow:ellipsis;}
-
-/* Car info card */
-.carinfo-card{
-  background:var(--card);border-radius:var(--radius);padding:16px;margin-bottom:12px;box-shadow:var(--shadow);
-}
-.carinfo-card .ci-row{display:flex;justify-content:space-between;padding:4px 0;font-size:13px;}
-.carinfo-card .ci-label{color:var(--text3);}
-.carinfo-card .ci-edit{color:var(--primary);font-size:12px;cursor:pointer;margin-top:8px;display:inline-block;}
-
-/* Section */
-.section-title{font-size:13px;font-weight:600;color:var(--text2);margin:14px 0 8px;}
-.section-title:first-child{margin-top:0;}
+.btn-primary{display:block;width:100%;padding:12px;border:none;border-radius:10px;background:var(--primary);color:#fff;font-size:15px;font-weight:600;cursor:pointer;font-family:inherit;margin-top:8px;}
+.btn-primary:active{opacity:.85;}
 
 /* Confirm */
-.confirm-overlay{
-  position:fixed;inset:0;background:rgba(0,0,0,0.45);z-index:300;
-  display:flex;align-items:center;justify-content:center;
-}
-.confirm-box{background:var(--card);border-radius:var(--radius);padding:22px;width:280px;text-align:center;}
+.confirm-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.4);z-index:300;display:flex;align-items:center;justify-content:center;}
+.confirm-box{background:var(--card);border-radius:var(--radius);padding:24px;width:280px;text-align:center;}
 .confirm-box p{margin-bottom:18px;font-size:15px;}
 .confirm-box .cbtns{display:flex;gap:10px;}
-.confirm-box button{flex:1;padding:10px;border-radius:var(--radius-sm);border:none;font-size:14px;cursor:pointer;font-family:inherit;}
-.btn-cancel{background:var(--bg);color:var(--text);}
+.confirm-box button{flex:1;padding:10px;border-radius:10px;border:none;font-size:14px;cursor:pointer;font-family:inherit;}
+.btn-cancel{background:#f0f0f0;color:var(--text);}
 .btn-danger{background:var(--danger);color:#fff;}
-.btn-primary{
-  display:block;width:100%;padding:11px;border:none;border-radius:var(--radius-sm);
-  background:var(--primary);color:#fff;font-size:15px;font-weight:600;cursor:pointer;font-family:inherit;margin-top:6px;
-}
 
 /* Settings */
-.setting-group{margin-bottom:18px;}
-.setting-group h4{font-size:14px;margin-bottom:8px;color:var(--text);}
-.setting-item{
-  background:var(--card);border-radius:var(--radius-sm);padding:12px 14px;margin-bottom:6px;
-  display:flex;justify-content:space-between;align-items:center;box-shadow:0 1px 3px rgba(0,0,0,0.04);
-}
+.setting-group{margin-bottom:16px;}
+.setting-group h4{font-size:14px;margin-bottom:8px;}
+.setting-item{background:var(--card);border-radius:12px;padding:12px 14px;margin-bottom:6px;display:flex;justify-content:space-between;align-items:center;box-shadow:0 1px 3px rgba(0,0,0,0.03);}
 .setting-item .si-label{font-size:14px;}
-.setting-item .si-val{font-size:13px;color:var(--text3);}
-.setting-item .si-btn{
-  padding:6px 14px;border-radius:14px;border:none;font-size:12px;cursor:pointer;font-family:inherit;
-  background:var(--bg);color:var(--text);
-}
-.setting-item .si-btn.danger{background:rgba(231,76,60,.1);color:var(--danger);}
+.setting-item .si-val{font-size:12px;color:var(--text2);}
+.setting-item .si-btn{padding:6px 14px;border-radius:14px;border:none;font-size:12px;cursor:pointer;font-family:inherit;background:#f0f0f0;color:var(--text);}
+.setting-item .si-btn.danger{background:rgba(231,76,60,.08);color:var(--danger);}
 
 /* Toast */
-.toast{
-  position:fixed;bottom:80px;left:50%;transform:translateX(-50%);z-index:400;
-  background:rgba(0,0,0,.78);color:#fff;padding:8px 20px;border-radius:20px;font-size:13px;
-  opacity:0;transition:opacity .3s;pointer-events:none;
-}
+.toast{position:fixed;bottom:90px;left:50%;transform:translateX(-50%);z-index:400;background:rgba(0,0,0,.78);color:#fff;padding:10px 24px;border-radius:20px;font-size:13px;opacity:0;transition:opacity .3s;pointer-events:none;}
 .toast.show{opacity:1;}
-
-/* Empty */
-.empty{text-align:center;padding:40px 20px;color:var(--text3);}
-.empty .eicon{font-size:44px;margin-bottom:10px;}
-.empty p{font-size:14px;}
 
 .hidden{display:none!important;}
 </style>
 </head>
 <body>
-<div class="app" id="app">
-  <div class="header" id="header">
-    <button class="menu-btn" id="menuBtn">☰</button>
-    <div class="title" id="headerTitle"><span>◆</span> 个人工作台</div>
-  </div>
-  <div class="main" id="main"></div>
-  <button class="fab" id="fab">+</button>
-</div>
-
-<div class="sidebar-overlay" id="sidebarOverlay"></div>
-<nav class="sidebar" id="sidebar">
-  <div class="sidebar-brand">
-    <div class="logo">◆</div>
-    <div><div class="name">工作台</div><div class="ver">v2.1 · 离线版</div></div>
-  </div>
-  <div class="sidebar-nav" id="sidebarNav"></div>
-  <div class="sidebar-footer" id="sidebarFooter"></div>
-</nav>
-
+<div class="app" id="app"></div>
+<div class="fab hidden" id="fab">+</div>
 <div class="modal-overlay hidden" id="modalOverlay"></div>
 <div class="confirm-overlay hidden" id="confirmOverlay"></div>
 <div class="toast" id="toast"></div>
@@ -343,28 +275,7 @@ body{
 <script>
 // ==================== IndexedDB ====================
 const DB_NAME='WorkbenchDB',DB_VER=3;let db;
-function openDB(){
-  return new Promise((resolve,reject)=>{
-    const req=indexedDB.open(DB_NAME,DB_VER);
-    req.onupgradeneeded=e=>{
-      const d=e.target.result;
-      if(!d.objectStoreNames.contains('ledger')){
-        const s=d.createObjectStore('ledger',{keyPath:'id',autoIncrement:true});
-        s.createIndex('date','date');s.createIndex('type','type');s.createIndex('reimbursable','reimbursable');
-      }
-      if(!d.objectStoreNames.contains('weight')){
-        const s=d.createObjectStore('weight',{keyPath:'id',autoIncrement:true});
-        s.createIndex('date','date',{unique:true});
-      }
-      if(!d.objectStoreNames.contains('car')){
-        const s=d.createObjectStore('car',{keyPath:'id',autoIncrement:true});
-        s.createIndex('date','date');s.createIndex('carType','carType');
-      }
-    };
-    req.onsuccess=e=>{db=e.target.result;resolve(db);};
-    req.onerror=()=>reject(req.error);
-  });
-}
+function openDB(){return new Promise((r,j)=>{const req=indexedDB.open(DB_NAME,DB_VER);req.onupgradeneeded=e=>{const d=e.target.result;if(!d.objectStoreNames.contains('ledger')){const s=d.createObjectStore('ledger',{keyPath:'id',autoIncrement:true});s.createIndex('date','date');s.createIndex('type','type');}if(!d.objectStoreNames.contains('weight')){const s=d.createObjectStore('weight',{keyPath:'id',autoIncrement:true});s.createIndex('date','date',{unique:true});}if(!d.objectStoreNames.contains('car')){const s=d.createObjectStore('car',{keyPath:'id',autoIncrement:true});s.createIndex('date','date');s.createIndex('carType','carType');}};req.onsuccess=e=>{db=e.target.result;r(db);};req.onerror=()=>j(req.error);});}
 function dbAdd(s,d){return new Promise((r,j)=>{const t=db.transaction(s,'readwrite');const q=t.objectStore(s).add(d);q.onsuccess=()=>r(q.result);q.onerror=()=>j(q.error);});}
 function dbPut(s,d){return new Promise((r,j)=>{const t=db.transaction(s,'readwrite');const q=t.objectStore(s).put(d);q.onsuccess=()=>r(q.result);q.onerror=()=>j(q.error);});}
 function dbAll(s,n){return new Promise((r,j)=>{const t=db.transaction(s,'readonly');const o=t.objectStore(s);const q=n?o.index(n).getAll():o.getAll();q.onsuccess=()=>r(q.result);q.onerror=()=>j(q.error);});}
@@ -374,190 +285,193 @@ function dbDel(s,id){return new Promise((r,j)=>{const t=db.transaction(s,'readwr
 const EXP_CATS=['🍜 餐饮','🚌 交通','🛒 购物','👗 服饰','🏠 居家','🎮 娱乐','📱 通讯','💊 医疗','📚 教育','🎁 人情','🐱 宠物','💻 数码','💄 美妆','🏃 运动','✈️ 旅行','📦 其他'];
 const INC_CATS=['💰 工资','🎁 奖金','💼 兼职','📈 投资','↩️ 退款','🧾 报销','🧧 红包','🤝 借入','📦 其他'];
 const ACCOUNTS=['💰 现金','🏦 银行卡','💬 微信','📱 支付宝','💳 信用卡','📦 其他'];
-const CAR_SUBTABS=[
-  {id:'fuel',label:'⛽ 加油/充电'},
-  {id:'maintenance',label:'🔧 保养'},
-  {id:'other',label:'📦 其他'},
-  {id:'all',label:'📋 全部'}
-];
+const CAR_SUBTABS=[{id:'fuel',label:'⛽ 加油/充电'},{id:'maintenance',label:'🔧 保养'},{id:'other',label:'📦 其他'},{id:'all',label:'📋 全部'}];
 const OTHER_CATS=['🛡️ 保险','🅿️ 停车','🛣️ 过路费','🧼 洗车','🔩 维修','📋 年检','🔧 改装','📦 其他'];
-const LEDGER_FILTERS=[
-  {id:'all',label:'全部'},
-  {id:'expense',label:'支出'},
-  {id:'income',label:'收入'},
-  {id:'reimb',label:'待报销'},
-  {id:'loan',label:'借入/借出'},
-  {id:'install',label:'分期'}
-];
-const MENU=[
-  {id:'ledger',label:'记账',icon:'💰'},
-  {id:'weight',label:'体重',icon:'⚖️'},
-  {id:'car',label:'用车',icon:'🚗'},
-  {id:'settings',label:'设置',icon:'⚙️'}
-];
+const LEDGER_FILTERS=[{id:'all',label:'全部'},{id:'expense',label:'支出'},{id:'income',label:'收入'},{id:'reimb',label:'待报销'},{id:'loan',label:'借入/借出'},{id:'install',label:'分期'}];
 
-// ==================== State ====================
-let curMod='ledger',carTab='fuel',searchQ='',ledgerFilter='all';
+// State
+let page='home',sub='',carTab='fuel',searchQ='',ledgerFilter='all';
 
-// ==================== Helpers ====================
+// Helpers
 const $=s=>document.querySelector(s);
-function fd(d){return d.slice(0,10);}
-function fm(n){return'¥'+Number(n).toFixed(2);}
-function today(){return new Date().toISOString().slice(0,10);}
-function month(){const n=new Date();return n.getFullYear()+'-'+String(n.getMonth()+1).padStart(2,'0');}
-function toast(msg){const t=$('#toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),1800);}
-function getCarInfo(){try{return JSON.parse(localStorage.getItem('wb_carInfo')||'null');}catch{return null;}}
-function setCarInfo(d){localStorage.setItem('wb_carInfo',JSON.stringify(d));}
-function getWeightGoal(){try{return JSON.parse(localStorage.getItem('wb_wtGoal')||'null');}catch{return null;}}
-function setWeightGoal(d){localStorage.setItem('wb_wtGoal',JSON.stringify(d));}
+function fd(d){return d.slice(0,10)}function fm(n){return'¥'+Number(n).toFixed(2)}function today(){return new Date().toISOString().slice(0,10)}function month(){const n=new Date();return n.getFullYear()+'-'+String(n.getMonth()+1).padStart(2,'0')}
+function toast(m){const t=$('#toast');t.textContent=m;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),1800)}
+function getCarInfo(){try{return JSON.parse(localStorage.getItem('wb_carInfo')||'null')}catch{return null}}
+function setCarInfo(d){localStorage.setItem('wb_carInfo',JSON.stringify(d))}
+function getWeightGoal(){try{return JSON.parse(localStorage.getItem('wb_wtGoal')||'null')}catch{return null}}
+function setWeightGoal(d){localStorage.setItem('wb_wtGoal',JSON.stringify(d))}
 
-// ==================== Sidebar ====================
-function renderSidebar(){
-  const nav=$('#sidebarNav');
-  nav.innerHTML=MENU.map(m=>`
-    <div class="sidebar-item${m.id===curMod?' active':''}" data-mid="${m.id}">
-      <span class="sicon">${m.icon}</span><span>${m.label}</span>
+// ==================== Router ====================
+function go(p,s_=''){page=p;sub=s_;searchQ='';ledgerFilter='all';carTab='fuel';render()}
+function goCar(t){page='car';carTab=t;render()}
+
+// ==================== Render ====================
+async function render(){
+  const app=$('#app'),fab=$('#fab');
+  fab.classList.add('hidden');
+  if(page==='home')await renderHome(app,fab);
+  else if(page==='ledger')await renderLedger(app,fab);
+  else if(page==='weight')await renderWeight(app,fab);
+  else if(page==='car')await renderCar(app,fab);
+  else if(page==='settings')await renderSettings(app,fab);
+}
+
+// ==================== HOME (Dashboard) ====================
+async function renderHome(app,fab){
+  const m=month();
+  const [ledgerR,weightR,carR]=await Promise.all([dbAll('ledger'),dbAll('weight'),dbAll('car')]);
+  const mRecs=ledgerR.filter(r=>r.date.startsWith(m));
+  const income=mRecs.filter(r=>r.type==='income'||r.type==='loan_in').reduce((s,r)=>s+r.amount,0);
+  const expense=mRecs.filter(r=>r.type==='expense'||r.type==='loan_out').reduce((s,r)=>s+r.amount,0);
+  const reimbSum=ledgerR.filter(r=>r.reimbursable&&!r.reimbursed).reduce((s,r)=>s+r.amount,0);
+  const latestWt=weightR.sort((a,b)=>a.date.localeCompare(b.date)).pop();
+  const goal=getWeightGoal();
+  const info=getCarInfo();
+  const mCar=carR.filter(r=>r.date.startsWith(m)).reduce((s,r)=>s+(r.amount||0),0);
+
+  // Recent 8 records across all modules
+  const recent=[];
+  ledgerR.forEach(r=>recent.push({type:'ledger',date:r.date,data:r,sort:r.date+r.id}));
+  weightR.forEach(r=>recent.push({type:'weight',date:r.date,data:r,sort:r.date+r.id}));
+  carR.forEach(r=>recent.push({type:'car',date:r.date,data:r,sort:r.date+r.id}));
+  recent.sort((a,b)=>b.sort.localeCompare(a.sort));
+  const recent8=recent.slice(0,8);
+
+  app.innerHTML=`
+    <div class="header"><h1>个人工作台</h1></div>
+    <div class="main">
+      <div class="widget">
+        <div class="widget-title">📊 本月概览</div>
+        <div class="overview-row">
+          <div class="overview-card"><div class="oc-icon">💰</div><div class="oc-val oc-green">${fm(income)}</div><div class="oc-label">收入</div></div>
+          <div class="overview-card"><div class="oc-icon">💸</div><div class="oc-val oc-red">${fm(expense)}</div><div class="oc-label">支出</div></div>
+          <div class="overview-card"><div class="oc-icon">💵</div><div class="oc-val oc-blue">${fm(income-expense)}</div><div class="oc-label">结余</div></div>
+        </div>
+        ${reimbSum>0?`<div class="overview-card" style="background:#fff8e1;border:1px solid rgba(243,156,18,.15)"><div class="oc-icon">🧾</div><div class="oc-val" style="color:var(--warning)">${fm(reimbSum)}</div><div class="oc-label">待报销</div></div>`:''}
+      </div>
+
+      <div class="widget">
+        <div class="widget-title">⚡ 快捷入口</div>
+        <div class="mod-entry" onclick="go('ledger')">
+          <div class="me-icon me-ledger">💰</div><div class="me-info"><div class="me-name">记账</div><div class="me-desc">本月${ledgerR.filter(r=>r.date.startsWith(m)).length}笔记录</div></div><div class="me-arrow">›</div>
+        </div>
+        <div class="mod-entry" onclick="go('weight')">
+          <div class="me-icon me-weight">⚖️</div><div class="me-info"><div class="me-name">体重</div><div class="me-desc">${latestWt?latestWt.weight.toFixed(1)+' kg'+(goal?' · 目标 '+goal.target+' kg':''):'暂无记录'}</div></div><div class="me-arrow">›</div>
+        </div>
+        <div class="mod-entry" onclick="go('car')">
+          <div class="me-icon me-car">🚗</div><div class="me-info"><div class="me-name">用车</div><div class="me-desc">${info?info.brand+' '+info.model:''} 本月${fm(mCar)} · ${carR.length}条记录</div></div><div class="me-arrow">›</div>
+        </div>
+      </div>
+
+      ${recent8.length>0?`
+      <div class="widget">
+        <div class="widget-title">🕐 最近记录</div>
+        ${recent8.map(r=>{
+          if(r.type==='ledger'){
+            const d=r.data;const sign=(d.type==='income'||d.type==='loan_in')?'+':'-';
+            const cls=(d.type==='income'||d.type==='loan_in')?'income':'expense';
+            return`<div class="recent-item" onclick="go('ledger')">
+              <div class="ri-dot ${cls}"></div><div class="ri-info"><div class="ri-title">${(d.category||'').slice(2)}</div><div class="ri-sub">${fd(d.date)} ${d.account||''}</div></div>
+              <div class="ri-amount" style="color:${cls==='income'?'var(--success)':'var(--danger)'}">${sign}${fm(d.amount)}</div></div>`;
+          }else if(r.type==='weight'){
+            return`<div class="recent-item" onclick="go('weight')">
+              <div class="ri-dot weight"></div><div class="ri-info"><div class="ri-title">体重记录</div><div class="ri-sub">${fd(r.data.date)}</div></div>
+              <div class="ri-amount" style="color:var(--primary)">${r.data.weight.toFixed(1)} kg</div></div>`;
+          }else{
+            return`<div class="recent-item" onclick="go('car')">
+              <div class="ri-dot car"></div><div class="ri-info"><div class="ri-title">${r.data.carType==='fuel'?'加油/充电':r.data.carType==='maintenance'?'保养':'其他用车'}</div><div class="ri-sub">${fd(r.data.date)}</div></div>
+              <div class="ri-amount" style="color:var(--danger)">-${fm(r.data.amount||0)}</div></div>`;
+          }
+        }).join('')}
+      </div>`:''}
+
+      <div class="mod-entry" onclick="go('settings')" style="margin-top:4px">
+        <div class="me-icon" style="background:rgba(149,165,166,.1)">⚙️</div><div class="me-info"><div class="me-name">设置</div><div class="me-desc">车辆信息 · 体重目标 · 数据管理</div></div><div class="me-arrow">›</div>
+      </div>
     </div>
-  `).join('');
-  nav.querySelectorAll('.sidebar-item').forEach(el=>{
-    el.addEventListener('click',()=>{switchMod(el.dataset.mid);closeSidebar();});
-  });
-  updateStorageInfo();
-}
-async function updateStorageInfo(){
-  let total=0;try{const l=(await dbAll('ledger')).length,w=(await dbAll('weight')).length,c=(await dbAll('car')).length;total=l+w+c;}catch{}
-  $('#sidebarFooter').innerHTML=`<span>📊 ${total} 条记录</span><span>v2.1</span>`;
-}
-function toggleSidebar(e){e.stopPropagation();const s=$('#sidebar'),o=$('#sidebarOverlay');const show=!s.classList.contains('show');s.classList.toggle('show',show);o.classList.toggle('show',show);}
-function closeSidebar(){$('#sidebar').classList.remove('show');$('#sidebarOverlay').classList.remove('show');}
-function switchMod(id){
-  if(curMod===id)return;
-  curMod=id;carTab='fuel';searchQ='';ledgerFilter='all';
-  renderSidebar();renderMain();
-}
-
-// ==================== Main Render ====================
-async function renderMain(){
-  const main=$('#main'),fab=$('#fab'),ht=$('#headerTitle');
-  const m=MENU.find(x=>x.id===curMod)||MENU[0];
-  ht.innerHTML=`<span>◆</span> ${m.label}`;
-  fab.classList.remove('hidden');
-  if(curMod==='ledger')await renderLedger(main);
-  else if(curMod==='weight')await renderWeight(main);
-  else if(curMod==='car')await renderCar(main);
-  else if(curMod==='settings')await renderSettings(main);
+  `;
 }
 
 // ==================== LEDGER ====================
-async function renderLedger(main){
+async function renderLedger(app,fab){
+  fab.classList.remove('hidden');fab.onclick=()=>showLedgerForm();
   const m=month();
   const records=(await dbAll('ledger')).sort((a,b)=>b.date.localeCompare(a.date)||b.id-a.id);
   const mRecs=records.filter(r=>r.date.startsWith(m));
-  const income=mRecs.filter(r=>r.type==='income').reduce((s,r)=>s+r.amount,0);
-  const expense=mRecs.filter(r=>r.type==='expense').reduce((s,r)=>s+r.amount,0);
-  const reimbTotal=mRecs.filter(r=>r.reimbursable&&!r.reimbursed).reduce((s,r)=>s+r.amount,0);
-
-  // Filters
+  const income=mRecs.filter(r=>r.type==='income'||r.type==='loan_in').reduce((s,r)=>s+r.amount,0);
+  const expense=mRecs.filter(r=>r.type==='expense'||r.type==='loan_out').reduce((s,r)=>s+r.amount,0);
+  const reimbSum=records.filter(r=>r.reimbursable&&!r.reimbursed).reduce((s,r)=>s+r.amount,0);
   let disp=records;
-  if(ledgerFilter==='expense')disp=disp.filter(r=>r.type==='expense');
-  else if(ledgerFilter==='income')disp=disp.filter(r=>r.type==='income');
+  if(ledgerFilter==='expense')disp=disp.filter(r=>r.type==='expense'||r.type==='loan_out');
+  else if(ledgerFilter==='income')disp=disp.filter(r=>r.type==='income'||r.type==='loan_in');
   else if(ledgerFilter==='reimb')disp=disp.filter(r=>r.reimbursable&&!r.reimbursed);
   else if(ledgerFilter==='loan')disp=disp.filter(r=>r.type==='loan_out'||r.type==='loan_in');
   else if(ledgerFilter==='install')disp=disp.filter(r=>r.installment);
-  if(searchQ){const q=searchQ.toLowerCase();disp=disp.filter(r=>r.category.includes(q)||(r.note||'').toLowerCase().includes(q)||String(r.amount).includes(q)||(r.account||'').includes(q));}
+  if(searchQ){const q=searchQ.toLowerCase();disp=disp.filter(r=>(r.category||'').includes(q)||(r.note||'').toLowerCase().includes(q)||String(r.amount).includes(q)||(r.account||'').includes(q));}
 
-  // Reimb summary
-  const allReimb=records.filter(r=>r.reimbursable&&!r.reimbursed);
-  const reimbSum=allReimb.reduce((s,r)=>s+r.amount,0);
-
-  main.innerHTML=`
-    <div class="stat-row">
-      <div class="stat-card"><div class="slabel">本月收入</div><div class="svalue c-income">${fm(income)}</div></div>
-      <div class="stat-card"><div class="slabel">本月支出</div><div class="svalue c-expense">${fm(expense)}</div></div>
-      <div class="stat-card"><div class="slabel">结余</div><div class="svalue c-primary">${fm(income-expense)}</div></div>
+  app.innerHTML=`
+    <div class="header"><button class="back" onclick="go('home')">←</button><h1>记账</h1></div>
+    <div class="main">
+      <div class="summary-row">
+        <div class="summary-card"><div class="sc-label">本月收入</div><div class="sc-val sc-green">${fm(income)}</div></div>
+        <div class="summary-card"><div class="sc-label">本月支出</div><div class="sc-val sc-red">${fm(expense)}</div></div>
+        <div class="summary-card"><div class="sc-label">结余</div><div class="sc-val sc-blue">${fm(income-expense)}</div></div>
+      </div>
+      ${reimbSum>0?`<div class="summary-card" style="background:#fff8e1;border:1px solid rgba(243,156,18,.15);margin-bottom:12px"><div class="sc-label">🧾 待报销</div><div class="sc-val" style="color:var(--warning)">${fm(reimbSum)}</div></div>`:''}
+      <div class="quick-row">${[10,20,50,100,200,500].map(v=>`<button class="quick-btn" data-amt="${v}">¥${v}</button>`).join('')}</div>
+      <div class="filter-row">${LEDGER_FILTERS.map(f=>`<span class="filter-chip${f.id===ledgerFilter?' sel':''}" data-fid="${f.id}">${f.label}</span>`).join('')}</div>
+      ${mRecs.filter(r=>r.type==='expense'||r.type==='loan_out').length>0?`<div class="chart-box"><canvas id="ledgerPie"></canvas></div>`:''}
+      <div class="chart-box"><canvas id="ledgerTrend"></canvas></div>
+      <div class="search-wrap"><input type="text" id="ledgerSearch" placeholder="🔍 搜索..." value="${searchQ}"></div>
+      <div class="section-title">记录 (${disp.length}条)</div>
+      ${disp.length===0?'<div class="empty"><div class="eicon">📝</div><p>暂无记录</p></div>':''}
+      ${disp.map(r=>{
+        const tags=[];if(r.reimbursable&&!r.reimbursed)tags.push('<span class="tag tag-reimb">待报销</span>');else if(r.reimbursed)tags.push('<span class="tag tag-reimb">已报销</span>');
+        if(r.type==='loan_out')tags.push('<span class="tag tag-loan">借出</span>');else if(r.type==='loan_in')tags.push('<span class="tag tag-loan">借入</span>');
+        if(r.installment)tags.push(`<span class="tag tag-inst">${r.installCurrent||1}/${r.installTotal||'?'}期</span>`);
+        if(r.account)tags.push(`<span class="tag tag-acc">${r.account}</span>`);
+        const isIn=r.type==='income'||r.type==='loan_in';
+        return`<div class="list-item" data-id="${r.id}"><div class="cat-dot" style="background:${isIn?'rgba(39,174,96,.1)':'rgba(231,76,60,.1)'}">${r.category?r.category.slice(0,2):'💸'}</div><div class="linfo"><div class="ltitle">${(r.category||'').slice(2)}${tags.join('')}</div><div class="lsub">${fd(r.date)} ${r.note||''}</div></div><div class="lamount ${isIn?'la-in':'la-out'}">${isIn?'+':'-'}${fm(r.amount)}</div><button class="ldel" data-del="${r.id}">✕</button></div>`;
+      }).join('')}
     </div>
-    ${reimbSum>0?`<div class="stat-card" style="margin-bottom:12px;background:#fff8e1;border:1px solid rgba(243,156,18,.2)"><div class="slabel">🧾 待报销</div><div class="svalue" style="color:var(--warning)">${fm(reimbSum)}</div><div class="ssub">${allReimb.length}笔待报销</div></div>`:''}
-    <div class="quick-row">
-      ${[10,20,50,100,200,500].map(v=>`<button class="quick-btn" data-amt="${v}">¥${v}</button>`).join('')}
-    </div>
-    <div class="filter-row">
-      ${LEDGER_FILTERS.map(f=>`<span class="filter-chip${f.id===ledgerFilter?' sel':''}" data-fid="${f.id}">${f.label}</span>`).join('')}
-    </div>
-    ${mRecs.filter(r=>r.type==='expense').length>0?`<div class="chart-box"><canvas id="ledgerPie"></canvas></div>`:''}
-    <div class="chart-box"><canvas id="ledgerTrend"></canvas></div>
-    <div class="search-wrap"><input type="text" id="ledgerSearch" placeholder="🔍 搜索记录..." value="${searchQ}"></div>
-    <div class="section-title">${m} 记录 (${disp.length}条)</div>
-    ${disp.length===0?'<div class="empty"><div class="eicon">📝</div><p>暂无记录</p></div>':''}
-    ${disp.map(r=>{
-      const tags=[];
-      if(r.reimbursable&&!r.reimbursed)tags.push('<span class="tag tag-reimb">待报销</span>');
-      else if(r.reimbursed)tags.push('<span class="tag tag-reimb">已报销</span>');
-      if(r.type==='loan_out')tags.push('<span class="tag tag-loan">借出</span>');
-      else if(r.type==='loan_in')tags.push('<span class="tag tag-loan">借入</span>');
-      if(r.installment)tags.push(`<span class="tag tag-inst">${r.installCurrent||1}/${r.installTotal||'?'}期</span>`);
-      if(r.account)tags.push(`<span class="tag tag-acc">${r.account}</span>`);
-      const amtSign=r.type==='income'||r.type==='loan_in'?'+':'-';
-      const amtCls=(r.type==='income'||r.type==='loan_in')?'in':'out';
-      const catLabel=r.type==='loan_out'?'借出':r.type==='loan_in'?'借入':(r.category||'').slice(2);
-      return`<div class="list-item" data-id="${r.id}">
-        <div class="cat-dot" style="background:${amtCls==='in'?'rgba(39,174,96,.12)':'rgba(231,76,60,.12)'}">${r.category?r.category.slice(0,2):'💸'}</div>
-        <div class="linfo"><div class="ltitle">${catLabel}${tags.join('')}</div><div class="lsub">${fd(r.date)} ${r.note||''}</div></div>
-        <div class="lamount ${amtCls}">${amtSign}${fm(r.amount)}</div>
-        <button class="ldel" data-del="${r.id}">✕</button>
-      </div>`;
-    }).join('')}
   `;
-  bindDel(main);
-  main.querySelectorAll('.quick-btn').forEach(b=>b.addEventListener('click',()=>showLedgerForm(Number(b.dataset.amt))));
-  main.querySelectorAll('.filter-chip').forEach(c=>c.addEventListener('click',()=>{ledgerFilter=c.dataset.fid;renderMain();}));
-  $('#ledgerSearch')?.addEventListener('input',e=>{searchQ=e.target.value;renderMain();});
-  if(mRecs.filter(r=>r.type==='expense').length>0)setTimeout(()=>drawPie(mRecs.filter(r=>r.type==='expense')),50);
-  setTimeout(()=>drawTrend(records),50);
+  bindDel();
+  app.querySelectorAll('.quick-btn').forEach(b=>b.onclick=()=>showLedgerForm(Number(b.dataset.amt)));
+  app.querySelectorAll('.filter-chip').forEach(c=>c.onclick=()=>{ledgerFilter=c.dataset.fid;render();});
+  $('#ledgerSearch')?.addEventListener('input',e=>{searchQ=e.target.value;render();});
+  if(mRecs.filter(r=>r.type==='expense'||r.type==='loan_out').length>0)setTimeout(()=>drawPie(mRecs.filter(r=>r.type==='expense'||r.type==='loan_out')),100);
+  setTimeout(()=>drawTrend(records),100);
 }
 
 function drawPie(recs){
-  const c=$('#ledgerPie');if(!c)return;
-  const catMap={};recs.forEach(r=>{catMap[r.category]=catMap[r.category]||[];catMap[r.category].push(r.amount);});
+  const c=$('#ledgerPie');if(!c)return;const catMap={};recs.forEach(r=>{catMap[r.category]=catMap[r.category]||[];catMap[r.category].push(r.amount)});
   const entries=Object.entries(catMap).map(([k,v])=>({cat:k.slice(2),total:v.reduce((a,b)=>a+b,0)})).sort((a,b)=>b.total-a.total);
   const colors=['#E74C3C','#F39C12','#3498DB','#2ECC71','#9B59B6','#1ABC9C','#E67E22','#34495E','#95A5A6','#D35400','#C0392B','#2980B9','#27AE60','#8E44AD','#16A085'];
-  const total=entries.reduce((s,e)=>s+e.total,0);
-  const ctx=c.getContext('2d');const dpr=window.devicePixelRatio||1;
-  const W=Math.min(320,c.parentElement.clientWidth-28),H=W;
-  c.width=W*dpr;c.height=H*dpr;c.style.width=W+'px';c.style.height=H+'px';ctx.scale(dpr,dpr);
-  const cx=W*.38,cy=H*.5,r=W*.28;let ang=-Math.PI/2;
-  entries.forEach((e,i)=>{const slice=(e.total/total)*Math.PI*2;ctx.fillStyle=colors[i%colors.length];ctx.beginPath();ctx.moveTo(cx,cy);ctx.arc(cx,cy,r,ang,ang+slice);ctx.fill();ang+=slice;});
-  let ly=20;
-  entries.forEach((e,i)=>{ctx.fillStyle=colors[i%colors.length];ctx.fillRect(W*.7,ly,10,10);ctx.fillStyle='#333';ctx.font='11px sans-serif';ctx.textAlign='left';ctx.fillText(`${e.cat} ${(e.total/total*100).toFixed(1)}%`,W*.7+16,ly+9);ly+=18;});
+  const total=entries.reduce((s,e)=>s+e.total,0);const ctx=c.getContext('2d');const dpr=window.devicePixelRatio||1;
+  const W=Math.min(300,c.parentElement.clientWidth-28),H=W;c.width=W*dpr;c.height=H*dpr;c.style.width=W+'px';c.style.height=H+'px';ctx.scale(dpr,dpr);
+  const cx=W*.36,cy=H*.5,r=W*.28;let ang=-Math.PI/2;
+  entries.forEach((e,i)=>{const sl=(e.total/total)*Math.PI*2;ctx.fillStyle=colors[i%colors.length];ctx.beginPath();ctx.moveTo(cx,cy);ctx.arc(cx,cy,r,ang,ang+sl);ctx.fill();ang+=sl});
+  let ly=16;entries.forEach((e,i)=>{ctx.fillStyle=colors[i%colors.length];ctx.fillRect(W*.68,ly,9,9);ctx.fillStyle='#333';ctx.font='10px sans-serif';ctx.textAlign='left';ctx.fillText(`${e.cat} ${(e.total/total*100).toFixed(1)}%`,W*.68+13,ly+8);ly+=16});
 }
 
 function drawTrend(records){
-  const c=$('#ledgerTrend');if(!c)return;
-  const months=[];const now=new Date();
-  for(let i=5;i>=0;i--){const d=new Date(now.getFullYear(),now.getMonth()-i,1);months.push(d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0'));}
-  const data=months.map(m=>{
-    const recs=records.filter(r=>r.date.startsWith(m));
-    return{month:m.slice(5),income:recs.filter(r=>r.type==='income'||r.type==='loan_in').reduce((s,r)=>s+r.amount,0),expense:recs.filter(r=>r.type==='expense'||r.type==='loan_out').reduce((s,r)=>s+r.amount,0)};
-  });
-  const maxVal=Math.max(...data.map(d=>Math.max(d.income,d.expense)),1);
-  const ctx=c.getContext('2d');const dpr=window.devicePixelRatio||1;
-  const W=c.parentElement.clientWidth-28,H=200;c.width=W*dpr;c.height=H*dpr;c.style.width=W+'px';c.style.height=H+'px';ctx.scale(dpr,dpr);
-  const pad={t:20,r:8,b:30,l:44},pw=W-pad.l-pad.r,ph=H-pad.t-pad.b;
-  for(let i=0;i<=4;i++){const y=pad.t+ph*(1-i/4);ctx.strokeStyle='#eee';ctx.beginPath();ctx.moveTo(pad.l,y);ctx.lineTo(W-pad.r,y);ctx.stroke();ctx.fillStyle='#999';ctx.font='10px sans-serif';ctx.textAlign='right';ctx.fillText(fm(maxVal*i/4),pad.l-6,y+4);}
-  const bw=Math.min(20,pw/data.length/3);
-  data.forEach((d,i)=>{
-    const x0=pad.l+(i+.5)*pw/data.length;
-    const hi=(d.income/maxVal)*ph;ctx.fillStyle='rgba(39,174,96,.7)';ctx.fillRect(x0-bw,pad.t+ph-hi,bw,hi);
-    const he=(d.expense/maxVal)*ph;ctx.fillStyle='rgba(231,76,60,.7)';ctx.fillRect(x0,pad.t+ph-he,bw,he);
-    ctx.fillStyle='#666';ctx.font='10px sans-serif';ctx.textAlign='center';ctx.fillText(d.month,x0,H-pad.b+14);
-  });
-  ctx.fillStyle='rgba(39,174,96,.7)';ctx.fillRect(pad.l,8,8,8);ctx.fillStyle='#666';ctx.font='10px sans-serif';ctx.textAlign='left';ctx.fillText('收入',pad.l+12,16);
-  ctx.fillStyle='rgba(231,76,60,.7)';ctx.fillRect(pad.l+50,8,8,8);ctx.fillText('支出',pad.l+62,16);
+  const c=$('#ledgerTrend');if(!c)return;const months=[],now=new Date();
+  for(let i=5;i>=0;i--){const d=new Date(now.getFullYear(),now.getMonth()-i,1);months.push(d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0'))}
+  const data=months.map(m=>{const recs=records.filter(r=>r.date.startsWith(m));return{month:m.slice(5),income:recs.filter(r=>r.type==='income'||r.type==='loan_in').reduce((s,r)=>s+r.amount,0),expense:recs.filter(r=>r.type==='expense'||r.type==='loan_out').reduce((s,r)=>s+r.amount,0)}});
+  const maxV=Math.max(...data.map(d=>Math.max(d.income,d.expense)),1);const ctx=c.getContext('2d');const dpr=window.devicePixelRatio||1;
+  const W=c.parentElement.clientWidth-28,H=180;c.width=W*dpr;c.height=H*dpr;c.style.width=W+'px';c.style.height=H+'px';ctx.scale(dpr,dpr);
+  const pad={t:16,r:8,b:28,l:40},pw=W-pad.l-pad.r,ph=H-pad.t-pad.b;
+  for(let i=0;i<=4;i++){const y=pad.t+ph*(1-i/4);ctx.strokeStyle='#eee';ctx.beginPath();ctx.moveTo(pad.l,y);ctx.lineTo(W-pad.r,y);ctx.stroke();ctx.fillStyle='#999';ctx.font='9px sans-serif';ctx.textAlign='right';ctx.fillText(fm(maxV*i/4),pad.l-4,y+3)}
+  const bw=Math.min(18,pw/data.length/3);
+  data.forEach((d,i)=>{const x0=pad.l+(i+.5)*pw/data.length;const hi=(d.income/maxV)*ph;ctx.fillStyle='rgba(39,174,96,.65)';ctx.fillRect(x0-bw,pad.t+ph-hi,bw,hi);const he=(d.expense/maxV)*ph;ctx.fillStyle='rgba(231,76,60,.65)';ctx.fillRect(x0,pad.t+ph-he,bw,he);ctx.fillStyle='#666';ctx.font='9px sans-serif';ctx.textAlign='center';ctx.fillText(d.month,x0,H-pad.b+14)});
+  ctx.fillStyle='rgba(39,174,96,.65)';ctx.fillRect(pad.l,4,8,8);ctx.fillStyle='#666';ctx.font='9px sans-serif';ctx.textAlign='left';ctx.fillText('收入',pad.l+12,12);
+  ctx.fillStyle='rgba(231,76,60,.65)';ctx.fillRect(pad.l+46,4,8,8);ctx.fillText('支出',pad.l+58,12);
 }
 
-function showLedgerForm(preAmt){
+function showLedgerForm(pre){
   showModal('记一笔',`
     <div class="fg"><div class="type-tgl" id="typeTgl"><button class="inc-act" data-t="income">收入</button><button data-t="expense">支出</button></div></div>
-    <div class="fg"><label>金额</label><input type="number" id="fAmt" placeholder="0.00" step="0.01" min="0" value="${preAmt||''}"></div>
+    <div class="fg"><label>金额</label><input type="number" id="fAmt" placeholder="0.00" step="0.01" min="0" value="${pre||''}"></div>
     <div class="fg"><label>分类</label><div class="cat-grid" id="catGrid"></div></div>
     <div class="fg"><label>账户</label><div class="cat-grid" id="accGrid">${ACCOUNTS.map((a,i)=>`<span class="cat-chip${i===0?' sel':''}" data-acc="${a}">${a}</span>`).join('')}</div></div>
     <div class="chk-row"><label><input type="checkbox" id="fReimb"> 可报销</label><label><input type="checkbox" id="fLoan"> 借钱</label><label><input type="checkbox" id="fInst"> 分期</label></div>
@@ -565,456 +479,189 @@ function showLedgerForm(preAmt){
     <div class="fg"><label>日期</label><input type="date" id="fDate" value="${today()}"></div>
     <div class="fg"><label>备注</label><input type="text" id="fNote" placeholder="可选"></div>
   `,async()=>{
-    const tgl=document.querySelector('#typeTgl .inc-act,#typeTgl .exp-act');
-    const isIncome=tgl.classList.contains('inc-act');
-    const amt=parseFloat($('#fAmt').value);
-    const cat=document.querySelector('#catGrid .sel')?.dataset.cat;
+    const tgl=document.querySelector('#typeTgl .inc-act,#typeTgl .exp-act');const isIncome=tgl.classList.contains('inc-act');
+    const amt=parseFloat($('#fAmt').value);const cat=document.querySelector('#catGrid .sel')?.dataset.cat;
     const acc=document.querySelector('#accGrid .sel')?.dataset.acc;
-    if(!amt||amt<=0){toast('请输入金额');throw new Error();}
-    if(!cat){toast('请选择分类');throw new Error();}
-    const reimb=$('#fReimb').checked;
-    const loan=$('#fLoan').checked;
-    const inst=$('#fInst').checked;
-    let type=isIncome?'income':'expense';
-    let extra={};
-    if(loan){type=isIncome?'loan_in':'loan_out';extra.loan=true;}
-    if(inst){extra.installment=true;extra.installTotal=parseInt($('#fInstTotal')?.value)||0;extra.installCurrent=parseInt($('#fInstCurrent')?.value)||1;}
+    if(!amt||amt<=0){toast('请输入金额');throw new Error()}if(!cat){toast('请选择分类');throw new Error()}
+    const reimb=$('#fReimb').checked,loan=$('#fLoan').checked,inst=$('#fInst').checked;
+    let type=isIncome?'income':'expense';const extra={};
+    if(loan){type=isIncome?'loan_in':'loan_out';extra.loan=true}
+    if(inst){extra.installment=true;extra.installTotal=parseInt($('#fInstTotal')?.value)||0;extra.installCurrent=parseInt($('#fInstCurrent')?.value)||1}
     await dbAdd('ledger',{type,amount:amt,category:cat,date:$('#fDate').value,note:$('#fNote').value.trim(),account:acc,reimbursable:reimb,reimbursed:false,...extra,createdAt:Date.now()});
-    renderMain();
+    render();
   });
-  const tgl=$('#typeTgl');
-  tgl.querySelectorAll('button').forEach(b=>b.addEventListener('click',()=>{tgl.querySelectorAll('button').forEach(x=>x.className='');b.className=b.dataset.t==='income'?'inc-act':'exp-act';renderCats(b.dataset.t);}));
+  const tgl=$('#typeTgl');tgl.querySelectorAll('button').forEach(b=>b.onclick=()=>{tgl.querySelectorAll('button').forEach(x=>x.className='');b.className=b.dataset.t==='income'?'inc-act':'exp-act';renderCats(b.dataset.t)});
   renderCats('income');
-  function renderCats(t){const g=$('#catGrid');const cats=t==='income'?INC_CATS:EXP_CATS;g.innerHTML=cats.map((c,i)=>`<span class="cat-chip${i===0?' sel':''}" data-cat="${c}">${c}</span>`).join('');g.querySelectorAll('.cat-chip').forEach(c=>c.addEventListener('click',()=>{g.querySelectorAll('.cat-chip').forEach(x=>x.classList.remove('sel'));c.classList.add('sel');}));}
-  // Account chips
-  document.querySelectorAll('#accGrid .cat-chip').forEach(c=>c.addEventListener('click',()=>{document.querySelectorAll('#accGrid .cat-chip').forEach(x=>x.classList.remove('sel'));c.classList.add('sel');}));
-  // Extra fields toggle
-  function updateExtra(){
-    const ef=$('#extraFields');
-    let h='';
-    if($('#fInst').checked)h+=`<div class="fg-row"><div class="fg"><label>总期数</label><input type="number" id="fInstTotal" placeholder="12" min="1"></div><div class="fg"><label>当前第几期</label><input type="number" id="fInstCurrent" placeholder="1" min="1"></div></div>`;
-    if($('#fLoan').checked)h+=`<div class="fg"><label>对方/用途</label><input type="text" id="fLoanNote" placeholder="例如：借给张三"></div>`;
-    ef.innerHTML=h;
-  }
-  ['#fReimb','#fLoan','#fInst'].forEach(s=>{const el=document.querySelector(s);if(el)el.addEventListener('change',updateExtra);});
+  function renderCats(t){const g=$('#catGrid');const cats=t==='income'?INC_CATS:EXP_CATS;g.innerHTML=cats.map((c,i)=>`<span class="cat-chip${i===0?' sel':''}" data-cat="${c}">${c}</span>`).join('');g.querySelectorAll('.cat-chip').forEach(c=>c.onclick=()=>{g.querySelectorAll('.cat-chip').forEach(x=>x.classList.remove('sel'));c.classList.add('sel')})}
+  document.querySelectorAll('#accGrid .cat-chip').forEach(c=>c.onclick=()=>{document.querySelectorAll('#accGrid .cat-chip').forEach(x=>x.classList.remove('sel'));c.classList.add('sel')});
+  function upd(){const ef=$('#extraFields');let h='';if($('#fInst').checked)h+=`<div class="fg-row"><div class="fg"><label>总期数</label><input type="number" id="fInstTotal" placeholder="12" min="1"></div><div class="fg"><label>第几期</label><input type="number" id="fInstCurrent" placeholder="1" min="1"></div></div>`;if($('#fLoan').checked)h+=`<div class="fg"><label>对方/用途</label><input type="text" id="fLoanNote" placeholder="例如：借给张三"></div>`;ef.innerHTML=h}
+  ['#fReimb','#fLoan','#fInst'].forEach(s=>{const el=document.querySelector(s);if(el)el.onchange=upd});
 }
 
 // ==================== WEIGHT ====================
-async function renderWeight(main){
+async function renderWeight(app,fab){
+  fab.classList.remove('hidden');fab.onclick=()=>showWeightForm();
   const records=(await dbAll('weight')).sort((a,b)=>a.date.localeCompare(b.date));
-  const latest=records[records.length-1];
-  const goal=getWeightGoal();
-  const height=localStorage.getItem('wb_height')||'170';
-  let bmi='',bmiLabel='';
-  if(latest&&height){const h=parseFloat(height)/100;bmi=(latest.weight/(h*h)).toFixed(1);bmiLabel=bmiTag(bmi);}
-  const first=records[0];
-  const totalChange=first&&latest?(latest.weight-first.weight).toFixed(1):null;
-  const avg7=records.length>=7?avgLast(records,7):null;
-  const avg30=records.length>=2?avgLast(records,30):null;
-  const monthRecs=records.filter(r=>r.date.startsWith(month()));
-  const monthChange=monthRecs.length>=2?(monthRecs[monthRecs.length-1].weight-monthRecs[0].weight).toFixed(1):null;
-  const weeks=calcWeekly(records);
+  const latest=records[records.length-1];const goal=getWeightGoal();
+  const height=localStorage.getItem('wb_height')||'170';let bmi='',bl='';
+  if(latest&&height){const h=parseFloat(height)/100;bmi=(latest.weight/(h*h)).toFixed(1);bl=bmiTag(bmi)}
+  const first=records[0];const totalChange=first&&latest?(latest.weight-first.weight).toFixed(1):null;
+  const avg7=records.length>=7?avgL(records,7):null,avg30=records.length>=2?avgL(records,30):null;
+  const mRecs=records.filter(r=>r.date.startsWith(month()));const mChange=mRecs.length>=2?(mRecs[mRecs.length-1].weight-mRecs[0].weight).toFixed(1):null;
+  const weeks=cW(records);
 
-  main.innerHTML=`
-    <div class="bmi-box">
-      <div class="bmi-big">${latest?latest.weight.toFixed(1)+' kg':'-- kg'}</div>
-      <div class="bmi-tag">最新体重${bmi?' · BMI '+bmi+' '+bmiLabel:''}${goal?' · 目标 '+goal.target+' kg':''}</div>
+  app.innerHTML=`
+    <div class="header"><button class="back" onclick="go('home')">←</button><h1>体重</h1></div>
+    <div class="main">
+      <div class="bmi-box"><div class="bmi-big">${latest?latest.weight.toFixed(1)+' kg':'-- kg'}</div><div class="bmi-tag">最新体重${bmi?' · BMI '+bmi+' '+bl:''}${goal?' · 目标 '+goal.target+' kg':''}</div></div>
+      ${goal?`<div class="summary-row"><div class="summary-card"><div class="sc-label">距目标</div><div class="sc-val ${latest&&latest.weight>goal.target?'sc-red':'sc-blue'}">${latest?(latest.weight-goal.target).toFixed(1):'--'} kg</div></div><div class="summary-card"><div class="sc-label">总变化</div><div class="sc-val ${totalChange>0?'sc-red':'sc-blue'}">${totalChange||'--'} kg</div></div></div>`:''}
+      <div class="summary-row"><div class="summary-card"><div class="sc-label">7日均值</div><div class="sc-val sc-blue">${avg7||'--'} kg</div></div><div class="summary-card"><div class="sc-label">30日均值</div><div class="sc-val sc-blue">${avg30||'--'} kg</div></div><div class="summary-card"><div class="sc-label">本月变化</div><div class="sc-val ${mChange>0?'sc-red':'sc-blue'}">${mChange||'--'} kg</div></div></div>
+      ${weeks.length>0?`<div class="summary-row">${weeks.map(w=>`<div class="summary-card"><div class="sc-label">${w.label}</div><div class="sc-val" style="font-size:13px">${w.avg}</div><div class="sc-label">${w.diff}</div></div>`).join('')}</div>`:''}
+      ${records.length>=2?`<div class="chart-box"><canvas id="wtChart"></canvas></div>`:''}
+      ${records.length>=3?`<div class="chart-box"><canvas id="wtSmooth"></canvas></div>`:''}
+      ${goal&&records.length>=5?`<div class="widget" style="text-align:center"><div style="font-size:12px;color:var(--text2)">📈 趋势预测</div><div style="font-size:14px;margin-top:4px">${pred(records,goal)}</div></div>`:''}
+      <div class="section-title">历史记录</div>
+      ${records.length===0?'<div class="empty"><div class="eicon">⚖️</div><p>暂无记录</p></div>':''}
+      ${records.slice().reverse().map(r=>{const idx=records.indexOf(r),prev=records[idx-1];const diff=prev?(r.weight-prev.weight).toFixed(1):null;return`<div class="list-item" data-id="${r.id}"><div class="cat-dot" style="background:rgba(74,144,217,.1)">⚖️</div><div class="linfo"><div class="ltitle">${r.weight.toFixed(1)} kg</div><div class="lsub">${fd(r.date)} ${r.note||''}</div></div><div class="lamount" style="color:${diff>0?'var(--danger)':diff<0?'var(--success)':'var(--text3)'}">${diff?(diff>0?'+':'')+diff+' kg':''}</div><button class="ldel" data-del="${r.id}">✕</button></div>`}).join('')}
     </div>
-    ${goal?`<div class="stat-row">
-      <div class="stat-card"><div class="slabel">距目标</div><div class="svalue ${latest&&latest.weight>goal.target?'c-expense':'c-primary'}">${latest?(latest.weight-goal.target).toFixed(1):'--'} kg</div></div>
-      <div class="stat-card"><div class="slabel">已变化</div><div class="svalue ${totalChange>0?'c-expense':'c-primary'}">${totalChange||'--'} kg</div></div>
-    </div>`:''}
-    <div class="stat-row">
-      <div class="stat-card"><div class="slabel">7日均值</div><div class="svalue c-primary">${avg7||'--'} kg</div></div>
-      <div class="stat-card"><div class="slabel">30日均值</div><div class="svalue c-primary">${avg30||'--'} kg</div></div>
-      <div class="stat-card"><div class="slabel">本月变化</div><div class="svalue ${monthChange>0?'c-expense':'c-primary'}">${monthChange||'--'} kg</div></div>
-    </div>
-    ${weeks.length>0?`<div class="stat-row">${weeks.map(w=>`<div class="stat-card"><div class="slabel">${w.label}</div><div class="svalue" style="font-size:16px">${w.avg}</div><div class="ssub">${w.diff}</div></div>`).join('')}</div>`:''}
-    ${records.length>=2?`<div class="chart-box"><canvas id="wtChart"></canvas></div>`:''}
-    ${records.length>=3?`<div class="chart-box"><canvas id="wtSmooth"></canvas></div>`:''}
-    ${goal&&records.length>=5?`<div class="chart-box" style="text-align:center;padding:14px"><div style="font-size:13px;color:var(--text2)">📈 趋势预测</div><div style="font-size:15px;margin-top:4px">${predictGoal(records,goal)}</div></div>`:''}
-    <div class="section-title">历史记录</div>
-    ${records.length===0?'<div class="empty"><div class="eicon">⚖️</div><p>还没有体重记录</p></div>':''}
-    ${records.slice().reverse().map(r=>{
-      const idx=records.indexOf(r);const prev=records[idx-1];
-      const diff=prev?(r.weight-prev.weight).toFixed(1):null;
-      return`<div class="list-item" data-id="${r.id}">
-        <div class="cat-dot" style="background:rgba(74,144,217,.12)">⚖️</div>
-        <div class="linfo"><div class="ltitle">${r.weight.toFixed(1)} kg</div><div class="lsub">${fd(r.date)} ${r.note||''}</div></div>
-        <div class="lamount" style="color:${diff>0?'var(--danger)':diff<0?'var(--success)':'var(--text3)'}">${diff?(diff>0?'+':'')+diff+' kg':''}</div>
-        <button class="ldel" data-del="${r.id}">✕</button>
-      </div>`;
-    }).join('')}
   `;
-  bindDel(main);
-  if(records.length>=2)setTimeout(()=>drawWeightChart(records,parseFloat(height)),50);
-  if(records.length>=3)setTimeout(()=>drawSmoothChart(records),100);
+  bindDel();if(records.length>=2)setTimeout(()=>drawWtChart(records,parseFloat(height)),100);if(records.length>=3)setTimeout(()=>drawSmooth(records),150);
 }
+function bmiTag(b){const v=parseFloat(b);if(v<18.5)return'偏瘦';if(v<24)return'正常';if(v<28)return'偏胖';return'肥胖'}
+function avgL(r,n){const s=r.slice(-n);return(s.reduce((a,r)=>a+r.weight,0)/s.length).toFixed(1)}
+function cW(records){if(records.length<7)return[];const w=[],n=new Date();for(let i=3;i>=0;i--){const e=new Date(n);e.setDate(e.getDate()-i*7);const s=new Date(e);s.setDate(s.getDate()-6);const wk=records.filter(r=>r.date>=s.toISOString().slice(0,10)&&r.date<=e.toISOString().slice(0,10));if(!wk.length)continue;const a=(wk.reduce((s,r)=>s+r.weight,0)/wk.length).toFixed(1);const p=w[w.length-1];const d=p?(a-p.avg).toFixed(1):null;w.push({label:`W${4-i}`,avg:a+'kg',diff:d?(d>0?'+'+d:d)+'kg':''})}return w}
+function pred(r,g){const l=r.slice(-5);if(l.length<2)return'数据不足';let sx=0,sy=0,sxy=0,sx2=0,n=l.length;l.forEach((r,i)=>{sx+=i;sy+=r.weight;sxy+=i*r.weight;sx2+=i*i});const sl=(n*sxy-sx*sy)/(n*sx2-sx*sx);if(Math.abs(sl)<0.001)return'体重趋于稳定';const d=(g.target-l[n-1].weight)/sl;if(d<=0)return sl<0?'已达成目标！🎉':'体重在上升，暂无法预测';const p=new Date();p.setDate(p.getDate()+Math.round(d));return`预计 ${p.toLocaleDateString('zh-CN')} 达到目标（约${Math.round(d)}天后）`}
 
-function bmiTag(b){const v=parseFloat(b);if(v<18.5)return'偏瘦';if(v<24)return'正常';if(v<28)return'偏胖';return'肥胖';}
-function avgLast(records,n){const s=records.slice(-n);return(s.reduce((a,r)=>a+r.weight,0)/s.length).toFixed(1);}
-function calcWeekly(records){
-  if(records.length<7)return[];const weeks=[],now=new Date();
-  for(let w=3;w>=0;w--){const end=new Date(now);end.setDate(end.getDate()-w*7);const start=new Date(end);start.setDate(start.getDate()-6);const s=start.toISOString().slice(0,10),e=end.toISOString().slice(0,10);const wk=records.filter(r=>r.date>=s&&r.date<=e);if(wk.length===0)continue;const avg=(wk.reduce((a,r)=>a+r.weight,0)/wk.length).toFixed(1);const prev=weeks[weeks.length-1];const diff=prev?(avg-prev.avg).toFixed(1):null;weeks.push({label:`W${4-w}`,avg:avg+'kg',diff:diff?(diff>0?'+'+diff:diff)+'kg':''});}
-  return weeks;
-}
-function predictGoal(records,goal){
-  const last5=records.slice(-5);if(last5.length<2)return'数据不足';
-  let sumX=0,sumY=0,sumXY=0,sumX2=0,n=last5.length;
-  last5.forEach((r,i)=>{sumX+=i;sumY+=r.weight;sumXY+=i*r.weight;sumX2+=i*i;});
-  const slope=(n*sumXY-sumX*sumY)/(n*sumX2-sumX*sumX);
-  if(Math.abs(slope)<0.001)return'体重趋于稳定';
-  const days=(goal.target-last5[n-1].weight)/slope;
-  if(days<=0)return slope<0?'已达成目标！🎉':'体重在上升，暂无法预测';
-  const pred=new Date();pred.setDate(pred.getDate()+Math.round(days));
-  return`预计 ${pred.toLocaleDateString('zh-CN')} 达到目标 ${goal.target} kg（约${Math.round(days)}天后）`;
-}
-
-function drawWeightChart(records,height){
-  const c=$('#wtChart');if(!c)return;
-  const ctx=c.getContext('2d');const dpr=window.devicePixelRatio||1;
-  const W=c.parentElement.clientWidth-28,H=220;c.width=W*dpr;c.height=H*dpr;c.style.width=W+'px';c.style.height=H+'px';ctx.scale(dpr,dpr);
-  const pad={t:20,r:16,b:32,l:48},pw=W-pad.l-pad.r,ph=H-pad.t-pad.b;
-  const wts=records.map(r=>r.weight);
-  const bmis=height?records.map(r=>(r.weight/((height/100)**2)).toFixed(1)):[];
-  const minW=Math.floor(Math.min(...wts)-2),maxW=Math.ceil(Math.max(...wts)+2);
-  const minB=bmis.length?Math.floor(Math.min(...bmis.map(Number))-2):0,maxB=bmis.length?Math.ceil(Math.max(...bmis.map(Number))+2):0;
-  // Grid
-  ctx.strokeStyle='#eee';ctx.lineWidth=1;
-  for(let i=minW;i<=maxW;i+=2){const y=pad.t+ph-((i-minW)/(maxW-minW))*ph;ctx.beginPath();ctx.moveTo(pad.l,y);ctx.lineTo(W-pad.r,y);ctx.stroke();ctx.fillStyle='#999';ctx.font='10px sans-serif';ctx.textAlign='right';ctx.fillText(i,pad.l-6,y+4);}
-  // Weight line
-  ctx.strokeStyle='#4A90D9';ctx.lineWidth=2.5;ctx.lineJoin='round';ctx.beginPath();
-  records.forEach((r,i)=>{const x=pad.l+(i/(records.length-1))*pw;const y=pad.t+ph-((r.weight-minW)/(maxW-minW))*ph;i===0?ctx.moveTo(x,y):ctx.lineTo(x,y);});
-  ctx.stroke();
-  // BMI line
-  if(bmis.length){
-    ctx.strokeStyle='#F39C12';ctx.lineWidth=2;ctx.setLineDash([4,3]);ctx.beginPath();
-    records.forEach((r,i)=>{const x=pad.l+(i/(records.length-1))*pw;const bmi=parseFloat(bmis[i]);const y=pad.t+ph-((bmi-minB)/(maxB-minB))*ph;i===0?ctx.moveTo(x,y):ctx.lineTo(x,y);});
-    ctx.stroke();ctx.setLineDash([]);
-    for(let i=minB;i<=maxB;i+=2){const y=pad.t+ph-((i-minB)/(maxB-minB))*ph;ctx.fillStyle='#F39C12';ctx.font='9px sans-serif';ctx.textAlign='left';ctx.fillText(i,pad.l+pw+2,y+3);}
-  }
-  // X labels
-  ctx.fillStyle='#999';ctx.font='10px sans-serif';ctx.textAlign='center';
-  const step=Math.max(1,Math.floor(records.length/6));
-  records.forEach((r,i)=>{if(i%step===0||i===records.length-1)ctx.fillText(fd(r.date).slice(5),pad.l+(i/(records.length-1))*pw,H-pad.b+16);});
-  // Dots
-  records.forEach((r,i)=>{const x=pad.l+(i/(records.length-1))*pw;const y=pad.t+ph-((r.weight-minW)/(maxW-minW))*ph;ctx.fillStyle='#4A90D9';ctx.beginPath();ctx.arc(x,y,3.5,0,Math.PI*2);ctx.fill();ctx.fillStyle='#fff';ctx.beginPath();ctx.arc(x,y,1.5,0,Math.PI*2);ctx.fill();});
-  // Legend
-  ctx.fillStyle='#4A90D9';ctx.fillRect(pad.l,6,10,3);ctx.fillStyle='#666';ctx.font='10px sans-serif';ctx.textAlign='left';ctx.fillText('体重(kg)',pad.l+14,10);
-  if(bmis.length){ctx.fillStyle='#F39C12';ctx.fillRect(pad.l+70,6,10,3);ctx.fillText('BMI',pad.l+84,10);}
-}
-
-// Smooth trend chart (moving average)
-function drawSmoothChart(records){
-  const c=$('#wtSmooth');if(!c)return;
-  const ctx=c.getContext('2d');const dpr=window.devicePixelRatio||1;
+function drawWtChart(records,h){
+  const c=$('#wtChart');if(!c)return;const ctx=c.getContext('2d');const dpr=window.devicePixelRatio||1;
   const W=c.parentElement.clientWidth-28,H=200;c.width=W*dpr;c.height=H*dpr;c.style.width=W+'px';c.style.height=H+'px';ctx.scale(dpr,dpr);
-  const pad={t:20,r:12,b:32,l:44},pw=W-pad.l-pad.r,ph=H-pad.t-pad.b;
-  // Compute 3-day moving avg
-  const smooth=[];for(let i=0;i<records.length;i++){const slice=records.slice(Math.max(0,i-1),Math.min(records.length,i+2));const avg=slice.reduce((a,r)=>a+r.weight,0)/slice.length;smooth.push(avg);}
-  const allVals=[...records.map(r=>r.weight),...smooth];
-  const minV=Math.floor(Math.min(...allVals)-2),maxV=Math.ceil(Math.max(...allVals)+2);
-  // Grid
+  const pad={t:16,r:12,b:28,l:40},pw=W-pad.l-pad.r,ph=H-pad.t-pad.b;
+  const wts=records.map(r=>r.weight),bmis=h?records.map(r=>(r.weight/((h/100)**2)).toFixed(1)):[];
+  const minW=Math.floor(Math.min(...wts)-2),maxW=Math.ceil(Math.max(...wts)+2);
   ctx.strokeStyle='#eee';ctx.lineWidth=1;
-  for(let i=minV;i<=maxV;i+=2){const y=pad.t+ph-((i-minV)/(maxV-minV))*ph;ctx.beginPath();ctx.moveTo(pad.l,y);ctx.lineTo(W-pad.r,y);ctx.stroke();ctx.fillStyle='#999';ctx.font='9px sans-serif';ctx.textAlign='right';ctx.fillText(i,pad.l-4,y+3);}
-  // Raw line (light)
-  ctx.strokeStyle='rgba(74,144,217,.25)';ctx.lineWidth=1.5;ctx.lineJoin='round';ctx.beginPath();
-  records.forEach((r,i)=>{const x=pad.l+(i/(records.length-1))*pw;const y=pad.t+ph-((r.weight-minV)/(maxV-minV))*ph;i===0?ctx.moveTo(x,y):ctx.lineTo(x,y);});
-  ctx.stroke();
-  // Smooth line
-  ctx.strokeStyle='#4A90D9';ctx.lineWidth=3;ctx.lineJoin='round';ctx.beginPath();
-  smooth.forEach((v,i)=>{const x=pad.l+(i/(smooth.length-1))*pw;const y=pad.t+ph-((v-minV)/(maxV-minV))*ph;i===0?ctx.moveTo(x,y):ctx.lineTo(x,y);});
-  ctx.stroke();
-  // Area fill
-  ctx.fillStyle='rgba(74,144,217,.08)';ctx.beginPath();
-  smooth.forEach((v,i)=>{const x=pad.l+(i/(smooth.length-1))*pw;const y=pad.t+ph-((v-minV)/(maxV-minV))*ph;i===0?ctx.moveTo(x,y):ctx.lineTo(x,y);});
-  const lastX=pad.l+pw,lastY=pad.t+ph-((smooth[smooth.length-1]-minV)/(maxV-minV))*ph;
-  ctx.lineTo(lastX,pad.t+ph);ctx.lineTo(pad.l,pad.t+ph);ctx.fill();
-  // X labels
-  ctx.fillStyle='#999';ctx.font='9px sans-serif';ctx.textAlign='center';
-  const step=Math.max(1,Math.floor(records.length/6));
-  records.forEach((r,i)=>{if(i%step===0||i===records.length-1)ctx.fillText(fd(r.date).slice(5),pad.l+(i/(records.length-1))*pw,H-pad.b+14);});
-  ctx.fillStyle='#666';ctx.font='10px sans-serif';ctx.textAlign='center';ctx.fillText('平滑趋势 (3日移动均线)',W/2,10);
-  // Legend
-  ctx.fillStyle='rgba(74,144,217,.25)';ctx.fillRect(pad.l,8,14,2);
-  ctx.fillStyle='#4A90D9';ctx.fillRect(pad.l,14,14,3);
-  ctx.fillStyle='#666';ctx.font='9px sans-serif';ctx.textAlign='left';ctx.fillText('原始 / 平滑',pad.l+18,14);
+  for(let i=minW;i<=maxW;i+=2){const y=pad.t+ph-((i-minW)/(maxW-minW))*ph;ctx.beginPath();ctx.moveTo(pad.l,y);ctx.lineTo(W-pad.r,y);ctx.stroke();ctx.fillStyle='#999';ctx.font='9px sans-serif';ctx.textAlign='right';ctx.fillText(i,pad.l-4,y+3)}
+  ctx.strokeStyle='#4A90D9';ctx.lineWidth=2.5;ctx.lineJoin='round';ctx.beginPath();
+  records.forEach((r,i)=>{const x=pad.l+(i/(records.length-1))*pw;const y=pad.t+ph-((r.weight-minW)/(maxW-minW))*ph;i===0?ctx.moveTo(x,y):ctx.lineTo(x,y)});ctx.stroke();
+  if(bmis.length){const minB=Math.floor(Math.min(...bmis.map(Number))-2),maxB=Math.ceil(Math.max(...bmis.map(Number))+2);ctx.strokeStyle='#F39C12';ctx.lineWidth=2;ctx.setLineDash([4,3]);ctx.beginPath();records.forEach((r,i)=>{const x=pad.l+(i/(records.length-1))*pw;const bmi=parseFloat(bmis[i]);const y=pad.t+ph-((bmi-minB)/(maxB-minB))*ph;i===0?ctx.moveTo(x,y):ctx.lineTo(x,y)});ctx.stroke();ctx.setLineDash([])}
+  ctx.fillStyle='#999';ctx.font='9px sans-serif';ctx.textAlign='center';const step=Math.max(1,Math.floor(records.length/6));
+  records.forEach((r,i)=>{if(i%step===0||i===records.length-1)ctx.fillText(fd(r.date).slice(5),pad.l+(i/(records.length-1))*pw,H-pad.b+14)});
+  records.forEach((r,i)=>{const x=pad.l+(i/(records.length-1))*pw;const y=pad.t+ph-((r.weight-minW)/(maxW-minW))*ph;ctx.fillStyle='#4A90D9';ctx.beginPath();ctx.arc(x,y,3,0,Math.PI*2);ctx.fill();ctx.fillStyle='#fff';ctx.beginPath();ctx.arc(x,y,1.5,0,Math.PI*2);ctx.fill()});
+  ctx.fillStyle='#4A90D9';ctx.fillRect(pad.l,4,10,2);ctx.fillStyle='#666';ctx.font='9px sans-serif';ctx.textAlign='left';ctx.fillText('体重(kg)',pad.l+14,8);
+  if(bmis.length){ctx.fillStyle='#F39C12';ctx.fillRect(pad.l+66,4,10,2);ctx.fillText('BMI',pad.l+80,8)}
+}
+function drawSmooth(records){
+  const c=$('#wtSmooth');if(!c)return;const ctx=c.getContext('2d');const dpr=window.devicePixelRatio||1;
+  const W=c.parentElement.clientWidth-28,H=180;c.width=W*dpr;c.height=H*dpr;c.style.width=W+'px';c.style.height=H+'px';ctx.scale(dpr,dpr);
+  const pad={t:16,r:12,b:28,l:40},pw=W-pad.l-pad.r,ph=H-pad.t-pad.b;
+  const smooth=[];for(let i=0;i<records.length;i++){const s=records.slice(Math.max(0,i-1),Math.min(records.length,i+2));smooth.push(s.reduce((a,r)=>a+r.weight,0)/s.length)}
+  const all=[...records.map(r=>r.weight),...smooth];const minV=Math.floor(Math.min(...all)-2),maxV=Math.ceil(Math.max(...all)+2);
+  ctx.strokeStyle='#eee';ctx.lineWidth=1;for(let i=minV;i<=maxV;i+=2){const y=pad.t+ph-((i-minV)/(maxV-minV))*ph;ctx.beginPath();ctx.moveTo(pad.l,y);ctx.lineTo(W-pad.r,y);ctx.stroke();ctx.fillStyle='#999';ctx.font='9px sans-serif';ctx.textAlign='right';ctx.fillText(i,pad.l-4,y+3)}
+  ctx.strokeStyle='rgba(74,144,217,.2)';ctx.lineWidth=1.5;ctx.beginPath();records.forEach((r,i)=>{const x=pad.l+(i/(records.length-1))*pw;const y=pad.t+ph-((r.weight-minV)/(maxV-minV))*ph;i===0?ctx.moveTo(x,y):ctx.lineTo(x,y)});ctx.stroke();
+  ctx.strokeStyle='#4A90D9';ctx.lineWidth=3;ctx.lineJoin='round';ctx.beginPath();smooth.forEach((v,i)=>{const x=pad.l+(i/(smooth.length-1))*pw;const y=pad.t+ph-((v-minV)/(maxV-minV))*ph;i===0?ctx.moveTo(x,y):ctx.lineTo(x,y)});ctx.stroke();
+  ctx.fillStyle='rgba(74,144,217,.07)';ctx.beginPath();smooth.forEach((v,i)=>{const x=pad.l+(i/(smooth.length-1))*pw;const y=pad.t+ph-((v-minV)/(maxV-minV))*ph;i===0?ctx.moveTo(x,y):ctx.lineTo(x,y)});ctx.lineTo(pad.l+pw,pad.t+ph);ctx.lineTo(pad.l,pad.t+ph);ctx.fill();
+  ctx.fillStyle='#999';ctx.font='9px sans-serif';ctx.textAlign='center';const step=Math.max(1,Math.floor(records.length/6));
+  records.forEach((r,i)=>{if(i%step===0||i===records.length-1)ctx.fillText(fd(r.date).slice(5),pad.l+(i/(records.length-1))*pw,H-pad.b+14)});
+  ctx.fillStyle='#666';ctx.font='9px sans-serif';ctx.textAlign='center';ctx.fillText('平滑趋势 (3日移动均线)',W/2,8);
+  ctx.fillStyle='rgba(74,144,217,.2)';ctx.fillRect(pad.l,4,12,2);ctx.fillStyle='#4A90D9';ctx.fillRect(pad.l,10,12,3);ctx.fillStyle='#666';ctx.font='9px sans-serif';ctx.textAlign='left';ctx.fillText('原始 / 平滑',pad.l+16,12);
 }
 
 function showWeightForm(){
-  showModal('记录体重',`
-    <div class="fg"><label>体重 (kg)</label><input type="number" id="fWt" placeholder="65.0" step="0.1" min="20" max="300"></div>
-    <div class="fg"><label>日期</label><input type="date" id="fDate" value="${today()}"></div>
-    <div class="fg"><label>备注</label><input type="text" id="fNote" placeholder="可选"></div>
-  `,async()=>{
-    const wt=parseFloat($('#fWt').value);if(!wt||wt<20||wt>300){toast('请输入有效体重');throw new Error();}
-    const date=$('#fDate').value;
-    const existing=await dbAll('weight');const dup=existing.find(r=>r.date===date);
-    if(dup)await dbPut('weight',{...dup,weight:wt,note:$('#fNote').value.trim()});
-    else await dbAdd('weight',{weight:wt,date,note:$('#fNote').value.trim(),createdAt:Date.now()});
-    renderMain();
+  showModal('记录体重',`<div class="fg"><label>体重 (kg)</label><input type="number" id="fWt" placeholder="65.0" step="0.1" min="20" max="300"></div><div class="fg"><label>日期</label><input type="date" id="fDate" value="${today()}"></div><div class="fg"><label>备注</label><input type="text" id="fNote" placeholder="可选"></div>`,async()=>{
+    const wt=parseFloat($('#fWt').value);if(!wt||wt<20||wt>300){toast('请输入有效体重');throw new Error()}const date=$('#fDate').value;
+    const ex=await dbAll('weight');const dup=ex.find(r=>r.date===date);
+    if(dup)await dbPut('weight',{...dup,weight:wt,note:$('#fNote').value.trim()});else await dbAdd('weight',{weight:wt,date,note:$('#fNote').value.trim(),createdAt:Date.now()});render();
   });
 }
 
 // ==================== CAR ====================
-async function renderCar(main){
-  const info=getCarInfo();
-  const isEV=info?.fuelType==='electric';
+async function renderCar(app,fab){
+  fab.classList.remove('hidden');fab.onclick=()=>showCarForm();
+  const info=getCarInfo();const isEV=info?.fuelType==='electric';
   const records=(await dbAll('car')).sort((a,b)=>b.date.localeCompare(a.date)||b.id-a.id);
   const filtered=carTab==='all'?records:records.filter(r=>r.carType===carTab);
-  // Maintenance alert
   const maintAlert=records.filter(r=>r.carType==='maintenance'&&r.nextDate).sort((a,b)=>b.date.localeCompare(a.date))[0];
-  const maintWarn=maintAlert&&maintAlert.nextDate&&maintAlert.nextDate<=new Date().toISOString().slice(0,10);
-  // Fuel/Charge stats
+  const maintWarn=maintAlert&&maintAlert.nextDate&&maintAlert.nextDate<=today();
   const fuelRecs=records.filter(r=>r.carType==='fuel').sort((a,b)=>a.date.localeCompare(b.date));
   let fuelStat='',fuelChart=false;
-  if(fuelRecs.length>=2){
-    if(isEV){
-      let tKm=0,tKwh=0;
-      for(let i=1;i<fuelRecs.length;i++){tKm+=fuelRecs[i].mileage-fuelRecs[i-1].mileage;tKwh+=fuelRecs[i].liters||0;}
-      const avg=tKm>0?(tKwh/tKm*100).toFixed(1):'--';
-      fuelStat=`<div class="stat-card"><div class="slabel">百公里电耗</div><div class="svalue c-primary">${avg} kWh</div></div>`;
-    }else{
-      let tKm=0,tL=0;
-      for(let i=1;i<fuelRecs.length;i++){tKm+=fuelRecs[i].mileage-fuelRecs[i-1].mileage;tL+=fuelRecs[i].liters||0;}
-      const avg=tKm>0?(tL/tKm*100).toFixed(1):'--';
-      fuelStat=`<div class="stat-card"><div class="slabel">百公里油耗</div><div class="svalue c-primary">${avg} L</div></div>`;
-    }
-    fuelChart=fuelRecs.length>=2;
-  }
-  const totalExp=filtered.reduce((s,r)=>s+(r.amount||0),0);
-  const mRecs=filtered.filter(r=>r.date.startsWith(month()));
-  const mExp=mRecs.reduce((s,r)=>s+(r.amount||0),0);
-  const fuelTypeLabel=isEV?'纯电 ⚡':'燃油 ⛽';
+  if(fuelRecs.length>=2){let tKm=0,tU=0;for(let i=1;i<fuelRecs.length;i++){tKm+=fuelRecs[i].mileage-fuelRecs[i-1].mileage;tU+=fuelRecs[i].liters||0}const avg=tKm>0?(tU/tKm*100).toFixed(1):'--';fuelStat=`<div class="summary-card"><div class="sc-label">百公里${isEV?'电耗':'油耗'}</div><div class="sc-val sc-blue">${avg} ${isEV?'kWh':'L'}</div></div>`;fuelChart=true}
+  const totalExp=filtered.reduce((s,r)=>s+(r.amount||0),0);const mExp=filtered.filter(r=>r.date.startsWith(month())).reduce((s,r)=>s+(r.amount||0),0);
 
-  main.innerHTML=`
-    ${info?`
-      <div class="carinfo-card">
-        <div class="ci-row"><span class="ci-label">品牌</span><span>${info.brand} ${info.model} <span style="font-size:11px;color:var(--text3)">${fuelTypeLabel}</span></span></div>
-        <div class="ci-row"><span class="ci-label">车牌</span><span>${info.plate}</span></div>
-        <div class="ci-row"><span class="ci-label">购车日期</span><span>${info.buyDate}</span></div>
-        <div class="ci-row"><span class="ci-label">当前里程</span><span>${info.currentMileage} km</span></div>
-        <span class="ci-edit" id="editCarInfo">✎ 编辑车辆信息</span>
-      </div>
-    `:`<div class="carinfo-card" style="text-align:center"><p style="margin-bottom:8px;color:var(--text3)">尚未设置车辆信息</p><span class="ci-edit" id="editCarInfo" style="font-size:14px">✎ 填写车辆信息</span></div>`}
-    ${maintWarn?`<div class="stat-card" style="margin-bottom:12px;background:#fff3f3;border:1px solid rgba(231,76,60,.2)"><div class="slabel" style="color:var(--danger)">⚠️ 保养提醒</div><div class="svalue" style="font-size:15px;color:var(--danger)">${maintAlert.note||'保养'} · ${maintAlert.nextDate}<span class="alert-badge">到期</span></div></div>`:''}
-    <div class="stat-row">
-      <div class="stat-card"><div class="slabel">本月费用</div><div class="svalue c-expense">${fm(mExp)}</div></div>
-      <div class="stat-card"><div class="slabel">全部记录</div><div class="svalue c-primary">${filtered.length}</div></div>
-      <div class="stat-card"><div class="slabel">总计</div><div class="svalue c-expense">${fm(totalExp)}</div></div>
-      ${fuelStat}
+  app.innerHTML=`
+    <div class="header"><button class="back" onclick="go('home')">←</button><h1>用车</h1></div>
+    <div class="main">
+      ${info?`<div class="car-info"><div class="ci-row"><span class="ci-l">车辆</span><span>${info.brand} ${info.model} <span style="font-size:11px;color:var(--text3)">${isEV?'⚡电动':'⛽燃油'}</span></span></div><div class="ci-row"><span class="ci-l">车牌</span><span>${info.plate}</span></div><div class="ci-row"><span class="ci-l">购车</span><span>${info.buyDate}</span></div><div class="ci-row"><span class="ci-l">里程</span><span>${info.currentMileage} km</span></div><span class="ci-edit" id="editCarInfo">✎ 编辑</span></div>`:`<div class="car-info" style="text-align:center"><p style="margin-bottom:6px;color:var(--text3)">未设置车辆信息</p><span class="ci-edit" id="editCarInfo" style="font-size:14px">✎ 填写信息</span></div>`}
+      ${maintWarn?`<div class="alert-card"><div class="al-icon">⚠️</div><div class="al-text">${maintAlert.note||'保养'} · ${maintAlert.nextDate}<span class="alert-badge">到期</span></div></div>`:''}
+      <div class="summary-row"><div class="summary-card"><div class="sc-label">本月费用</div><div class="sc-val sc-red">${fm(mExp)}</div></div><div class="summary-card"><div class="sc-label">记录数</div><div class="sc-val sc-blue">${filtered.length}</div></div><div class="summary-card"><div class="sc-label">总计</div><div class="sc-val sc-red">${fm(totalExp)}</div></div>${fuelStat}</div>
+      ${fuelChart?`<div class="chart-box"><canvas id="fuelChart"></canvas></div>`:''}
+      <div class="subtabs">${CAR_SUBTABS.map(t=>`<div class="subtab${t.id===carTab?' act':''}" data-tab="${t.id}">${t.label}</div>`).join('')}</div>
+      <div class="section-title">记录列表</div>
+      ${filtered.length===0?'<div class="empty"><div class="eicon">🚗</div><p>暂无记录</p></div>':''}
+      ${filtered.map(r=>{const icon=r.carType==='fuel'?'⛽':r.carType==='maintenance'?'🔧':'📦';return`<div class="list-item" data-id="${r.id}"><div class="cat-dot" style="background:rgba(74,144,217,.1)">${icon}</div><div class="linfo"><div class="ltitle">${r.carType==='fuel'?(isEV?'充电':'加油'):r.carType==='maintenance'?'保养':r.note||'其他'}${r.nextDate?` <span style="font-size:10px;color:var(--text3)">下次:${r.nextDate}</span>`:''}</div><div class="lsub">${fd(r.date)} ${r.mileage?r.mileage+'km ':''}${r.liters?(isEV?r.liters+'kWh ':r.liters+'L '):''}</div></div><div class="lamount la-out">-${fm(r.amount||0)}</div><button class="ldel" data-del="${r.id}">✕</button></div>`}).join('')}
     </div>
-    ${fuelChart?`<div class="chart-box"><canvas id="fuelChart"></canvas></div>`:''}
-    <div class="subtabs">
-      ${CAR_SUBTABS.map(t=>`<div class="subtab${t.id===carTab?' act':''}" data-tab="${t.id}">${t.label}</div>`).join('')}
-    </div>
-    <div class="section-title">记录列表</div>
-    ${filtered.length===0?'<div class="empty"><div class="eicon">🚗</div><p>暂无记录</p></div>':''}
-    ${filtered.map(r=>{
-      const icon=r.carType==='fuel'?'⛽':r.carType==='maintenance'?'🔧':'📦';
-      const name=r.carType==='fuel'?(isEV?'充电':'加油'):r.carType==='maintenance'?'保养':r.note||'其他';
-      return`<div class="list-item" data-id="${r.id}">
-        <div class="cat-dot" style="background:rgba(74,144,217,.12)">${icon}</div>
-        <div class="linfo"><div class="ltitle">${name}${r.nextDate?` <span style="font-size:10px;color:var(--text3)">下次:${r.nextDate}</span>`:''}</div>
-        <div class="lsub">${fd(r.date)} ${r.mileage?r.mileage+'km ':''}${r.liters?(isEV?r.liters+'kWh ':r.liters+'L '):''}${r.unitPrice?'单价'+r.unitPrice+' ':''}</div></div>
-        <div class="lamount out">-${fm(r.amount||0)}</div>
-        <button class="ldel" data-del="${r.id}">✕</button>
-      </div>`;
-    }).join('')}
   `;
-  bindDel(main);
-  main.querySelectorAll('.subtab').forEach(el=>el.addEventListener('click',()=>{carTab=el.dataset.tab;renderMain();}));
+  bindDel();app.querySelectorAll('.subtab').forEach(el=>el.onclick=()=>goCar(el.dataset.tab));
   $('#editCarInfo')?.addEventListener('click',showCarInfoForm);
-  if(fuelChart)setTimeout(()=>drawFuelChart(fuelRecs,isEV),50);
+  if(fuelChart)setTimeout(()=>drawFuelChart(fuelRecs,isEV),100);
 }
-
-function drawFuelChart(recs,isEV){
-  const c=$('#fuelChart');if(!c)return;
-  const last=recs.slice(-10);if(last.length<2)return;
-  const data=[];
-  for(let i=1;i<last.length;i++){const km=last[i].mileage-last[i-1].mileage;const l=last[i].liters||0;data.push({label:fd(last[i].date).slice(5),val:km>0?(l/km*100).toFixed(1):0});}
-  const ctx=c.getContext('2d');const dpr=window.devicePixelRatio||1;
-  const W=c.parentElement.clientWidth-28,H=180;c.width=W*dpr;c.height=H*dpr;c.style.width=W+'px';c.style.height=H+'px';ctx.scale(dpr,dpr);
-  const pad={t:20,r:12,b:30,l:40},pw=W-pad.l-pad.r,ph=H-pad.t-pad.b;
-  const maxV=Math.max(...data.map(d=>parseFloat(d.val)))+2,minV=Math.max(0,Math.min(...data.map(d=>parseFloat(d.val)))-2);
-  for(let i=0;i<=4;i++){const v=minV+(maxV-minV)*i/4;const y=pad.t+ph*(1-i/4);ctx.strokeStyle='#eee';ctx.beginPath();ctx.moveTo(pad.l,y);ctx.lineTo(W-pad.r,y);ctx.stroke();ctx.fillStyle='#999';ctx.font='9px sans-serif';ctx.textAlign='right';ctx.fillText(v.toFixed(1),pad.l-4,y+3);}
-  ctx.strokeStyle='#F39C12';ctx.lineWidth=2.5;ctx.lineJoin='round';ctx.beginPath();
-  data.forEach((d,i)=>{const x=pad.l+(i/(data.length-1))*pw;const y=pad.t+ph-((parseFloat(d.val)-minV)/(maxV-minV))*ph;i===0?ctx.moveTo(x,y):ctx.lineTo(x,y);});
-  ctx.stroke();
-  data.forEach((d,i)=>{const x=pad.l+(i/(data.length-1))*pw;const y=pad.t+ph-((parseFloat(d.val)-minV)/(maxV-minV))*ph;ctx.fillStyle='#F39C12';ctx.beginPath();ctx.arc(x,y,3.5,0,Math.PI*2);ctx.fill();ctx.fillStyle='#666';ctx.font='9px sans-serif';ctx.textAlign='center';ctx.fillText(d.label,x,H-pad.b+14);});
-  ctx.fillStyle='#666';ctx.font='10px sans-serif';ctx.textAlign='center';ctx.fillText(`百公里${isEV?'电耗 (kWh/100km)':'油耗 (L/100km)'}`,W/2,12);
-}
+function drawFuelChart(r,ev){const c=$('#fuelChart');if(!c)return;const l=r.slice(-10);if(l.length<2)return;const d=[];for(let i=1;i<l.length;i++){const k=l[i].mileage-l[i-1].mileage,lt=l[i].liters||0;d.push({label:fd(l[i].date).slice(5),val:k>0?(lt/k*100).toFixed(1):0})}const ctx=c.getContext('2d');const dpr=window.devicePixelRatio||1;const W=c.parentElement.clientWidth-28,H=160;c.width=W*dpr;c.height=H*dpr;c.style.width=W+'px';c.style.height=H+'px';ctx.scale(dpr,dpr);const pad={t:16,r:12,b:28,l:36},pw=W-pad.l-pad.r,ph=H-pad.t-pad.b;const mx=Math.max(...d.map(x=>parseFloat(x.val)))+2,mn=Math.max(0,Math.min(...d.map(x=>parseFloat(x.val)))-2);for(let i=0;i<=4;i++){const v=mn+(mx-mn)*i/4,y=pad.t+ph*(1-i/4);ctx.strokeStyle='#eee';ctx.beginPath();ctx.moveTo(pad.l,y);ctx.lineTo(W-pad.r,y);ctx.stroke();ctx.fillStyle='#999';ctx.font='8px sans-serif';ctx.textAlign='right';ctx.fillText(v.toFixed(1),pad.l-3,y+3)}ctx.strokeStyle='#F39C12';ctx.lineWidth=2.5;ctx.lineJoin='round';ctx.beginPath();d.forEach((p,i)=>{const x=pad.l+(i/(d.length-1))*pw,y=pad.t+ph-((parseFloat(p.val)-mn)/(mx-mn))*ph;i===0?ctx.moveTo(x,y):ctx.lineTo(x,y)});ctx.stroke();d.forEach((p,i)=>{const x=pad.l+(i/(d.length-1))*pw,y=pad.t+ph-((parseFloat(p.val)-mn)/(mx-mn))*ph;ctx.fillStyle='#F39C12';ctx.beginPath();ctx.arc(x,y,3,0,Math.PI*2);ctx.fill();ctx.fillStyle='#666';ctx.font='8px sans-serif';ctx.textAlign='center';ctx.fillText(p.label,x,H-pad.b+14)});ctx.fillStyle='#666';ctx.font='9px sans-serif';ctx.textAlign='center';ctx.fillText(`百公里${ev?'电耗(kWh)':'油耗(L)'}趋势`,W/2,8)}
 
 function showCarInfoForm(){
   const info=getCarInfo()||{};
   showModal(info.brand?'编辑车辆信息':'设置车辆信息',`
-    <div class="fg"><label>车辆类型</label>
-      <select id="ciFuelType" style="width:100%;padding:9px 12px;border:1px solid var(--border);border-radius:var(--radius-sm);font-size:14px;background:var(--bg)">
-        <option value="gasoline" ${info.fuelType!=='electric'?'selected':''}>⛽ 燃油车</option>
-        <option value="electric" ${info.fuelType==='electric'?'selected':''}>⚡ 电动车</option>
-      </select>
-    </div>
+    <div class="fg"><label>类型</label><select id="ciFuelType" style="width:100%;padding:10px;border:1px solid #e0e0e0;border-radius:10px;font-size:14px;background:#f8f9fa"><option value="gasoline" ${info.fuelType!=='electric'?'selected':''}>⛽ 燃油车</option><option value="electric" ${info.fuelType==='electric'?'selected':''}>⚡ 电动车</option></select></div>
     <div class="fg"><label>品牌</label><input type="text" id="ciBrand" placeholder="例如：丰田" value="${info.brand||''}"></div>
     <div class="fg"><label>型号</label><input type="text" id="ciModel" placeholder="例如：卡罗拉" value="${info.model||''}"></div>
     <div class="fg"><label>车牌号</label><input type="text" id="ciPlate" placeholder="例如：京A12345" value="${info.plate||''}"></div>
     <div class="fg"><label>购车日期</label><input type="date" id="ciBuyDate" value="${info.buyDate||''}"></div>
     <div class="fg"><label>当前里程 (km)</label><input type="number" id="ciMileage" placeholder="50000" value="${info.currentMileage||''}"></div>
-  `,async()=>{
-    const data={brand:$('#ciBrand').value.trim(),model:$('#ciModel').value.trim(),plate:$('#ciPlate').value.trim(),buyDate:$('#ciBuyDate').value,currentMileage:parseInt($('#ciMileage').value)||0,fuelType:$('#ciFuelType').value};
-    if(!data.brand||!data.model){toast('请填写品牌和型号');throw new Error();}
-    setCarInfo(data);renderMain();
-  });
+  `,async()=>{const d={brand:$('#ciBrand').value.trim(),model:$('#ciModel').value.trim(),plate:$('#ciPlate').value.trim(),buyDate:$('#ciBuyDate').value,currentMileage:parseInt($('#ciMileage').value)||0,fuelType:$('#ciFuelType').value};if(!d.brand||!d.model){toast('请填写品牌和型号');throw new Error()}setCarInfo(d);render()});
 }
-
 function showCarForm(){
-  const info=getCarInfo();const isEV=info?.fuelType==='electric';
-  const isFuel=carTab==='fuel',isMaint=carTab==='maintenance';
-  const type=isFuel?'fuel':isMaint?'maintenance':'other';
-  const energyLabel=isEV?'充电度数 (kWh)':'加油量 (L)';
-  const energyUnit=isEV?'kWh':'L';
-  const priceLabel=isEV?'电价 (元/kWh)':'油价 (元/L)';
-
+  const info=getCarInfo();const ev=info?.fuelType==='electric';const isF=carTab==='fuel',isM=carTab==='maintenance',tp=isF?'fuel':isM?'maintenance':'other';
   showModal('添加用车记录',`
-    <div class="fg"><label>类型</label>
-      <select id="fCarType" style="width:100%;padding:9px 12px;border:1px solid var(--border);border-radius:var(--radius-sm);font-size:14px;background:var(--bg)">
-        <option value="fuel" ${type==='fuel'?'selected':''}>${isEV?'⚡ 充电':'⛽ 加油'}</option>
-        <option value="maintenance" ${type==='maintenance'?'selected':''}>🔧 保养</option>
-        <option value="other" ${type==='other'?'selected':''}>📦 其他</option>
-      </select>
-    </div>
-    ${isFuel?`
-      <div class="fg"><label>当前里程 (km)</label><input type="number" id="fMileage" placeholder="50000"></div>
-      <div class="fg-row"><div class="fg"><label>${priceLabel}</label><input type="number" id="fPrice" placeholder="${isEV?'0.80':'8.00'}" step="0.01"></div><div class="fg"><label>${energyLabel}</label><input type="number" id="fLiters" placeholder="${isEV?'50':'45'}" step="0.01"></div></div>
-      <div class="fg"><label>金额 (元)</label><input type="number" id="fAmt" placeholder="自动计算" step="0.01"></div>
-    `:isMaint?`
-      <div class="fg"><label>保养项目</label><input type="text" id="fNote" placeholder="例如：更换机油"></div>
-      <div class="fg-row"><div class="fg"><label>费用</label><input type="number" id="fAmt" placeholder="0.00" step="0.01"></div><div class="fg"><label>下次保养里程</label><input type="number" id="fNextKm" placeholder="60000"></div></div>
-      <div class="fg"><label>下次保养日期</label><input type="date" id="fNextDate"></div>
-    `:`
-      <div class="fg"><label>费用类别</label><div class="cat-grid" id="otherCatGrid">${OTHER_CATS.map((c,i)=>`<span class="cat-chip${i===0?' sel':''}" data-cat="${c}">${c}</span>`).join('')}</div></div>
-      <div class="fg"><label>金额</label><input type="number" id="fAmt" placeholder="0.00" step="0.01"></div>
-      <div class="fg"><label>备注</label><input type="text" id="fNote" placeholder="可选"></div>
-    `}
+    <div class="fg"><label>类型</label><select id="fCarType" style="width:100%;padding:10px;border:1px solid #e0e0e0;border-radius:10px;font-size:14px;background:#f8f9fa"><option value="fuel" ${tp==='fuel'?'selected':''}>${ev?'⚡ 充电':'⛽ 加油'}</option><option value="maintenance" ${tp==='maintenance'?'selected':''}>🔧 保养</option><option value="other" ${tp==='other'?'selected':''}>📦 其他</option></select></div>
+    ${isF?`<div class="fg"><label>当前里程 (km)</label><input type="number" id="fMileage" placeholder="50000"></div><div class="fg-row"><div class="fg"><label>${ev?'电价 (元/kWh)':'油价 (元/L)'}</label><input type="number" id="fPrice" placeholder="${ev?'0.80':'8.00'}" step="0.01"></div><div class="fg"><label>${ev?'充电量 (kWh)':'加油量 (L)'}</label><input type="number" id="fLiters" placeholder="${ev?'50':'45'}" step="0.01"></div></div><div class="fg"><label>金额</label><input type="number" id="fAmt" placeholder="自动计算" step="0.01"></div>`:isM?`<div class="fg"><label>保养项目</label><input type="text" id="fNote" placeholder="例如：更换机油"></div><div class="fg-row"><div class="fg"><label>费用</label><input type="number" id="fAmt" placeholder="0.00" step="0.01"></div><div class="fg"><label>下次里程</label><input type="number" id="fNextKm" placeholder="60000"></div></div><div class="fg"><label>下次保养日期</label><input type="date" id="fNextDate"></div>`:`<div class="fg"><label>类别</label><div class="cat-grid" id="ocg">${OTHER_CATS.map((c,i)=>`<span class="cat-chip${i===0?' sel':''}" data-cat="${c}">${c}</span>`).join('')}</div></div><div class="fg"><label>金额</label><input type="number" id="fAmt" placeholder="0.00" step="0.01"></div><div class="fg"><label>备注</label><input type="text" id="fNote" placeholder="可选"></div>`}
     <div class="fg"><label>日期</label><input type="date" id="fDate" value="${today()}"></div>
   `,async()=>{
-    const ct=$('#fCarType').value;
-    const amt=parseFloat($('#fAmt').value)||0;
-    const date=$('#fDate').value;
-    const rec={carType:ct,amount:amt,date,note:'',createdAt:Date.now()};
-    if(ct==='fuel'){
-      rec.mileage=parseFloat($('#fMileage').value)||0;
-      const price=parseFloat($('#fPrice').value)||0,liters=parseFloat($('#fLiters').value)||0;
-      if(price&&liters)rec.amount=price*liters;
-      else if(amt&&price)rec.liters=amt/price;
-      else if(amt&&liters)rec.unitPrice=amt/liters;
-      rec.liters=liters||rec.liters||0;rec.unitPrice=price||rec.unitPrice||0;
-      if(rec.mileage){const info=getCarInfo();if(info){info.currentMileage=rec.mileage;setCarInfo(info);}}
-    }else if(ct==='maintenance'){
-      rec.note=$('#fNote').value.trim();
-      rec.nextMileage=parseInt($('#fNextKm').value)||0;
-      rec.nextDate=$('#fNextDate').value||'';
-    }else{
-      const cat=document.querySelector('#otherCatGrid .sel')?.dataset.cat||OTHER_CATS[0];
-      rec.note=cat+' '+($('#fNote')?.value?.trim()||'');
-    }
-    if(!date){toast('请选择日期');throw new Error();}
-    await dbAdd('car',rec);renderMain();
+    const ct=$('#fCarType').value,date=$('#fDate').value,rec={carType:ct,amount:parseFloat($('#fAmt').value)||0,date,note:'',createdAt:Date.now()};
+    if(ct==='fuel'){rec.mileage=parseFloat($('#fMileage').value)||0;const pr=parseFloat($('#fPrice').value)||0,lt=parseFloat($('#fLiters').value)||0;if(pr&&lt)rec.amount=pr*lt;else if(rec.amount&&pr)rec.liters=rec.amount/pr;else if(rec.amount&&lt)rec.unitPrice=rec.amount/lt;rec.liters=lt||rec.liters||0;rec.unitPrice=pr||rec.unitPrice||0;if(rec.mileage){const i=getCarInfo();if(i){i.currentMileage=rec.mileage;setCarInfo(i)}}}
+    else if(ct==='maintenance'){rec.note=$('#fNote').value.trim();rec.nextMileage=parseInt($('#fNextKm').value)||0;rec.nextDate=$('#fNextDate').value||''}
+    else{const cat=document.querySelector('#ocg .sel')?.dataset.cat||OTHER_CATS[0];rec.note=cat+' '+($('#fNote')?.value?.trim()||'')}
+    if(!date){toast('请选择日期');throw new Error()}await dbAdd('car',rec);render();
   });
-  if(isFuel){
-    ['#fPrice','#fLiters'].forEach(s=>{const el=document.querySelector(s);if(el)el.addEventListener('input',()=>{const p=parseFloat($('#fPrice').value)||0,l=parseFloat($('#fLiters').value)||0;if(p&&l)$('#fAmt').value=(p*l).toFixed(2);});});
-    $('#fAmt').addEventListener('input',()=>{const a=parseFloat($('#fAmt').value)||0,p=parseFloat($('#fPrice').value)||0,l=parseFloat($('#fLiters').value)||0;if(a&&p&&!l)$('#fLiters').value=(a/p).toFixed(2);else if(a&&l&&!p)$('#fPrice').value=(a/l).toFixed(2);});
-  }
-  if(!isFuel&&!isMaint){document.querySelectorAll('#otherCatGrid .cat-chip').forEach(c=>c.addEventListener('click',()=>{document.querySelectorAll('#otherCatGrid .cat-chip').forEach(x=>x.classList.remove('sel'));c.classList.add('sel');}));}
-  $('#fCarType').addEventListener('change',function(){carTab=this.value;showCarForm();});
+  if(isF){['#fPrice','#fLiters'].forEach(s=>{const el=document.querySelector(s);if(el)el.oninput=()=>{const p=parseFloat($('#fPrice').value)||0,l=parseFloat($('#fLiters').value)||0;if(p&&l)$('#fAmt').value=(p*l).toFixed(2)}});$('#fAmt').oninput=()=>{const a=parseFloat($('#fAmt').value)||0,p=parseFloat($('#fPrice').value)||0,l=parseFloat($('#fLiters').value)||0;if(a&&p&&!l)$('#fLiters').value=(a/p).toFixed(2);else if(a&&l&&!p)$('#fPrice').value=(a/l).toFixed(2)}}
+  if(!isF&&!isM){document.querySelectorAll('#ocg .cat-chip').forEach(c=>c.onclick=()=>{document.querySelectorAll('#ocg .cat-chip').forEach(x=>x.classList.remove('sel'));c.classList.add('sel')})}
+  $('#fCarType').onchange=function(){carTab=this.value;showCarForm()};
 }
 
 // ==================== SETTINGS ====================
-async function renderSettings(main){
-  const info=getCarInfo();
-  const goal=getWeightGoal();
-  const height=localStorage.getItem('wb_height')||'170';
-  const fuelLabel=info?.fuelType==='electric'?'⚡ 电动':'⛽ 燃油';
-  main.innerHTML=`
-    <div class="setting-group"><h4>🚗 车辆信息</h4>
-      ${info?`
-        <div class="setting-item"><span class="si-label">${info.brand} ${info.model} <span style="font-size:11px">${fuelLabel}</span></span><span class="si-val">${info.plate}</span><span class="si-btn" id="setCarBtn">编辑</span></div>
-      `:`<div class="setting-item"><span class="si-label">未设置</span><span class="si-btn" id="setCarBtn">设置</span></div>`}
-    </div>
-    <div class="setting-group"><h4>⚖️ 体重设置</h4>
-      <div class="setting-item"><span class="si-label">身高</span><span class="si-val">${height} cm</span><span class="si-btn" id="setHeightBtn">修改</span></div>
-      <div class="setting-item"><span class="si-label">目标体重</span><span class="si-val">${goal?goal.target+' kg':'未设置'}</span><span class="si-btn" id="setGoalBtn">${goal?'修改':'设置'}</span></div>
-    </div>
-    <div class="setting-group"><h4>📦 数据管理</h4>
-      <div class="setting-item"><span class="si-label">导出数据 (CSV)</span><span class="si-btn" id="exportBtn">导出</span></div>
-      <div class="setting-item"><span class="si-label">清除所有数据</span><span class="si-btn danger" id="clearBtn">清除</span></div>
+async function renderSettings(app,fab){
+  const info=getCarInfo(),goal=getWeightGoal(),h=localStorage.getItem('wb_height')||'170';
+  app.innerHTML=`
+    <div class="header"><button class="back" onclick="go('home')">←</button><h1>设置</h1></div>
+    <div class="main">
+      <div class="setting-group"><h4>🚗 车辆信息</h4>${info?`<div class="setting-item"><span class="si-label">${info.brand} ${info.model}</span><span class="si-val">${info.plate}</span><span class="si-btn" id="setCarBtn">编辑</span></div>`:`<div class="setting-item"><span class="si-label">未设置</span><span class="si-btn" id="setCarBtn">设置</span></div>`}</div>
+      <div class="setting-group"><h4>⚖️ 体重设置</h4><div class="setting-item"><span class="si-label">身高</span><span class="si-val">${h} cm</span><span class="si-btn" id="setHtBtn">修改</span></div><div class="setting-item"><span class="si-label">目标体重</span><span class="si-val">${goal?goal.target+' kg':'未设置'}</span><span class="si-btn" id="setGlBtn">${goal?'修改':'设置'}</span></div></div>
+      <div class="setting-group"><h4>📦 数据</h4><div class="setting-item"><span class="si-label">导出 CSV</span><span class="si-btn" id="expBtn">导出</span></div><div class="setting-item"><span class="si-label">清除所有数据</span><span class="si-btn danger" id="clrBtn">清除</span></div></div>
     </div>
   `;
-  $('#setCarBtn').addEventListener('click',showCarInfoForm);
-  $('#setHeightBtn').addEventListener('click',()=>{const h=prompt('输入身高 (cm)',height);if(h&&!isNaN(h)&&h>50&&h<250){localStorage.setItem('wb_height',h);renderMain();}});
-  $('#setGoalBtn').addEventListener('click',()=>{const g=prompt('输入目标体重 (kg)',goal?goal.target:'');if(g&&!isNaN(g)&&g>20&&g<300){setWeightGoal({target:parseFloat(g),startDate:today()});renderMain();}});
-  $('#exportBtn').addEventListener('click',exportCSV);
-  $('#clearBtn').addEventListener('click',()=>showConfirm('确定清除所有数据吗？此操作不可恢复！',async()=>{await Promise.all(['ledger','weight','car'].map(s=>dbAll(s).then(rs=>Promise.all(rs.map(r=>dbDel(s,r.id))))));localStorage.clear();toast('数据已清除');renderMain();}));
+  $('#setCarBtn')?.addEventListener('click',showCarInfoForm);
+  $('#setHtBtn')?.addEventListener('click',()=>{const v=prompt('身高 (cm)',h);if(v&&!isNaN(v)&&v>50&&v<250){localStorage.setItem('wb_height',v);render()}});
+  $('#setGlBtn')?.addEventListener('click',()=>{const v=prompt('目标体重 (kg)',goal?goal.target:'');if(v&&!isNaN(v)&&v>20&&v<300){setWeightGoal({target:parseFloat(v),startDate:today()});render()}});
+  $('#expBtn')?.addEventListener('click',expCSV);
+  $('#clrBtn')?.addEventListener('click',()=>showConfirm('确定清除所有数据？不可恢复！',async()=>{await Promise.all(['ledger','weight','car'].map(s=>dbAll(s).then(rs=>Promise.all(rs.map(r=>dbDel(s,r.id))))));localStorage.clear();toast('已清除');render()}));
 }
-
-async function exportCSV(){
-  const ledger=await dbAll('ledger');const weight=await dbAll('weight');const car=await dbAll('car');
-  let csv='\uFEFF';
-  csv+='=== 记账记录 ===\n类型,分类,金额,日期,账户,可报销,已报销,分期,备注\n';
-  ledger.forEach(r=>csv+=`${r.type},${r.category||''},${r.amount},${r.date},${r.account||''},${r.reimbursable?'是':'否'},${r.reimbursed?'是':'否'},${r.installment?r.installCurrent+'/'+r.installTotal:''},${r.note||''}\n`);
-  csv+='\n=== 体重记录 ===\n体重(kg),日期,备注\n';
-  weight.forEach(r=>csv+=`${r.weight},${r.date},${r.note||''}\n`);
-  csv+='\n=== 用车记录 ===\n类型,金额,日期,里程,用量,备注\n';
-  car.forEach(r=>csv+=`${r.carType},${r.amount||0},${r.date},${r.mileage||''},${r.liters||''},${r.note||''}\n`);
-  const blob=new Blob([csv],{type:'text/csv;charset=utf-8'});
-  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='workbench_export.csv';a.click();
-  toast('导出成功');
-}
+async function expCSV(){
+  const l=await dbAll('ledger'),w=await dbAll('weight'),c=await dbAll('car');let csv='\uFEFF=== 记账 ===\n类型,分类,金额,日期,账户,报销,分期,备注\n';l.forEach(r=>csv+=`${r.type},${r.category||''},${r.amount},${r.date},${r.account||''},${r.reimbursable?'是':'否'},${r.installment?r.installCurrent+'/'+r.installTotal:''},${r.note||''}\n`);csv+='\n=== 体重 ===\n体重(kg),日期,备注\n';w.forEach(r=>csv+=`${r.weight},${r.date},${r.note||''}\n`);csv+='\n=== 用车 ===\n类型,金额,日期,里程,用量,备注\n';c.forEach(r=>csv+=`${r.carType},${r.amount||0},${r.date},${r.mileage||''},${r.liters||''},${r.note||''}\n`);const b=new Blob([csv],{type:'text/csv;charset=utf-8'});const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download='workbench.csv';a.click();toast('导出成功')}
 
 // ==================== Shared ====================
-function showModal(title,content,onSubmit){
-  const o=$('#modalOverlay');
-  o.innerHTML=`<div class="modal"><h3>${title}</h3>${content}<button class="btn-primary" id="modalSubmit">确定</button></div>`;
-  o.classList.remove('hidden');
-  o.addEventListener('click',e=>{if(e.target===o)closeModal();});
-  $('#modalSubmit').addEventListener('click',async()=>{try{await onSubmit();closeModal();}catch(e){}});
-}
-function closeModal(){$('#modalOverlay').classList.add('hidden');}
-function showConfirm(msg,fn){
-  const o=$('#confirmOverlay');
-  o.innerHTML=`<div class="confirm-box"><p>${msg}</p><div class="cbtns"><button class="btn-cancel" id="cfmCancel">取消</button><button class="btn-danger" id="cfmOk">确定</button></div></div>`;
-  o.classList.remove('hidden');
-  $('#cfmCancel').onclick=()=>o.classList.add('hidden');
-  $('#cfmOk').onclick=async()=>{o.classList.add('hidden');await fn();};
-}
-function bindDel(container){
-  container.querySelectorAll('[data-del]').forEach(b=>b.addEventListener('click',e=>{e.stopPropagation();showConfirm('确定删除这条记录吗？',async()=>{const s=curMod==='car'?'car':curMod;await dbDel(s,Number(b.dataset.del));renderMain();});}));
-}
+function showModal(t,c,f){const o=$('#modalOverlay');o.innerHTML=`<div class="modal"><h3>${t}</h3>${c}<button class="btn-primary" id="modalSubmit">确定</button></div>`;o.classList.remove('hidden');o.onclick=e=>{if(e.target===o)closeModal()};$('#modalSubmit').onclick=async()=>{try{await f();closeModal()}catch(e){}}}
+function closeModal(){$('#modalOverlay').classList.add('hidden')}
+function showConfirm(m,f){const o=$('#confirmOverlay');o.innerHTML=`<div class="confirm-box"><p>${m}</p><div class="cbtns"><button class="btn-cancel" id="cfmCancel">取消</button><button class="btn-danger" id="cfmOk">确定</button></div></div>`;o.classList.remove('hidden');$('#cfmCancel').onclick=()=>o.classList.add('hidden');$('#cfmOk').onclick=async()=>{o.classList.add('hidden');await f()}}
+function bindDel(){document.querySelectorAll('[data-del]').forEach(b=>b.onclick=e=>{e.stopPropagation();showConfirm('确定删除？',async()=>{const s=page==='car'?'car':page;await dbDel(s,Number(b.dataset.del));render()})})}
 
-// ==================== Init ====================
-async function init(){
-  await openDB();
-  renderSidebar();
-  renderMain();
-  $('#menuBtn').addEventListener('click',e=>toggleSidebar(e));
-  $('#sidebarOverlay').addEventListener('click',closeSidebar);
-  // Only close sidebar on swipe-right when sidebar is actually open
-  let touchStartX=0,touchStartY=0;
-  document.addEventListener('touchstart',e=>{touchStartX=e.touches[0].clientX;touchStartY=e.touches[0].clientY;},true);
-  document.addEventListener('touchend',e=>{
-    const dx=touchStartX-e.changedTouches[0].clientX;
-    const dy=Math.abs(touchStartY-e.changedTouches[0].clientY);
-    // Only close on clear horizontal swipe (not vertical scroll), and only when sidebar is open
-    if(dx>50&&Math.abs(dx)>dy*1.5&&$('#sidebar').classList.contains('show'))closeSidebar();
-  },true);
-  $('#fab').addEventListener('click',()=>{
-    if(curMod==='ledger')showLedgerForm();
-    else if(curMod==='weight')showWeightForm();
-    else if(curMod==='car')showCarForm();
-    else if(curMod==='settings')renderSettings($('#main'));
-  });
-  if('serviceWorker'in navigator)navigator.serviceWorker.register('sw.js').catch(()=>{});
-  window.addEventListener('resize',()=>{if(curMod==='weight'||curMod==='ledger')renderMain();});
-}
+// Init
+async function init(){await openDB();render();if('serviceWorker'in navigator)navigator.serviceWorker.register('sw.js').catch(()=>{});window.addEventListener('resize',()=>{if(page!=='home')render()})}
 document.addEventListener('DOMContentLoaded',init);
 </script>
 </body>
