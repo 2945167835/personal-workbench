@@ -1,4 +1,5 @@
-const CACHE_NAME = 'workbench-v3';
+// v3 — 强制网络优先，避免旧缓存阻塞
+const CACHE_NAME = 'workbench-v3.1';
 const ASSETS = [
   '/personal-workbench/index.html',
   '/personal-workbench/manifest.json'
@@ -14,23 +15,21 @@ self.addEventListener('install', e => {
 self.addEventListener('activate', e => {
   e.waitUntil(
     caches.keys().then(keys => Promise.all(
-      keys.filter(k => k !== CACHE_NAME).map(k => caches.delete(k))
+      keys.map(k => caches.delete(k))
     ))
   );
   self.clients.claim();
 });
 
+// Network-first strategy
 self.addEventListener('fetch', e => {
-  e.respondWith(
-    caches.match(e.request).then(cached => {
-      const networked = fetch(e.request).then(res => {
-        if (res && res.status === 200) {
-          const clone = res.clone();
-          caches.open(CACHE_NAME).then(c => c.put(e.request, clone));
-        }
+  if (e.request.url.includes('index.html') || e.request.url.includes('manifest.json')) {
+    e.respondWith(
+      fetch(e.request).then(res => {
+        const clone = res.clone();
+        caches.open(CACHE_NAME).then(c => c.put(e.request, clone));
         return res;
-      }).catch(() => cached);
-      return cached || networked;
-    })
-  );
+      }).catch(() => caches.match(e.request))
+    );
+  }
 });

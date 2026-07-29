@@ -273,6 +273,7 @@ body{
 <div class="toast" id="toast"></div>
 
 <script>
+// === v3.1 ===
 // ==================== IndexedDB ====================
 const DB_NAME='WorkbenchDB',DB_VER=3;let db;
 function openDB(){return new Promise((r,j)=>{const req=indexedDB.open(DB_NAME,DB_VER);req.onupgradeneeded=e=>{const d=e.target.result;if(!d.objectStoreNames.contains('ledger')){const s=d.createObjectStore('ledger',{keyPath:'id',autoIncrement:true});s.createIndex('date','date');s.createIndex('type','type');}if(!d.objectStoreNames.contains('weight')){const s=d.createObjectStore('weight',{keyPath:'id',autoIncrement:true});s.createIndex('date','date',{unique:true});}if(!d.objectStoreNames.contains('car')){const s=d.createObjectStore('car',{keyPath:'id',autoIncrement:true});s.createIndex('date','date');s.createIndex('carType','carType');}};req.onsuccess=e=>{db=e.target.result;r(db);};req.onerror=()=>j(req.error);});}
@@ -661,7 +662,7 @@ function showConfirm(m,f){const o=$('#confirmOverlay');o.innerHTML=`<div class="
 function bindDel(){document.querySelectorAll('[data-del]').forEach(b=>b.onclick=e=>{e.stopPropagation();showConfirm('确定删除？',async()=>{const s=page==='car'?'car':page;await dbDel(s,Number(b.dataset.del));render()})})}
 
 // Init
-async function init(){await openDB();render();if('serviceWorker'in navigator)navigator.serviceWorker.register('sw.js').catch(()=>{});window.addEventListener('resize',()=>{if(page!=='home')render()})}
+async function init(){await openDB();render();if('serviceWorker'in navigator){navigator.serviceWorker.getRegistrations().then(regs=>regs.forEach(r=>r.unregister()));navigator.serviceWorker.register('sw.js?v=3.1').catch(()=>{})}window.addEventListener('resize',()=>{if(page!=='home')render()})}
 document.addEventListener('DOMContentLoaded',init);
 </script>
 </body>
