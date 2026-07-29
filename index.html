@@ -283,9 +283,13 @@ function dbAll(s,n){return new Promise((r,j)=>{const t=db.transaction(s,'readonl
 function dbDel(s,id){return new Promise((r,j)=>{const t=db.transaction(s,'readwrite');const q=t.objectStore(s).delete(id);q.onsuccess=()=>r();q.onerror=()=>j(q.error);});}
 
 // ==================== Config ====================
-const EXP_CATS=['🍜 餐饮','🚌 交通','🛒 购物','👗 服饰','🏠 居家','🎮 娱乐','📱 通讯','💊 医疗','📚 教育','🎁 人情','🐱 宠物','💻 数码','💄 美妆','🏃 运动','✈️ 旅行','📦 其他'];
-const INC_CATS=['💰 工资','🎁 奖金','💼 兼职','📈 投资','↩️ 退款','🧾 报销','🧧 红包','🤝 借入','📦 其他'];
-const ACCOUNTS=['💰 现金','🏦 银行卡','💬 微信','📱 支付宝','💳 信用卡','📦 其他'];
+// User-defined categories & accounts — stored in localStorage
+function getExpCats(){try{const v=JSON.parse(localStorage.getItem('wb_expCats'));return v&&v.length?v:['🍜 餐饮','🚌 交通','🛒 购物','🏠 居家','🎮 娱乐','📦 其他']}catch{return['🍜 餐饮','🚌 交通','🛒 购物','🏠 居家','🎮 娱乐','📦 其他']}}
+function setExpCats(a){localStorage.setItem('wb_expCats',JSON.stringify(a))}
+function getIncCats(){try{const v=JSON.parse(localStorage.getItem('wb_incCats'));return v&&v.length?v:['💰 工资','🎁 奖金','💼 兼职','📈 投资','📦 其他']}catch{return['💰 工资','🎁 奖金','💼 兼职','📈 投资','📦 其他']}}
+function setIncCats(a){localStorage.setItem('wb_incCats',JSON.stringify(a))}
+function getAccounts(){try{const v=JSON.parse(localStorage.getItem('wb_accounts'));return v&&v.length?v:['💰 现金','🏦 银行卡','💬 微信','📱 支付宝']}catch{return['💰 现金','🏦 银行卡','💬 微信','📱 支付宝']}}
+function setAccounts(a){localStorage.setItem('wb_accounts',JSON.stringify(a))}
 const CAR_SUBTABS=[{id:'fuel',label:'⛽ 加油/充电'},{id:'maintenance',label:'🔧 保养'},{id:'other',label:'📦 其他'},{id:'all',label:'📋 全部'}];
 const OTHER_CATS=['🛡️ 保险','🅿️ 停车','🛣️ 过路费','🧼 洗车','🔩 维修','📋 年检','🔧 改装','📦 其他'];
 const LEDGER_FILTERS=[{id:'all',label:'全部'},{id:'expense',label:'支出'},{id:'income',label:'收入'},{id:'reimb',label:'待报销'},{id:'loan',label:'借入/借出'},{id:'install',label:'分期'}];
@@ -372,7 +376,7 @@ async function renderHome(app,fab){
             const d=r.data;const sign=(d.type==='income'||d.type==='loan_in')?'+':'-';
             const cls=(d.type==='income'||d.type==='loan_in')?'income':'expense';
             return`<div class="recent-item" onclick="go('ledger')">
-              <div class="ri-dot ${cls}"></div><div class="ri-info"><div class="ri-title">${(d.category||'').slice(2)}</div><div class="ri-sub">${fd(d.date)} ${d.account||''}</div></div>
+              <div class="ri-dot ${cls}"></div><div class="ri-info"><div class="ri-title">${d.category||''}</div><div class="ri-sub">${fd(d.date)} ${d.account||''}</div></div>
               <div class="ri-amount" style="color:${cls==='income'?'var(--success)':'var(--danger)'}">${sign}${fm(d.amount)}</div></div>`;
           }else if(r.type==='weight'){
             return`<div class="recent-item" onclick="go('weight')">
@@ -419,7 +423,6 @@ async function renderLedger(app,fab){
         <div class="summary-card"><div class="sc-label">结余</div><div class="sc-val sc-blue">${fm(income-expense)}</div></div>
       </div>
       ${reimbSum>0?`<div class="summary-card" style="background:#fff8e1;border:1px solid rgba(243,156,18,.15);margin-bottom:12px"><div class="sc-label">🧾 待报销</div><div class="sc-val" style="color:var(--warning)">${fm(reimbSum)}</div></div>`:''}
-      <div class="quick-row">${[10,20,50,100,200,500].map(v=>`<button class="quick-btn" data-amt="${v}">¥${v}</button>`).join('')}</div>
       <div class="filter-row">${LEDGER_FILTERS.map(f=>`<span class="filter-chip${f.id===ledgerFilter?' sel':''}" data-fid="${f.id}">${f.label}</span>`).join('')}</div>
       ${mRecs.filter(r=>r.type==='expense'||r.type==='loan_out').length>0?`<div class="chart-box"><canvas id="ledgerPie"></canvas></div>`:''}
       <div class="chart-box"><canvas id="ledgerTrend"></canvas></div>
@@ -432,12 +435,11 @@ async function renderLedger(app,fab){
         if(r.installment)tags.push(`<span class="tag tag-inst">${r.installCurrent||1}/${r.installTotal||'?'}期</span>`);
         if(r.account)tags.push(`<span class="tag tag-acc">${r.account}</span>`);
         const isIn=r.type==='income'||r.type==='loan_in';
-        return`<div class="list-item" data-id="${r.id}"><div class="cat-dot" style="background:${isIn?'rgba(39,174,96,.1)':'rgba(231,76,60,.1)'}">${r.category?r.category.slice(0,2):'💸'}</div><div class="linfo"><div class="ltitle">${(r.category||'').slice(2)}${tags.join('')}</div><div class="lsub">${fd(r.date)} ${r.note||''}</div></div><div class="lamount ${isIn?'la-in':'la-out'}">${isIn?'+':'-'}${fm(r.amount)}</div><button class="ldel" data-del="${r.id}">✕</button></div>`;
+        return`<div class="list-item" data-id="${r.id}"><div class="cat-dot" style="background:${isIn?'rgba(39,174,96,.1)':'rgba(231,76,60,.1)'}">${(r.category||'💸').slice(0,2)}</div><div class="linfo"><div class="ltitle">${r.category||''}${tags.join('')}</div><div class="lsub">${fd(r.date)} ${r.note||''}</div></div><div class="lamount ${isIn?'la-in':'la-out'}">${isIn?'+':'-'}${fm(r.amount)}</div><button class="ldel" data-del="${r.id}">✕</button></div>`;
       }).join('')}
     </div>
   `;
   bindDel();
-  app.querySelectorAll('.quick-btn').forEach(b=>b.onclick=()=>showLedgerForm(Number(b.dataset.amt)));
   app.querySelectorAll('.filter-chip').forEach(c=>c.onclick=()=>{ledgerFilter=c.dataset.fid;render();});
   $('#ledgerSearch')?.addEventListener('input',e=>{searchQ=e.target.value;render();});
   if(mRecs.filter(r=>r.type==='expense'||r.type==='loan_out').length>0)setTimeout(()=>drawPie(mRecs.filter(r=>r.type==='expense'||r.type==='loan_out')),100);
@@ -446,7 +448,7 @@ async function renderLedger(app,fab){
 
 function drawPie(recs){
   const c=$('#ledgerPie');if(!c)return;const catMap={};recs.forEach(r=>{catMap[r.category]=catMap[r.category]||[];catMap[r.category].push(r.amount)});
-  const entries=Object.entries(catMap).map(([k,v])=>({cat:k.slice(2),total:v.reduce((a,b)=>a+b,0)})).sort((a,b)=>b.total-a.total);
+  const entries=Object.entries(catMap).map(([k,v])=>({cat:k,total:v.reduce((a,b)=>a+b,0)})).sort((a,b)=>b.total-a.total);
   const colors=['#E74C3C','#F39C12','#3498DB','#2ECC71','#9B59B6','#1ABC9C','#E67E22','#34495E','#95A5A6','#D35400','#C0392B','#2980B9','#27AE60','#8E44AD','#16A085'];
   const total=entries.reduce((s,e)=>s+e.total,0);const ctx=c.getContext('2d');const dpr=window.devicePixelRatio||1;
   const W=Math.min(300,c.parentElement.clientWidth-28),H=W;c.width=W*dpr;c.height=H*dpr;c.style.width=W+'px';c.style.height=H+'px';ctx.scale(dpr,dpr);
@@ -469,12 +471,12 @@ function drawTrend(records){
   ctx.fillStyle='rgba(231,76,60,.65)';ctx.fillRect(pad.l+46,4,8,8);ctx.fillText('支出',pad.l+58,12);
 }
 
-function showLedgerForm(pre){
+function showLedgerForm(){
   showModal('记一笔',`
     <div class="fg"><div class="type-tgl" id="typeTgl"><button class="inc-act" data-t="income">收入</button><button data-t="expense">支出</button></div></div>
-    <div class="fg"><label>金额</label><input type="number" id="fAmt" placeholder="0.00" step="0.01" min="0" value="${pre||''}"></div>
-    <div class="fg"><label>分类</label><div class="cat-grid" id="catGrid"></div></div>
-    <div class="fg"><label>账户</label><div class="cat-grid" id="accGrid">${ACCOUNTS.map((a,i)=>`<span class="cat-chip${i===0?' sel':''}" data-acc="${a}">${a}</span>`).join('')}</div></div>
+    <div class="fg"><label>金额</label><input type="number" id="fAmt" placeholder="0.00" step="0.01" min="0"></div>
+    <div class="fg"><label>分类</label><div class="cat-grid" id="catGrid"></div><div style="margin-top:6px"><input type="text" id="newCat" placeholder="+ 新建分类" style="width:100%;padding:6px 10px;border:1px dashed #ccc;border-radius:8px;font-size:12px;outline:none"></div></div>
+    <div class="fg"><label>账户</label><div class="cat-grid" id="accGrid"></div><div style="margin-top:6px"><input type="text" id="newAcc" placeholder="+ 新建账户" style="width:100%;padding:6px 10px;border:1px dashed #ccc;border-radius:8px;font-size:12px;outline:none"></div></div>
     <div class="chk-row"><label><input type="checkbox" id="fReimb"> 可报销</label><label><input type="checkbox" id="fLoan"> 借钱</label><label><input type="checkbox" id="fInst"> 分期</label></div>
     <div id="extraFields"></div>
     <div class="fg"><label>日期</label><input type="date" id="fDate" value="${today()}"></div>
@@ -492,9 +494,13 @@ function showLedgerForm(pre){
     render();
   });
   const tgl=$('#typeTgl');tgl.querySelectorAll('button').forEach(b=>b.onclick=()=>{tgl.querySelectorAll('button').forEach(x=>x.className='');b.className=b.dataset.t==='income'?'inc-act':'exp-act';renderCats(b.dataset.t)});
-  renderCats('income');
-  function renderCats(t){const g=$('#catGrid');const cats=t==='income'?INC_CATS:EXP_CATS;g.innerHTML=cats.map((c,i)=>`<span class="cat-chip${i===0?' sel':''}" data-cat="${c}">${c}</span>`).join('');g.querySelectorAll('.cat-chip').forEach(c=>c.onclick=()=>{g.querySelectorAll('.cat-chip').forEach(x=>x.classList.remove('sel'));c.classList.add('sel')})}
-  document.querySelectorAll('#accGrid .cat-chip').forEach(c=>c.onclick=()=>{document.querySelectorAll('#accGrid .cat-chip').forEach(x=>x.classList.remove('sel'));c.classList.add('sel')});
+  renderCats('income');renderAccs();
+  function renderCats(t){const g=$('#catGrid');const cats=t==='income'?getIncCats():getExpCats();g.innerHTML=cats.map((c,i)=>`<span class="cat-chip${i===0?' sel':''}" data-cat="${c}">${c}</span>`).join('');g.querySelectorAll('.cat-chip').forEach(c=>c.onclick=()=>{g.querySelectorAll('.cat-chip').forEach(x=>x.classList.remove('sel'));c.classList.add('sel')})}
+  function renderAccs(){const g=$('#accGrid');const accts=getAccounts();g.innerHTML=accts.map((a,i)=>`<span class="cat-chip${i===0?' sel':''}" data-acc="${a}">${a}</span>`).join('');g.querySelectorAll('.cat-chip').forEach(c=>c.onclick=()=>{g.querySelectorAll('.cat-chip').forEach(x=>x.classList.remove('sel'));c.classList.add('sel')})}
+  // Add new category
+  $('#newCat').addEventListener('keydown',e=>{if(e.key==='Enter'){const v=$('#newCat').value.trim();if(v){const t=document.querySelector('#typeTgl .inc-act,#typeTgl .exp-act');const isInc=t.classList.contains('inc-act');const cats=isInc?getIncCats():getExpCats();if(!cats.includes(v)){cats.push(v);isInc?setIncCats(cats):setExpCats(cats)}renderCats(isInc?'income':'expense')}$('#newCat').value=''}});
+  // Add new account
+  $('#newAcc').addEventListener('keydown',e=>{if(e.key==='Enter'){const v=$('#newAcc').value.trim();if(v){const accts=getAccounts();if(!accts.includes(v)){accts.push(v);setAccounts(accts)}renderAccs()}$('#newAcc').value=''}});
   function upd(){const ef=$('#extraFields');let h='';if($('#fInst').checked)h+=`<div class="fg-row"><div class="fg"><label>总期数</label><input type="number" id="fInstTotal" placeholder="12" min="1"></div><div class="fg"><label>第几期</label><input type="number" id="fInstCurrent" placeholder="1" min="1"></div></div>`;if($('#fLoan').checked)h+=`<div class="fg"><label>对方/用途</label><input type="text" id="fLoanNote" placeholder="例如：借给张三"></div>`;ef.innerHTML=h}
   ['#fReimb','#fLoan','#fInst'].forEach(s=>{const el=document.querySelector(s);if(el)el.onchange=upd});
 }
@@ -638,9 +644,15 @@ function showCarForm(){
 // ==================== SETTINGS ====================
 async function renderSettings(app,fab){
   const info=getCarInfo(),goal=getWeightGoal(),h=localStorage.getItem('wb_height')||'170';
+  const expCats=getExpCats(),incCats=getIncCats(),accts=getAccounts();
   app.innerHTML=`
     <div class="header"><button class="back" onclick="go('home')">←</button><h1>设置</h1></div>
     <div class="main">
+      <div class="setting-group"><h4>💰 记账设置</h4>
+        <div class="setting-item"><span class="si-label">支出分类</span><span class="si-val">${expCats.length}个</span><span class="si-btn" id="mngExpBtn">管理</span></div>
+        <div class="setting-item"><span class="si-label">收入分类</span><span class="si-val">${incCats.length}个</span><span class="si-btn" id="mngIncBtn">管理</span></div>
+        <div class="setting-item"><span class="si-label">账户</span><span class="si-val">${accts.length}个</span><span class="si-btn" id="mngAccBtn">管理</span></div>
+      </div>
       <div class="setting-group"><h4>🚗 车辆信息</h4>${info?`<div class="setting-item"><span class="si-label">${info.brand} ${info.model}</span><span class="si-val">${info.plate}</span><span class="si-btn" id="setCarBtn">编辑</span></div>`:`<div class="setting-item"><span class="si-label">未设置</span><span class="si-btn" id="setCarBtn">设置</span></div>`}</div>
       <div class="setting-group"><h4>⚖️ 体重设置</h4><div class="setting-item"><span class="si-label">身高</span><span class="si-val">${h} cm</span><span class="si-btn" id="setHtBtn">修改</span></div><div class="setting-item"><span class="si-label">目标体重</span><span class="si-val">${goal?goal.target+' kg':'未设置'}</span><span class="si-btn" id="setGlBtn">${goal?'修改':'设置'}</span></div></div>
       <div class="setting-group"><h4>📦 数据</h4><div class="setting-item"><span class="si-label">导出 CSV</span><span class="si-btn" id="expBtn">导出</span></div><div class="setting-item"><span class="si-label">清除所有数据</span><span class="si-btn danger" id="clrBtn">清除</span></div></div>
@@ -651,9 +663,32 @@ async function renderSettings(app,fab){
   $('#setGlBtn')?.addEventListener('click',()=>{const v=prompt('目标体重 (kg)',goal?goal.target:'');if(v&&!isNaN(v)&&v>20&&v<300){setWeightGoal({target:parseFloat(v),startDate:today()});render()}});
   $('#expBtn')?.addEventListener('click',expCSV);
   $('#clrBtn')?.addEventListener('click',()=>showConfirm('确定清除所有数据？不可恢复！',async()=>{await Promise.all(['ledger','weight','car'].map(s=>dbAll(s).then(rs=>Promise.all(rs.map(r=>dbDel(s,r.id))))));localStorage.clear();toast('已清除');render()}));
+  // Category/Account management
+  $('#mngExpBtn')?.addEventListener('click',()=>showCatManager('支出分类',getExpCats,setExpCats));
+  $('#mngIncBtn')?.addEventListener('click',()=>showCatManager('收入分类',getIncCats,setIncCats));
+  $('#mngAccBtn')?.addEventListener('click',()=>showCatManager('账户',getAccounts,setAccounts));
 }
 async function expCSV(){
   const l=await dbAll('ledger'),w=await dbAll('weight'),c=await dbAll('car');let csv='\uFEFF=== 记账 ===\n类型,分类,金额,日期,账户,报销,分期,备注\n';l.forEach(r=>csv+=`${r.type},${r.category||''},${r.amount},${r.date},${r.account||''},${r.reimbursable?'是':'否'},${r.installment?r.installCurrent+'/'+r.installTotal:''},${r.note||''}\n`);csv+='\n=== 体重 ===\n体重(kg),日期,备注\n';w.forEach(r=>csv+=`${r.weight},${r.date},${r.note||''}\n`);csv+='\n=== 用车 ===\n类型,金额,日期,里程,用量,备注\n';c.forEach(r=>csv+=`${r.carType},${r.amount||0},${r.date},${r.mileage||''},${r.liters||''},${r.note||''}\n`);const b=new Blob([csv],{type:'text/csv;charset=utf-8'});const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download='workbench.csv';a.click();toast('导出成功')}
+
+function showCatManager(title,getFn,setFn){
+  const items=getFn();
+  showModal('管理'+title,`
+    <div id="catList">${items.map((c,i)=>`<div style="display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid #f0f0f0"><span style="flex:1;font-size:14px">${c}</span><button class="cat-del-btn" data-idx="${i}" style="border:none;background:rgba(231,76,60,.1);color:var(--danger);width:28px;height:28px;border-radius:50%;font-size:14px;cursor:pointer">✕</button></div>`).join('')}</div>
+    <div style="margin-top:10px;display:flex;gap:8px"><input type="text" id="newItem" placeholder="输入新名称" style="flex:1;padding:8px 10px;border:1px solid #e0e0e0;border-radius:8px;font-size:13px;outline:none"><button id="addItemBtn" style="padding:8px 16px;border:none;border-radius:8px;background:var(--primary);color:#fff;font-size:13px;cursor:pointer;white-space:nowrap">添加</button></div>
+  `,async()=>{
+    const updated=[];document.querySelectorAll('#catList > div').forEach(d=>{const s=d.querySelector('span');if(s)updated.push(s.textContent)});
+    setFn(updated);render();
+  });
+  // Delete
+  document.querySelectorAll('.cat-del-btn').forEach(b=>b.onclick=()=>{
+    const items=getFn();items.splice(parseInt(b.dataset.idx),1);setFn(items);
+    showCatManager(title,getFn,setFn);
+  });
+  // Add
+  $('#addItemBtn').addEventListener('click',()=>{const v=$('#newItem').value.trim();if(v){const items=getFn();items.push(v);setFn(items);showCatManager(title,getFn,setFn)}});
+  $('#newItem').addEventListener('keydown',e=>{if(e.key==='Enter'){$('#addItemBtn').click()}});
+}
 
 // ==================== Shared ====================
 function showModal(t,c,f){const o=$('#modalOverlay');o.innerHTML=`<div class="modal"><h3>${t}</h3>${c}<button class="btn-primary" id="modalSubmit">确定</button></div>`;o.classList.remove('hidden');o.onclick=e=>{if(e.target===o)closeModal()};$('#modalSubmit').onclick=async()=>{try{await f();closeModal()}catch(e){}}}
