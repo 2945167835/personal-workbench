@@ -1,0 +1,23 @@
+{
+  "name": "个人工作台",
+  "short_name": "工作台",
+  "description": "记账、体重记录、用车管理 - 个人效率工具",
+  "start_url": "/personal-workbench/index.html",
+  "scope": "/personal-workbench/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#f5f5f5",
+  "theme_color": "#4A90D9",
+  "icons": [
+    {
+      "src": "icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
