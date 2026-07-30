@@ -630,7 +630,7 @@ function showInstForm(){showLedgerForm(null,{inst:true})}
 
 // ==================== WEIGHT ====================
 async function renderWeight(app,fab){
-  fab.classList.remove('hidden');fab.onclick=()=>showWeightForm();
+  fab.classList.add('hidden'); // weight uses inline recording instead
   const records=(await dbAll('weight')).sort((a,b)=>a.date.localeCompare(b.date));
   const latest=records[records.length-1];const pf=getProfile();
   const height=pf.height;let bmi='',bl='';
@@ -647,11 +647,16 @@ async function renderWeight(app,fab){
   app.innerHTML=`
     <div class="header"><button class="back" onclick="go('home')">←</button><h1>体重</h1></div>
     <div class="main">
-      <div class="bmi-box">
+      <div class="bmi-box" style="cursor:pointer" onclick="showWeightForm()">
         <div class="bmi-big">${latest?latest.weight.toFixed(1)+' kg':'-- kg'}</div>
         <div class="bmi-tag">${pf.gender==='male'?'♂':'♀'} ${pf.age}岁 · 身高${pf.height}cm${bmi?' · BMI '+bmi+' '+bl:''}${pf.targetWeight?' · 目标 '+pf.targetWeight+' kg':''}</div>
         ${initWt&&latest?`<div style="margin-top:8px;font-size:11px;color:var(--text3)">初始 ${initWt.toFixed(1)}kg → 当前 ${latest.weight.toFixed(1)}kg · 变化 ${totalChange>0?'+':''}${totalChange}kg</div>`:''}
         ${bmr?`<div style="margin-top:4px;font-size:11px;color:var(--text3)">基础代谢 ≈ ${bmr} kcal/天 · 理想体重 ${idealMin.toFixed(1)}~${idealMax.toFixed(1)}kg</div>`:''}
+        <div style="margin-top:12px;padding:8px;background:rgba(74,144,217,.08);border-radius:8px;font-size:13px;color:var(--primary);font-weight:500">+ 记录今日体重</div>
+      </div>
+      <div class="add-bar" style="margin-bottom:12px">
+        <input type="number" id="quickWt" placeholder="${latest?'上次 '+latest.weight.toFixed(1)+' kg — 输入今日体重':''}" step="0.1" min="20" max="300" style="flex:1;border:none;outline:none;font-size:15px;font-family:inherit;background:transparent">
+        <button class="add-btn" id="quickWtBtn">记录</button>
       </div>
       ${pf.targetWeight?`<div class="summary-row"><div class="summary-card"><div class="sc-label">距目标</div><div class="sc-val ${latest&&latest.weight>pf.targetWeight?'sc-red':'sc-blue'}">${latest?(latest.weight-pf.targetWeight).toFixed(1):'--'} kg</div></div><div class="summary-card"><div class="sc-label">已完成</div><div class="sc-val sc-blue">${initWt&&pf.targetWeight&&initWt!==pf.targetWeight?Math.abs((((latest?latest.weight:initWt)-initWt)/(pf.targetWeight-initWt)*100).toFixed(1)):'--'}%</div></div></div>`:''}
       <div class="summary-row"><div class="summary-card"><div class="sc-label">7日均值</div><div class="sc-val sc-blue">${avg7||'--'} kg</div></div><div class="summary-card"><div class="sc-label">30日均值</div><div class="sc-val sc-blue">${avg30||'--'} kg</div></div><div class="summary-card"><div class="sc-label">本月变化</div><div class="sc-val ${mChange>0?'sc-red':'sc-blue'}">${mChange||'--'} kg</div></div></div>
@@ -664,7 +669,19 @@ async function renderWeight(app,fab){
       ${records.slice().reverse().map(r=>{const idx=records.indexOf(r),prev=records[idx-1];const diff=prev?(r.weight-prev.weight).toFixed(1):null;return`<div class="list-item" data-id="${r.id}"><div class="cat-dot" style="background:rgba(74,144,217,.1)">⚖️</div><div class="linfo"><div class="ltitle">${r.weight.toFixed(1)} kg</div><div class="lsub">${fd(r.date)} ${r.note||''}</div></div><div class="lamount" style="color:${diff>0?'var(--danger)':diff<0?'var(--success)':'var(--text3)'}">${diff?(diff>0?'+':'')+diff+' kg':''}</div><button class="ldel" data-del="${r.id}">✕</button></div>`}).join('')}
     </div>
   `;
-  bindDel();if(records.length>=2)setTimeout(()=>drawWtChart(records,parseFloat(height)),100);if(records.length>=3)setTimeout(()=>drawSmooth(records),150);
+  bindDel();
+  // Quick weight record
+  $('#quickWtBtn')?.addEventListener('click',async()=>{
+    const wt=parseFloat($('#quickWt')?.value);
+    if(!wt||wt<20||wt>300){toast('请输入有效体重(20-300kg)');return}
+    const date=today();
+    const existing=await dbAll('weight');const dup=existing.find(r=>r.date===date);
+    if(dup)await dbPut('weight',{...dup,weight:wt,note:''});
+    else await dbAdd('weight',{weight:wt,date,note:'',createdAt:Date.now()});
+    render();toast('已记录 '+wt.toFixed(1)+' kg');
+  });
+  $('#quickWt')?.addEventListener('keydown',e=>{if(e.key==='Enter')$('#quickWtBtn')?.click()});
+  if(records.length>=2)setTimeout(()=>drawWtChart(records,parseFloat(height)),100);if(records.length>=3)setTimeout(()=>drawSmooth(records),150);
 }
 function bmiTag(b,h){const v=parseFloat(b);if(h>0){const ideal=18.5;if(v<ideal)return'偏瘦';if(v<24)return'正常';if(v<28)return'偏胖';return'肥胖'}if(v<18.5)return'偏瘦';if(v<24)return'正常';if(v<28)return'偏胖';return'肥胖'}
 function calcBMR(wt,pf){if(!pf.age||!pf.height)return null;const h=pf.height;return pf.gender==='male'?Math.round(66+13.7*wt+5*h-6.8*pf.age):Math.round(655+9.6*wt+1.8*h-4.7*pf.age)}
