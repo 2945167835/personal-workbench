@@ -334,7 +334,7 @@ function setAccounts(a){localStorage.setItem('wb_accounts',JSON.stringify(a))}
 function accName(a){return typeof a==='string'?a:a.name}
 function accIcon(a){return typeof a==='string'?a.slice(0,2):(a.icon||a.name.slice(0,2))}
 function accRaw(a){return typeof a==='string'?a.slice(2):a.name.slice(2)}
-const CAR_SUBTABS=[{id:'fuel',label:'⛽ 加油/充电'},{id:'maintenance',label:'🔧 保养'},{id:'other',label:'📦 其他'},{id:'all',label:'📋 全部'}];
+const CAR_SUBTABS=[{id:'fuel'},{id:'maintenance',label:'🔧 保养'},{id:'other',label:'📦 其他'},{id:'all',label:'📋 全部'}];
 const OTHER_CATS=['🛡️ 保险','🅿️ 停车','🛣️ 过路费','🧼 洗车','🔩 维修','📋 年检','🔧 改装','📦 其他'];
 const LEDGER_FILTERS=[{id:'all',label:'全部'},{id:'expense',label:'支出'},{id:'income',label:'收入'},{id:'reimb',label:'待报销'},{id:'loan',label:'借入/借出'},{id:'install',label:'分期'}];
 
@@ -438,7 +438,7 @@ async function renderHome(app,fab){
               <div class="ri-amount" style="color:var(--primary)">${r.data.weight.toFixed(1)} kg</div></div>`;
           }else{
             return`<div class="recent-item" onclick="go('car')">
-              <div class="ri-dot car"></div><div class="ri-info"><div class="ri-title">${r.data.carType==='fuel'?'加油/充电':r.data.carType==='maintenance'?'保养':'其他用车'}</div><div class="ri-sub">${fd(r.data.date)}</div></div>
+              <div class="ri-dot car"></div><div class="ri-info"><div class="ri-title">${r.data.carType==='fuel'?(isEV?'充电':'加油'):r.data.carType==='maintenance'?'保养':'其他用车'}</div><div class="ri-sub">${fd(r.data.date)}</div></div>
               <div class="ri-amount" style="color:var(--danger)">-${fm(r.data.amount||0)}</div></div>`;
           }
         }).join('')}
@@ -733,10 +733,10 @@ async function renderCar(app,fab){
       ${maintWarn?`<div class="alert-card"><div class="al-icon">⚠️</div><div class="al-text">${maintAlert.note||'保养'} · ${maintAlert.nextDate}<span class="alert-badge">到期</span></div></div>`:''}
       <div class="summary-row"><div class="summary-card"><div class="sc-label">本月费用</div><div class="sc-val sc-red">${fm(mExp)}</div></div><div class="summary-card"><div class="sc-label">记录数</div><div class="sc-val sc-blue">${filtered.length}</div></div><div class="summary-card"><div class="sc-label">总计</div><div class="sc-val sc-red">${fm(totalExp)}</div></div>${fuelStat}</div>
       ${fuelChart?`<div class="chart-box"><canvas id="fuelChart"></canvas></div>`:''}
-      <div class="subtabs">${CAR_SUBTABS.map(t=>`<div class="subtab${t.id===carTab?' act':''}" data-tab="${t.id}">${t.label}</div>`).join('')}</div>
+      <div class="subtabs">${CAR_SUBTABS.map(t=>`<div class="subtab${t.id===carTab?' act':''}" data-tab="${t.id}">${t.id==='fuel'?(isEV?'⚡ 充电':'⛽ 加油'):t.label}</div>`).join('')}</div>
       <div class="section-title">记录列表</div>
       ${filtered.length===0?'<div class="empty"><div class="eicon">🚗</div><p>暂无记录</p></div>':''}
-      ${filtered.map(r=>{const icon=r.carType==='fuel'?'⛽':r.carType==='maintenance'?'🔧':'📦';return`<div class="list-item" data-id="${r.id}"><div class="cat-dot" style="background:rgba(74,144,217,.1)">${icon}</div><div class="linfo"><div class="ltitle">${r.carType==='fuel'?(isEV?'充电':'加油'):r.carType==='maintenance'?'保养':r.note||'其他'}${r.nextDate?` <span style="font-size:10px;color:var(--text3)">下次:${r.nextDate}</span>`:''}</div><div class="lsub">${fd(r.date)} ${r.mileage?r.mileage+'km ':''}${r.liters?(isEV?r.liters+'kWh ':r.liters+'L '):''}</div></div><div class="lamount la-out">-${fm(r.amount||0)}</div><button class="ldel" data-del="${r.id}">✕</button></div>`}).join('')}
+      ${filtered.map(r=>{const icon=r.carType==='fuel'?(isEV?'⚡':'⛽'):r.carType==='maintenance'?'🔧':'📦';return`<div class="list-item" data-id="${r.id}"><div class="cat-dot" style="background:rgba(74,144,217,.1)">${icon}</div><div class="linfo"><div class="ltitle">${r.carType==='fuel'?(isEV?'充电':'加油'):r.carType==='maintenance'?'保养':r.note||'其他'}${r.nextDate?` <span style="font-size:10px;color:var(--text3)">下次:${r.nextDate}</span>`:''}</div><div class="lsub">${fd(r.date)} ${r.mileage?r.mileage+'km ':''}${r.liters?(isEV?r.liters+'kWh ':r.liters+'L '):''}</div></div><div class="lamount la-out">-${fm(r.amount||0)}</div><button class="ldel" data-del="${r.id}">✕</button></div>`}).join('')}
     </div>
   `;
   bindDel();app.querySelectorAll('.subtab').forEach(el=>el.onclick=()=>goCar(el.dataset.tab));
