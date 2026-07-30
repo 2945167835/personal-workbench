@@ -344,6 +344,8 @@ let page='home',sub='',carTab='fuel',searchQ='',ledgerFilter='all',selectedCarId
 // Helpers
 const $=s=>document.querySelector(s);
 function fd(d){return d.slice(0,10)}function fm(n){return'¥'+Number(n).toLocaleString('zh-CN',{minimumFractionDigits:2,maximumFractionDigits:2})}function today(){return new Date().toISOString().slice(0,10)}function month(){const n=new Date();return n.getFullYear()+'-'+String(n.getMonth()+1).padStart(2,'0')}
+function j(kg){return(kg*2).toFixed(1)} // kg → 斤 for display
+function jr(jin){return parseFloat((jin/2).toFixed(2))} // 斤 → kg for storage
 function toast(m){const t=$('#toast');t.textContent=m;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),1800)}
 function getCars(){
   try{const v=JSON.parse(localStorage.getItem('wb_cars'));if(v&&v.length)return v}catch{}
@@ -423,7 +425,7 @@ async function renderHome(app,fab){
           <div class="me-icon me-ledger">💰</div><div class="me-info"><div class="me-name">记账</div><div class="me-desc">本月${ledgerR.filter(r=>r.date.startsWith(m)).length}笔记录</div></div><div class="me-arrow">›</div>
         </div>
         <div class="mod-entry" onclick="go('weight')">
-          <div class="me-icon me-weight">⚖️</div><div class="me-info"><div class="me-name">体重</div><div class="me-desc">${latestWt?latestWt.weight.toFixed(1)+' kg'+(goal?' · 目标 '+goal+' kg':''):'暂无记录'}</div></div><div class="me-arrow">›</div>
+          <div class="me-icon me-weight">⚖️</div><div class="me-info"><div class="me-name">体重</div><div class="me-desc">${latestWt?j(latestWt.weight)+' 斤'+(goal?' · 目标 '+j(goal)+' 斤':''):'暂无记录'}</div></div><div class="me-arrow">›</div>
         </div>
         <div class="mod-entry" onclick="go('car')">
           <div class="me-icon me-car">🚗</div><div class="me-info"><div class="me-name">用车</div><div class="me-desc">${getCars().length}辆车 · ${carR.length}条记录 · 本月${fm(mCar)}</div></div><div class="me-arrow">›</div>
@@ -443,7 +445,7 @@ async function renderHome(app,fab){
           }else if(r.type==='weight'){
             return`<div class="recent-item" onclick="go('weight')">
               <div class="ri-dot weight"></div><div class="ri-info"><div class="ri-title">体重记录</div><div class="ri-sub">${fd(r.data.date)}</div></div>
-              <div class="ri-amount" style="color:var(--primary)">${r.data.weight.toFixed(1)} kg</div></div>`;
+              <div class="ri-amount" style="color:var(--primary)">${j(r.data.weight)} 斤</div></div>`;
           }else{
             const car=getCars().find(c=>c.id===r.data.carId);const ev=car?.fuelType==='electric';
             return`<div class="recent-item" onclick="go('car')">
@@ -657,37 +659,38 @@ async function renderWeight(app,fab){
     <div class="header"><button class="back" onclick="go('home')">←</button><h1>体重</h1></div>
     <div class="main">
       <div class="bmi-box" style="cursor:pointer" onclick="showWeightForm()">
-        <div class="bmi-big">${latest?latest.weight.toFixed(1)+' kg':'-- kg'}</div>
-        <div class="bmi-tag">${pf.gender==='male'?'♂':'♀'} ${pf.age}岁 · 身高${pf.height}cm${bmi?' · BMI '+bmi+' '+bl:''}${pf.targetWeight?' · 目标 '+pf.targetWeight+' kg':''}</div>
-        ${initWt&&latest?`<div style="margin-top:8px;font-size:11px;color:var(--text3)">初始 ${initWt.toFixed(1)}kg → 当前 ${latest.weight.toFixed(1)}kg · 变化 ${totalChange>0?'+':''}${totalChange}kg</div>`:''}
-        ${bmr?`<div style="margin-top:4px;font-size:11px;color:var(--text3)">基础代谢 ≈ ${bmr} kcal/天 · 理想体重 ${idealMin.toFixed(1)}~${idealMax.toFixed(1)}kg</div>`:''}
+        <div class="bmi-big">${latest?j(latest.weight)+' 斤':'-- 斤'}</div>
+        <div class="bmi-tag">${pf.gender==='male'?'♂':'♀'} ${pf.age}岁 · 身高${pf.height}cm${bmi?' · BMI '+bmi+' '+bl:''}${pf.targetWeight?' · 目标 '+j(pf.targetWeight)+' 斤':''}</div>
+        ${initWt&&latest?`<div style="margin-top:8px;font-size:11px;color:var(--text3)">初始 ${j(initWt)}斤 → 当前 ${j(latest.weight)}斤 · 变化 ${totalChange>0?'+':''}${j(Math.abs(totalChange))}斤</div>`:''}
+        ${bmr?`<div style="margin-top:4px;font-size:11px;color:var(--text3)">基础代谢 ≈ ${bmr} kcal/天 · 理想体重 ${j(idealMin)}~${j(idealMax)}斤</div>`:''}
         <div style="margin-top:12px;padding:8px;background:rgba(74,144,217,.08);border-radius:8px;font-size:13px;color:var(--primary);font-weight:500">+ 记录今日体重</div>
       </div>
       <div class="add-bar" style="margin-bottom:12px">
-        <input type="number" id="quickWt" placeholder="${latest?'上次 '+latest.weight.toFixed(1)+' kg — 输入今日体重':''}" step="0.1" min="20" max="300" style="flex:1;border:none;outline:none;font-size:15px;font-family:inherit;background:transparent">
+        <input type="number" id="quickWt" placeholder="${latest?'上次 '+j(latest.weight)+' 斤 — 输入今日体重':''}" step="0.1" min="40" max="600" style="flex:1;border:none;outline:none;font-size:15px;font-family:inherit;background:transparent">
         <button class="add-btn" id="quickWtBtn">记录</button>
       </div>
-      ${pf.targetWeight?`<div class="summary-row"><div class="summary-card"><div class="sc-label">距目标</div><div class="sc-val ${latest&&latest.weight>pf.targetWeight?'sc-red':'sc-blue'}">${latest?(latest.weight-pf.targetWeight).toFixed(1):'--'} kg</div></div><div class="summary-card"><div class="sc-label">已完成</div><div class="sc-val sc-blue">${initWt&&pf.targetWeight&&initWt!==pf.targetWeight?Math.abs((((latest?latest.weight:initWt)-initWt)/(pf.targetWeight-initWt)*100).toFixed(1)):'--'}%</div></div></div>`:''}
-      <div class="summary-row"><div class="summary-card"><div class="sc-label">7日均值</div><div class="sc-val sc-blue">${avg7||'--'} kg</div></div><div class="summary-card"><div class="sc-label">30日均值</div><div class="sc-val sc-blue">${avg30||'--'} kg</div></div><div class="summary-card"><div class="sc-label">本月变化</div><div class="sc-val ${mChange>0?'sc-red':'sc-blue'}">${mChange||'--'} kg</div></div></div>
+      ${pf.targetWeight?`<div class="summary-row"><div class="summary-card"><div class="sc-label">距目标</div><div class="sc-val ${latest&&latest.weight>pf.targetWeight?'sc-red':'sc-blue'}">${latest?j(Math.abs(latest.weight-pf.targetWeight)):'--'} 斤</div></div><div class="summary-card"><div class="sc-label">已完成</div><div class="sc-val sc-blue">${initWt&&pf.targetWeight&&initWt!==pf.targetWeight?Math.abs((((latest?latest.weight:initWt)-initWt)/(pf.targetWeight-initWt)*100).toFixed(1)):'--'}%</div></div></div>`:''}
+      <div class="summary-row"><div class="summary-card"><div class="sc-label">7日均值</div><div class="sc-val sc-blue">${avg7?j(parseFloat(avg7)):'--'} 斤</div></div><div class="summary-card"><div class="sc-label">30日均值</div><div class="sc-val sc-blue">${avg30?j(parseFloat(avg30)):'--'} 斤</div></div><div class="summary-card"><div class="sc-label">本月变化</div><div class="sc-val ${mChange>0?'sc-red':'sc-blue'}">${mChange?j(Math.abs(parseFloat(mChange))):'--'} 斤</div></div></div>
       ${weeks.length>0?`<div class="summary-row">${weeks.map(w=>`<div class="summary-card"><div class="sc-label">${w.label}</div><div class="sc-val" style="font-size:13px">${w.avg}</div><div class="sc-label">${w.diff}</div></div>`).join('')}</div>`:''}
       ${records.length>=2?`<div class="chart-box"><canvas id="wtChart"></canvas></div>`:''}
       ${records.length>=3?`<div class="chart-box"><canvas id="wtSmooth"></canvas></div>`:''}
       ${pf.targetWeight&&records.length>=5?`<div class="widget" style="text-align:center"><div style="font-size:12px;color:var(--text2)">📈 趋势预测</div><div style="font-size:14px;margin-top:4px">${pred(records,pf.targetWeight)}</div></div>`:''}
       <div class="section-title">历史记录</div>
       ${records.length===0?'<div class="empty"><div class="eicon">⚖️</div><p>暂无记录</p></div>':''}
-      ${records.slice().reverse().map(r=>{const idx=records.indexOf(r),prev=records[idx-1];const diff=prev?(r.weight-prev.weight).toFixed(1):null;return`<div class="list-item" data-id="${r.id}"><div class="cat-dot" style="background:rgba(74,144,217,.1)">⚖️</div><div class="linfo"><div class="ltitle">${r.weight.toFixed(1)} kg</div><div class="lsub">${fd(r.date)} ${r.note||''}</div></div><div class="lamount" style="color:${diff>0?'var(--danger)':diff<0?'var(--success)':'var(--text3)'}">${diff?(diff>0?'+':'')+diff+' kg':''}</div><button class="ldel" data-del="${r.id}">✕</button></div>`}).join('')}
+      ${records.slice().reverse().map(r=>{const idx=records.indexOf(r),prev=records[idx-1];const diff=prev?(r.weight-prev.weight):null;return`<div class="list-item" data-id="${r.id}"><div class="cat-dot" style="background:rgba(74,144,217,.1)">⚖️</div><div class="linfo"><div class="ltitle">${j(r.weight)} 斤</div><div class="lsub">${fd(r.date)} ${r.note||''}</div></div><div class="lamount" style="color:${diff>0?'var(--danger)':diff<0?'var(--success)':'var(--text3)'}">${diff?j(Math.abs(diff))+' 斤':''}</div><button class="ldel" data-del="${r.id}">✕</button></div>`}).join('')}
     </div>
   `;
   bindDel();
   // Quick weight record
   $('#quickWtBtn')?.addEventListener('click',async()=>{
-    const wt=parseFloat($('#quickWt')?.value);
-    if(!wt||wt<20||wt>300){toast('请输入有效体重(20-300kg)');return}
+    const jin=parseFloat($('#quickWt')?.value);
+    if(!jin||jin<40||jin>600){toast('请输入有效体重(40-600斤)');return}
+    const wt=jr(jin);
     const date=today();
     const existing=await dbAll('weight');const dup=existing.find(r=>r.date===date);
     if(dup)await dbPut('weight',{...dup,weight:wt,note:''});
     else await dbAdd('weight',{weight:wt,date,note:'',createdAt:Date.now()});
-    render();toast('已记录 '+wt.toFixed(1)+' kg');
+    render();toast('已记录 '+j(wt)+' 斤');
   });
   $('#quickWt')?.addEventListener('keydown',e=>{if(e.key==='Enter')$('#quickWtBtn')?.click()});
   if(records.length>=2)setTimeout(()=>drawWtChart(records,parseFloat(height)),100);if(records.length>=3)setTimeout(()=>drawSmooth(records),150);
@@ -695,7 +698,7 @@ async function renderWeight(app,fab){
 function bmiTag(b,h){const v=parseFloat(b);if(h>0){const ideal=18.5;if(v<ideal)return'偏瘦';if(v<24)return'正常';if(v<28)return'偏胖';return'肥胖'}if(v<18.5)return'偏瘦';if(v<24)return'正常';if(v<28)return'偏胖';return'肥胖'}
 function calcBMR(wt,pf){if(!pf.age||!pf.height)return null;const h=pf.height;return pf.gender==='male'?Math.round(66+13.7*wt+5*h-6.8*pf.age):Math.round(655+9.6*wt+1.8*h-4.7*pf.age)}
 function avgL(r,n){const s=r.slice(-n);return(s.reduce((a,r)=>a+r.weight,0)/s.length).toFixed(1)}
-function cW(records){if(records.length<7)return[];const w=[],n=new Date();for(let i=3;i>=0;i--){const e=new Date(n);e.setDate(e.getDate()-i*7);const s=new Date(e);s.setDate(s.getDate()-6);const wk=records.filter(r=>r.date>=s.toISOString().slice(0,10)&&r.date<=e.toISOString().slice(0,10));if(!wk.length)continue;const a=(wk.reduce((s,r)=>s+r.weight,0)/wk.length).toFixed(1);const p=w[w.length-1];const d=p?(a-p.avg).toFixed(1):null;w.push({label:`W${4-i}`,avg:a+'kg',diff:d?(d>0?'+'+d:d)+'kg':''})}return w}
+function cW(records){if(records.length<7)return[];const w=[],n=new Date();for(let i=3;i>=0;i--){const e=new Date(n);e.setDate(e.getDate()-i*7);const s=new Date(e);s.setDate(s.getDate()-6);const wk=records.filter(r=>r.date>=s.toISOString().slice(0,10)&&r.date<=e.toISOString().slice(0,10));if(!wk.length)continue;const a=(wk.reduce((s,r)=>s+r.weight,0)/wk.length);const p=w[w.length-1];const d=p?(a-p.avg):null;w.push({label:`W${4-i}`,avg:j(a)+'斤',diff:d!==null?(d>=0?'+':'')+j(Math.abs(d))+'斤':''})}return w}
 function pred(r,g){const l=r.slice(-5);if(l.length<2)return'数据不足';let sx=0,sy=0,sxy=0,sx2=0,n=l.length;l.forEach((r,i)=>{sx+=i;sy+=r.weight;sxy+=i*r.weight;sx2+=i*i});const sl=(n*sxy-sx*sy)/(n*sx2-sx*sx);if(Math.abs(sl)<0.001)return'体重趋于稳定';const d=(g-l[n-1].weight)/sl;if(d<=0)return sl<0?'已达成目标！🎉':'体重在上升，暂无法预测';const p=new Date();p.setDate(p.getDate()+Math.round(d));return`预计 ${p.toLocaleDateString('zh-CN')} 达到目标（约${Math.round(d)}天后）`}
 
 function drawWtChart(records,h){
@@ -705,14 +708,14 @@ function drawWtChart(records,h){
   const wts=records.map(r=>r.weight),bmis=h?records.map(r=>(r.weight/((h/100)**2)).toFixed(1)):[];
   const minW=Math.floor(Math.min(...wts)-2),maxW=Math.ceil(Math.max(...wts)+2);
   ctx.strokeStyle='#eee';ctx.lineWidth=1;
-  for(let i=minW;i<=maxW;i+=2){const y=pad.t+ph-((i-minW)/(maxW-minW))*ph;ctx.beginPath();ctx.moveTo(pad.l,y);ctx.lineTo(W-pad.r,y);ctx.stroke();ctx.fillStyle='#999';ctx.font='9px sans-serif';ctx.textAlign='right';ctx.fillText(i,pad.l-4,y+3)}
+  for(let i=minW;i<=maxW;i+=2){const y=pad.t+ph-((i-minW)/(maxW-minW))*ph;ctx.beginPath();ctx.moveTo(pad.l,y);ctx.lineTo(W-pad.r,y);ctx.stroke();ctx.fillStyle='#999';ctx.font='9px sans-serif';ctx.textAlign='right';ctx.fillText((i*2).toFixed(0),pad.l-4,y+3)}
   ctx.strokeStyle='#4A90D9';ctx.lineWidth=2.5;ctx.lineJoin='round';ctx.beginPath();
   records.forEach((r,i)=>{const x=pad.l+(i/(records.length-1))*pw;const y=pad.t+ph-((r.weight-minW)/(maxW-minW))*ph;i===0?ctx.moveTo(x,y):ctx.lineTo(x,y)});ctx.stroke();
   if(bmis.length){const minB=Math.floor(Math.min(...bmis.map(Number))-2),maxB=Math.ceil(Math.max(...bmis.map(Number))+2);ctx.strokeStyle='#F39C12';ctx.lineWidth=2;ctx.setLineDash([4,3]);ctx.beginPath();records.forEach((r,i)=>{const x=pad.l+(i/(records.length-1))*pw;const bmi=parseFloat(bmis[i]);const y=pad.t+ph-((bmi-minB)/(maxB-minB))*ph;i===0?ctx.moveTo(x,y):ctx.lineTo(x,y)});ctx.stroke();ctx.setLineDash([])}
   ctx.fillStyle='#999';ctx.font='9px sans-serif';ctx.textAlign='center';const step=Math.max(1,Math.floor(records.length/6));
   records.forEach((r,i)=>{if(i%step===0||i===records.length-1)ctx.fillText(fd(r.date).slice(5),pad.l+(i/(records.length-1))*pw,H-pad.b+14)});
   records.forEach((r,i)=>{const x=pad.l+(i/(records.length-1))*pw;const y=pad.t+ph-((r.weight-minW)/(maxW-minW))*ph;ctx.fillStyle='#4A90D9';ctx.beginPath();ctx.arc(x,y,3,0,Math.PI*2);ctx.fill();ctx.fillStyle='#fff';ctx.beginPath();ctx.arc(x,y,1.5,0,Math.PI*2);ctx.fill()});
-  ctx.fillStyle='#4A90D9';ctx.fillRect(pad.l,4,10,2);ctx.fillStyle='#666';ctx.font='9px sans-serif';ctx.textAlign='left';ctx.fillText('体重(kg)',pad.l+14,8);
+  ctx.fillStyle='#4A90D9';ctx.fillRect(pad.l,4,10,2);ctx.fillStyle='#666';ctx.font='9px sans-serif';ctx.textAlign='left';ctx.fillText('体重(斤)',pad.l+14,8);
   if(bmis.length){ctx.fillStyle='#F39C12';ctx.fillRect(pad.l+66,4,10,2);ctx.fillText('BMI',pad.l+80,8)}
 }
 function drawSmooth(records){
@@ -721,7 +724,7 @@ function drawSmooth(records){
   const pad={t:16,r:12,b:28,l:40},pw=W-pad.l-pad.r,ph=H-pad.t-pad.b;
   const smooth=[];for(let i=0;i<records.length;i++){const s=records.slice(Math.max(0,i-1),Math.min(records.length,i+2));smooth.push(s.reduce((a,r)=>a+r.weight,0)/s.length)}
   const all=[...records.map(r=>r.weight),...smooth];const minV=Math.floor(Math.min(...all)-2),maxV=Math.ceil(Math.max(...all)+2);
-  ctx.strokeStyle='#eee';ctx.lineWidth=1;for(let i=minV;i<=maxV;i+=2){const y=pad.t+ph-((i-minV)/(maxV-minV))*ph;ctx.beginPath();ctx.moveTo(pad.l,y);ctx.lineTo(W-pad.r,y);ctx.stroke();ctx.fillStyle='#999';ctx.font='9px sans-serif';ctx.textAlign='right';ctx.fillText(i,pad.l-4,y+3)}
+  ctx.strokeStyle='#eee';ctx.lineWidth=1;for(let i=minV;i<=maxV;i+=2){const y=pad.t+ph-((i-minV)/(maxV-minV))*ph;ctx.beginPath();ctx.moveTo(pad.l,y);ctx.lineTo(W-pad.r,y);ctx.stroke();ctx.fillStyle='#999';ctx.font='9px sans-serif';ctx.textAlign='right';ctx.fillText((i*2).toFixed(0),pad.l-4,y+3)}
   ctx.strokeStyle='rgba(74,144,217,.2)';ctx.lineWidth=1.5;ctx.beginPath();records.forEach((r,i)=>{const x=pad.l+(i/(records.length-1))*pw;const y=pad.t+ph-((r.weight-minV)/(maxV-minV))*ph;i===0?ctx.moveTo(x,y):ctx.lineTo(x,y)});ctx.stroke();
   ctx.strokeStyle='#4A90D9';ctx.lineWidth=3;ctx.lineJoin='round';ctx.beginPath();smooth.forEach((v,i)=>{const x=pad.l+(i/(smooth.length-1))*pw;const y=pad.t+ph-((v-minV)/(maxV-minV))*ph;i===0?ctx.moveTo(x,y):ctx.lineTo(x,y)});ctx.stroke();
   ctx.fillStyle='rgba(74,144,217,.07)';ctx.beginPath();smooth.forEach((v,i)=>{const x=pad.l+(i/(smooth.length-1))*pw;const y=pad.t+ph-((v-minV)/(maxV-minV))*ph;i===0?ctx.moveTo(x,y):ctx.lineTo(x,y)});ctx.lineTo(pad.l+pw,pad.t+ph);ctx.lineTo(pad.l,pad.t+ph);ctx.fill();
@@ -732,8 +735,8 @@ function drawSmooth(records){
 }
 
 function showWeightForm(){
-  showModal('记录体重',`<div class="fg"><label>体重 (kg)</label><input type="number" id="fWt" placeholder="65.0" step="0.1" min="20" max="300"></div><div class="fg"><label>日期</label><input type="date" id="fDate" value="${today()}"></div><div class="fg"><label>备注</label><input type="text" id="fNote" placeholder="可选"></div>`,async()=>{
-    const wt=parseFloat($('#fWt').value);if(!wt||wt<20||wt>300){toast('请输入有效体重');throw new Error()}const date=$('#fDate').value;
+  showModal('记录体重',`<div class="fg"><label>体重 (斤)</label><input type="number" id="fWt" placeholder="130.0" step="0.1" min="40" max="600"></div><div class="fg"><label>日期</label><input type="date" id="fDate" value="${today()}"></div><div class="fg"><label>备注</label><input type="text" id="fNote" placeholder="可选"></div>`,async()=>{
+    const jin=parseFloat($('#fWt').value);if(!jin||jin<40||jin>600){toast('请输入有效体重(40-600斤)');throw new Error()}const wt=jr(jin),date=$('#fDate').value;
     const ex=await dbAll('weight');const dup=ex.find(r=>r.date===date);
     if(dup)await dbPut('weight',{...dup,weight:wt,note:$('#fNote').value.trim()});else await dbAdd('weight',{weight:wt,date,note:$('#fNote').value.trim(),createdAt:Date.now()});render();
   });
@@ -847,8 +850,8 @@ async function renderSettings(app,fab){
         <div class="setting-item"><span class="si-label">性别</span><span class="si-val">${pf.gender==='male'?'男 ♂':'女 ♀'}</span><span class="si-btn" id="setGenderBtn">切换</span></div>
         <div class="setting-item"><span class="si-label">年龄</span><span class="si-val">${pf.age||'--'} 岁</span><span class="si-btn" id="setAgeBtn">修改</span></div>
         <div class="setting-item"><span class="si-label">身高</span><span class="si-val">${pf.height} cm</span><span class="si-btn" id="setHtBtn">修改</span></div>
-        <div class="setting-item"><span class="si-label">初始体重</span><span class="si-val">${pf.initWeight?pf.initWeight+' kg':'未设置'}</span><span class="si-btn" id="setIwBtn">${pf.initWeight?'修改':'设置'}</span></div>
-        <div class="setting-item"><span class="si-label">目标体重</span><span class="si-val">${pf.targetWeight?pf.targetWeight+' kg':'未设置'}</span><span class="si-btn" id="setTwBtn">${pf.targetWeight?'修改':'设置'}</span></div>
+        <div class="setting-item"><span class="si-label">初始体重</span><span class="si-val">${pf.initWeight?j(pf.initWeight)+' 斤':'未设置'}</span><span class="si-btn" id="setIwBtn">${pf.initWeight?'修改':'设置'}</span></div>
+        <div class="setting-item"><span class="si-label">目标体重</span><span class="si-val">${pf.targetWeight?j(pf.targetWeight)+' 斤':'未设置'}</span><span class="si-btn" id="setTwBtn">${pf.targetWeight?'修改':'设置'}</span></div>
       </div>
       <div class="setting-group"><h4>📦 数据</h4><div class="setting-item"><span class="si-label">导出 CSV</span><span class="si-btn" id="expBtn">导出</span></div><div class="setting-item"><span class="si-label">清除所有数据</span><span class="si-btn danger" id="clrBtn">清除</span></div></div>
     </div>
@@ -857,8 +860,8 @@ async function renderSettings(app,fab){
   $('#setGenderBtn')?.addEventListener('click',()=>{const p=getProfile();p.gender=p.gender==='male'?'female':'male';setProfile(p);render()});
   $('#setAgeBtn')?.addEventListener('click',()=>{const v=parseInt(prompt('年龄',pf.age||''));if(v&&v>0&&v<120){const p=getProfile();p.age=v;setProfile(p);render()}});
   $('#setHtBtn')?.addEventListener('click',()=>{const v=parseFloat(prompt('身高 (cm)',pf.height));if(v&&v>50&&v<250){const p=getProfile();p.height=v;setProfile(p);render()}});
-  $('#setIwBtn')?.addEventListener('click',()=>{const v=parseFloat(prompt('初始体重 (kg)',pf.initWeight||''));if(v&&v>20&&v<300){const p=getProfile();p.initWeight=v;setProfile(p);render()}});
-  $('#setTwBtn')?.addEventListener('click',()=>{const v=parseFloat(prompt('目标体重 (kg)',pf.targetWeight||''));if(v&&v>20&&v<300){const p=getProfile();p.targetWeight=v;p.startDate=today();setProfile(p);render()}});
+  $('#setIwBtn')?.addEventListener('click',()=>{const v=parseFloat(prompt('初始体重 (斤)',pf.initWeight?j(pf.initWeight):''));if(v&&v>40&&v<600){const p=getProfile();p.initWeight=jr(v);setProfile(p);render()}});
+  $('#setTwBtn')?.addEventListener('click',()=>{const v=parseFloat(prompt('目标体重 (斤)',pf.targetWeight?j(pf.targetWeight):''));if(v&&v>40&&v<600){const p=getProfile();p.targetWeight=jr(v);p.startDate=today();setProfile(p);render()}});
   $('#expBtn')?.addEventListener('click',expCSV);
   $('#clrBtn')?.addEventListener('click',()=>showConfirm('确定清除所有数据？不可恢复！',async()=>{await Promise.all(['ledger','weight','car'].map(s=>dbAll(s).then(rs=>Promise.all(rs.map(r=>dbDel(s,r.id))))));localStorage.clear();toast('已清除');render()}));
   // Category/Account management
