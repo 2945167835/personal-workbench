@@ -370,7 +370,6 @@ async function render(){
   else if(page==='weight')await renderWeight(app,fab);
   else if(page==='car')await renderCar(app,fab);
   else if(page==='settings')await renderSettings(app,fab);
-  else if(page==='game')await renderGame(app,fab);
 }
 
 // ==================== HOME (Dashboard) ====================
@@ -441,10 +440,6 @@ async function renderHome(app,fab){
           }
         }).join('')}
       </div>`:''}
-
-      <div class="mod-entry" onclick="go('game')">
-        <div class="me-icon" style="background:rgba(155,89,182,.1)">🎮</div><div class="me-info"><div class="me-name">游戏</div><div class="me-desc">万界洪荒 · MUD 文字修仙</div></div><div class="me-arrow">›</div>
-      </div>
 
       <div class="mod-entry" onclick="go('settings')" style="margin-top:4px">
         <div class="me-icon" style="background:rgba(149,165,166,.1)">⚙️</div><div class="me-info"><div class="me-name">设置</div><div class="me-desc">车辆信息 · 体重目标 · 数据管理</div></div><div class="me-arrow">›</div>
@@ -776,20 +771,6 @@ function showCarForm(){
   if(isF){['#fPrice','#fLiters'].forEach(s=>{const el=document.querySelector(s);if(el)el.oninput=()=>{const p=parseFloat($('#fPrice').value)||0,l=parseFloat($('#fLiters').value)||0;if(p&&l)$('#fAmt').value=(p*l).toFixed(2)}});$('#fAmt').oninput=()=>{const a=parseFloat($('#fAmt').value)||0,p=parseFloat($('#fPrice').value)||0,l=parseFloat($('#fLiters').value)||0;if(a&&p&&!l)$('#fLiters').value=(a/p).toFixed(2);else if(a&&l&&!p)$('#fPrice').value=(a/l).toFixed(2)}}
   if(!isF&&!isM){document.querySelectorAll('#ocg .cat-chip').forEach(c=>c.onclick=()=>{document.querySelectorAll('#ocg .cat-chip').forEach(x=>x.classList.remove('sel'));c.classList.add('sel')})}
   $('#fCarType').onchange=function(){carTab=this.value;showCarForm()};
-}
-
-// ==================== GAME ====================
-async function renderGame(app,fab){
-  app.innerHTML=`
-    <div class="header"><button class="back" onclick="go('home')">←</button><h1>游戏</h1></div>
-    <div class="main" style="padding:0">
-      <iframe src="https://mudgj.com/wjhh/login.do/?td_channelid=gityx"
-        style="width:100%;height:100%;border:none;min-height:calc(100dvh - var(--header-h) - var(--safe-top) - var(--safe-bottom))"
-        allow="accelerometer; autoplay; clipboard-write"
-        sandbox="allow-same-origin allow-scripts allow-popups allow-forms allow-modals">
-      </iframe>
-    </div>
-  `;
 }
 
 // ==================== SETTINGS ====================
