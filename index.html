@@ -339,14 +339,22 @@ const OTHER_CATS=['🛡️ 保险','🅿️ 停车','🛣️ 过路费','🧼 �
 const LEDGER_FILTERS=[{id:'all',label:'全部'},{id:'expense',label:'支出'},{id:'income',label:'收入'},{id:'reimb',label:'待报销'},{id:'loan',label:'借入/借出'},{id:'install',label:'分期'}];
 
 // State
-let page='home',sub='',carTab='fuel',searchQ='',ledgerFilter='all';
+let page='home',sub='',carTab='fuel',searchQ='',ledgerFilter='all',selectedCarId=null;
 
 // Helpers
 const $=s=>document.querySelector(s);
 function fd(d){return d.slice(0,10)}function fm(n){return'¥'+Number(n).toLocaleString('zh-CN',{minimumFractionDigits:2,maximumFractionDigits:2})}function today(){return new Date().toISOString().slice(0,10)}function month(){const n=new Date();return n.getFullYear()+'-'+String(n.getMonth()+1).padStart(2,'0')}
 function toast(m){const t=$('#toast');t.textContent=m;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),1800)}
-function getCarInfo(){try{return JSON.parse(localStorage.getItem('wb_carInfo')||'null')}catch{return null}}
-function setCarInfo(d){localStorage.setItem('wb_carInfo',JSON.stringify(d))}
+function getCars(){
+  try{const v=JSON.parse(localStorage.getItem('wb_cars'));if(v&&v.length)return v}catch{}
+  // Migrate old single car format
+  const old=JSON.parse(localStorage.getItem('wb_carInfo')||'null');
+  if(old){const c=[{...old,id:'car_'+Date.now()}];setCars(c);localStorage.removeItem('wb_carInfo');return c}
+  return [];
+}
+function setCars(d){localStorage.setItem('wb_cars',JSON.stringify(d))}
+function getCarInfo(){const c=getCars();return selectedCarId?c.find(x=>x.id===selectedCarId)||c[0]:c[0]||null}
+function setCarInfo(d){const c=getCars();const idx=c.findIndex(x=>x.id===d.id);if(idx>=0)c[idx]=d;else{d.id=d.id||'car_'+Date.now();c.push(d)}setCars(c)}
 function getWeightGoal(){return getProfile().targetWeight||null}
 function setWeightGoal(t){const p=getProfile();p.targetWeight=t;p.startDate=today();setProfile(p)}
 
@@ -361,7 +369,7 @@ function getProfile(){
 function setProfile(d){localStorage.setItem('wb_profile',JSON.stringify(d))}
 
 // ==================== Router ====================
-function go(p,s_=''){page=p;sub=s_;searchQ='';ledgerFilter='all';carTab='fuel';ledgerAcc=null;render()}
+function go(p,s_=''){page=p;sub=s_;searchQ='';ledgerFilter='all';carTab='fuel';ledgerAcc=null;selectedCarId=null;render()}
 function goCar(t){page='car';carTab=t;render()}
 
 // ==================== Render ====================
@@ -418,7 +426,7 @@ async function renderHome(app,fab){
           <div class="me-icon me-weight">⚖️</div><div class="me-info"><div class="me-name">体重</div><div class="me-desc">${latestWt?latestWt.weight.toFixed(1)+' kg'+(goal?' · 目标 '+goal+' kg':''):'暂无记录'}</div></div><div class="me-arrow">›</div>
         </div>
         <div class="mod-entry" onclick="go('car')">
-          <div class="me-icon me-car">🚗</div><div class="me-info"><div class="me-name">用车</div><div class="me-desc">${info?info.brand+' '+info.model:''} 本月${fm(mCar)} · ${carR.length}条记录</div></div><div class="me-arrow">›</div>
+          <div class="me-icon me-car">🚗</div><div class="me-info"><div class="me-name">用车</div><div class="me-desc">${getCars().length}辆车 · ${carR.length}条记录 · 本月${fm(mCar)}</div></div><div class="me-arrow">›</div>
         </div>
       </div>
 
@@ -437,8 +445,9 @@ async function renderHome(app,fab){
               <div class="ri-dot weight"></div><div class="ri-info"><div class="ri-title">体重记录</div><div class="ri-sub">${fd(r.data.date)}</div></div>
               <div class="ri-amount" style="color:var(--primary)">${r.data.weight.toFixed(1)} kg</div></div>`;
           }else{
+            const car=getCars().find(c=>c.id===r.data.carId);const ev=car?.fuelType==='electric';
             return`<div class="recent-item" onclick="go('car')">
-              <div class="ri-dot car"></div><div class="ri-info"><div class="ri-title">${r.data.carType==='fuel'?(isEV?'充电':'加油'):r.data.carType==='maintenance'?'保养':'其他用车'}</div><div class="ri-sub">${fd(r.data.date)}</div></div>
+              <div class="ri-dot car"></div><div class="ri-info"><div class="ri-title">${car?car.brand+' '+car.model+' ':''}${r.data.carType==='fuel'?(ev?'充电':'加油'):r.data.carType==='maintenance'?'保养':'其他用车'}</div><div class="ri-sub">${fd(r.data.date)}</div></div>
               <div class="ri-amount" style="color:var(--danger)">-${fm(r.data.amount||0)}</div></div>`;
           }
         }).join('')}
@@ -732,9 +741,37 @@ function showWeightForm(){
 
 // ==================== CAR ====================
 async function renderCar(app,fab){
+  const cars=getCars();
+  // Car list view (no car selected)
+  if(!selectedCarId){
+    fab.classList.add('hidden');
+    const allRecs=(await dbAll('car')).sort((a,b)=>b.date.localeCompare(a.date)||b.id-a.id);
+    app.innerHTML=`
+      <div class="header"><button class="back" onclick="go('home')">←</button><h1>用车</h1></div>
+      <div class="main">
+        <div class="acc-section">
+          <div class="acc-label">🚗 我的车辆 · 点击进入记录</div>
+          ${cars.map(c=>{
+            const recs=allRecs.filter(r=>r.carId===c.id);const isEV=c.fuelType==='electric';
+            const mExp=recs.filter(r=>r.date.startsWith(month())).reduce((s,r)=>s+(r.amount||0),0);
+            return`<div class="acc-card" onclick="selectedCarId='${c.id}';render()" draggable="true">
+              <div class="ac-icon" style="background:rgba(74,144,217,.1)">${isEV?'⚡':'⛽'}</div>
+              <div class="ac-info"><div class="ac-name">${c.brand} ${c.model}</div><div class="ac-meta">${c.plate} · ${c.currentMileage}km · ${isEV?'电动':'燃油'} · ${recs.length}条</div></div>
+              <div class="ac-bal" style="color:var(--danger)">${fm(mExp)}</div><div class="ac-arrow">›</div>
+            </div>`;
+          }).join('')}
+          <div class="acc-add-card" onclick="showCarInfoForm()">+ 添加车辆</div>
+        </div>
+        ${cars.length>0?`<div class="section-title">全部记录 (${allRecs.length}条)</div>
+        ${allRecs.slice(0,20).map(r=>{const c=cars.find(x=>x.id===r.carId);const ev=c?.fuelType==='electric';const icon=r.carType==='fuel'?(ev?'⚡':'⛽'):r.carType==='maintenance'?'🔧':'📦';return`<div class="list-item" data-id="${r.id}"><div class="cat-dot" style="background:rgba(243,156,18,.1)">${icon}</div><div class="linfo"><div class="ltitle">${c?c.brand+' '+c.model+' ':''}${r.carType==='fuel'?(ev?'充电':'加油'):r.carType==='maintenance'?'保养':r.note||'其他'}</div><div class="lsub">${fd(r.date)} ${r.mileage?r.mileage+'km ':''}${r.liters?(ev?r.liters+'kWh ':r.liters+'L '):''}</div></div><div class="lamount la-out">-${fm(r.amount||0)}</div><button class="ldel" data-del="${r.id}">✕</button></div>`}).join('')}`:''}
+      </div>`;
+    bindDel();return;
+  }
+  // Single car view
+  const info=getCarInfo();if(!info){selectedCarId=null;render();return}
   fab.classList.remove('hidden');fab.onclick=()=>showCarForm();
-  const info=getCarInfo();const isEV=info?.fuelType==='electric';
-  const records=(await dbAll('car')).sort((a,b)=>b.date.localeCompare(a.date)||b.id-a.id);
+  const isEV=info.fuelType==='electric';
+  const records=(await dbAll('car')).filter(r=>r.carId===selectedCarId).sort((a,b)=>b.date.localeCompare(a.date)||b.id-a.id);
   const filtered=carTab==='all'?records:records.filter(r=>r.carType===carTab);
   const maintAlert=records.filter(r=>r.carType==='maintenance'&&r.nextDate).sort((a,b)=>b.date.localeCompare(a.date))[0];
   const maintWarn=maintAlert&&maintAlert.nextDate&&maintAlert.nextDate<=today();
@@ -744,9 +781,9 @@ async function renderCar(app,fab){
   const totalExp=filtered.reduce((s,r)=>s+(r.amount||0),0);const mExp=filtered.filter(r=>r.date.startsWith(month())).reduce((s,r)=>s+(r.amount||0),0);
 
   app.innerHTML=`
-    <div class="header"><button class="back" onclick="go('home')">←</button><h1>用车</h1></div>
+    <div class="header"><button class="back" onclick="selectedCarId=null;render()">←</button><h1>${info.brand} ${info.model}</h1></div>
     <div class="main">
-      ${info?`<div class="car-info"><div class="ci-row"><span class="ci-l">车辆</span><span>${info.brand} ${info.model} <span style="font-size:11px;color:var(--text3)">${isEV?'⚡电动':'⛽燃油'}</span></span></div><div class="ci-row"><span class="ci-l">车牌</span><span>${info.plate}</span></div><div class="ci-row"><span class="ci-l">购车</span><span>${info.buyDate}</span></div><div class="ci-row"><span class="ci-l">里程</span><span>${info.currentMileage} km</span></div><span class="ci-edit" id="editCarInfo">✎ 编辑</span></div>`:`<div class="car-info" style="text-align:center"><p style="margin-bottom:6px;color:var(--text3)">未设置车辆信息</p><span class="ci-edit" id="editCarInfo" style="font-size:14px">✎ 填写信息</span></div>`}
+      <div class="car-info"><div class="ci-row"><span class="ci-l">车牌</span><span>${info.plate}</span></div><div class="ci-row"><span class="ci-l">购车</span><span>${info.buyDate}</span></div><div class="ci-row"><span class="ci-l">里程</span><span>${info.currentMileage} km</span></div><div class="ci-row"><span class="ci-l">类型</span><span>${isEV?'⚡电动':'⛽燃油'}</span></div><span class="ci-edit" id="editCarInfo">✎ 编辑</span><span class="ci-edit" id="delCar" style="color:var(--danger);margin-left:12px">删除</span></div>
       ${maintWarn?`<div class="alert-card"><div class="al-icon">⚠️</div><div class="al-text">${maintAlert.note||'保养'} · ${maintAlert.nextDate}<span class="alert-badge">到期</span></div></div>`:''}
       <div class="summary-row"><div class="summary-card"><div class="sc-label">本月费用</div><div class="sc-val sc-red">${fm(mExp)}</div></div><div class="summary-card"><div class="sc-label">记录数</div><div class="sc-val sc-blue">${filtered.length}</div></div><div class="summary-card"><div class="sc-label">总计</div><div class="sc-val sc-red">${fm(totalExp)}</div></div>${fuelStat}</div>
       ${fuelChart?`<div class="chart-box"><canvas id="fuelChart"></canvas></div>`:''}
@@ -754,24 +791,25 @@ async function renderCar(app,fab){
       <div class="section-title">记录列表</div>
       ${filtered.length===0?'<div class="empty"><div class="eicon">🚗</div><p>暂无记录</p></div>':''}
       ${filtered.map(r=>{const icon=r.carType==='fuel'?(isEV?'⚡':'⛽'):r.carType==='maintenance'?'🔧':'📦';return`<div class="list-item" data-id="${r.id}"><div class="cat-dot" style="background:rgba(74,144,217,.1)">${icon}</div><div class="linfo"><div class="ltitle">${r.carType==='fuel'?(isEV?'充电':'加油'):r.carType==='maintenance'?'保养':r.note||'其他'}${r.nextDate?` <span style="font-size:10px;color:var(--text3)">下次:${r.nextDate}</span>`:''}</div><div class="lsub">${fd(r.date)} ${r.mileage?r.mileage+'km ':''}${r.liters?(isEV?r.liters+'kWh ':r.liters+'L '):''}</div></div><div class="lamount la-out">-${fm(r.amount||0)}</div><button class="ldel" data-del="${r.id}">✕</button></div>`}).join('')}
-    </div>
-  `;
+    </div>`;
   bindDel();app.querySelectorAll('.subtab').forEach(el=>el.onclick=()=>goCar(el.dataset.tab));
   $('#editCarInfo')?.addEventListener('click',showCarInfoForm);
+  $('#delCar')?.addEventListener('click',()=>showConfirm(`删除${info.brand} ${info.model}？`,()=>{setCars(getCars().filter(c=>c.id!==selectedCarId));selectedCarId=null;render()}));
   if(fuelChart)setTimeout(()=>drawFuelChart(fuelRecs,isEV),100);
 }
 function drawFuelChart(r,ev){const c=$('#fuelChart');if(!c)return;const l=r.slice(-10);if(l.length<2)return;const d=[];for(let i=1;i<l.length;i++){const k=l[i].mileage-l[i-1].mileage,lt=l[i].liters||0;d.push({label:fd(l[i].date).slice(5),val:k>0?(lt/k*100).toFixed(1):0})}const ctx=c.getContext('2d');const dpr=window.devicePixelRatio||1;const W=c.parentElement.clientWidth-28,H=160;c.width=W*dpr;c.height=H*dpr;c.style.width=W+'px';c.style.height=H+'px';ctx.scale(dpr,dpr);const pad={t:16,r:12,b:28,l:36},pw=W-pad.l-pad.r,ph=H-pad.t-pad.b;const mx=Math.max(...d.map(x=>parseFloat(x.val)))+2,mn=Math.max(0,Math.min(...d.map(x=>parseFloat(x.val)))-2);for(let i=0;i<=4;i++){const v=mn+(mx-mn)*i/4,y=pad.t+ph*(1-i/4);ctx.strokeStyle='#eee';ctx.beginPath();ctx.moveTo(pad.l,y);ctx.lineTo(W-pad.r,y);ctx.stroke();ctx.fillStyle='#999';ctx.font='8px sans-serif';ctx.textAlign='right';ctx.fillText(v.toFixed(1),pad.l-3,y+3)}ctx.strokeStyle='#F39C12';ctx.lineWidth=2.5;ctx.lineJoin='round';ctx.beginPath();d.forEach((p,i)=>{const x=pad.l+(i/(d.length-1))*pw,y=pad.t+ph-((parseFloat(p.val)-mn)/(mx-mn))*ph;i===0?ctx.moveTo(x,y):ctx.lineTo(x,y)});ctx.stroke();d.forEach((p,i)=>{const x=pad.l+(i/(d.length-1))*pw,y=pad.t+ph-((parseFloat(p.val)-mn)/(mx-mn))*ph;ctx.fillStyle='#F39C12';ctx.beginPath();ctx.arc(x,y,3,0,Math.PI*2);ctx.fill();ctx.fillStyle='#666';ctx.font='8px sans-serif';ctx.textAlign='center';ctx.fillText(p.label,x,H-pad.b+14)});ctx.fillStyle='#666';ctx.font='9px sans-serif';ctx.textAlign='center';ctx.fillText(`百公里${ev?'电耗(kWh)':'油耗(L)'}趋势`,W/2,8)}
 
-function showCarInfoForm(){
-  const info=getCarInfo()||{};
-  showModal(info.brand?'编辑车辆信息':'设置车辆信息',`
+function showCarInfoForm(editId){
+  const info=editId?(getCars().find(c=>c.id===editId)||{}):(selectedCarId?getCarInfo()||{}:{});
+  const isNew=!info.id;
+  showModal(isNew?'添加车辆':'编辑车辆信息',`
     <div class="fg"><label>类型</label><select id="ciFuelType" style="width:100%;padding:10px;border:1px solid #e0e0e0;border-radius:10px;font-size:14px;background:#f8f9fa"><option value="gasoline" ${info.fuelType!=='electric'?'selected':''}>⛽ 燃油车</option><option value="electric" ${info.fuelType==='electric'?'selected':''}>⚡ 电动车</option></select></div>
     <div class="fg"><label>品牌</label><input type="text" id="ciBrand" placeholder="例如：丰田" value="${info.brand||''}"></div>
     <div class="fg"><label>型号</label><input type="text" id="ciModel" placeholder="例如：卡罗拉" value="${info.model||''}"></div>
     <div class="fg"><label>车牌号</label><input type="text" id="ciPlate" placeholder="例如：京A12345" value="${info.plate||''}"></div>
     <div class="fg"><label>购车日期</label><input type="date" id="ciBuyDate" value="${info.buyDate||''}"></div>
     <div class="fg"><label>当前里程 (km)</label><input type="number" id="ciMileage" placeholder="50000" value="${info.currentMileage||''}"></div>
-  `,async()=>{const d={brand:$('#ciBrand').value.trim(),model:$('#ciModel').value.trim(),plate:$('#ciPlate').value.trim(),buyDate:$('#ciBuyDate').value,currentMileage:parseInt($('#ciMileage').value)||0,fuelType:$('#ciFuelType').value};if(!d.brand||!d.model){toast('请填写品牌和型号');throw new Error()}setCarInfo(d);render()});
+  `,async()=>{const d={id:info.id||'car_'+Date.now(),brand:$('#ciBrand').value.trim(),model:$('#ciModel').value.trim(),plate:$('#ciPlate').value.trim(),buyDate:$('#ciBuyDate').value,currentMileage:parseInt($('#ciMileage').value)||0,fuelType:$('#ciFuelType').value};if(!d.brand||!d.model){toast('请填写品牌和型号');throw new Error()}setCarInfo(d);if(isNew)selectedCarId=d.id;render()});
 }
 function showCarForm(){
   const info=getCarInfo();const ev=info?.fuelType==='electric';const isF=carTab==='fuel',isM=carTab==='maintenance',tp=isF?'fuel':isM?'maintenance':'other';
@@ -784,6 +822,7 @@ function showCarForm(){
     if(ct==='fuel'){rec.mileage=parseFloat($('#fMileage').value)||0;const pr=parseFloat($('#fPrice').value)||0,lt=parseFloat($('#fLiters').value)||0;if(pr&&lt)rec.amount=pr*lt;else if(rec.amount&&pr)rec.liters=rec.amount/pr;else if(rec.amount&&lt)rec.unitPrice=rec.amount/lt;rec.liters=lt||rec.liters||0;rec.unitPrice=pr||rec.unitPrice||0;if(rec.mileage){const i=getCarInfo();if(i){i.currentMileage=rec.mileage;setCarInfo(i)}}}
     else if(ct==='maintenance'){rec.note=$('#fNote').value.trim();rec.nextMileage=parseInt($('#fNextKm').value)||0;rec.nextDate=$('#fNextDate').value||''}
     else{const cat=document.querySelector('#ocg .sel')?.dataset.cat||OTHER_CATS[0];rec.note=cat+' '+($('#fNote')?.value?.trim()||'')}
+    rec.carId=selectedCarId;
     if(!date){toast('请选择日期');throw new Error()}await dbAdd('car',rec);render();
   });
   if(isF){['#fPrice','#fLiters'].forEach(s=>{const el=document.querySelector(s);if(el)el.oninput=()=>{const p=parseFloat($('#fPrice').value)||0,l=parseFloat($('#fLiters').value)||0;if(p&&l)$('#fAmt').value=(p*l).toFixed(2)}});$('#fAmt').oninput=()=>{const a=parseFloat($('#fAmt').value)||0,p=parseFloat($('#fPrice').value)||0,l=parseFloat($('#fLiters').value)||0;if(a&&p&&!l)$('#fLiters').value=(a/p).toFixed(2);else if(a&&l&&!p)$('#fPrice').value=(a/l).toFixed(2)}}
@@ -803,7 +842,7 @@ async function renderSettings(app,fab){
         <div class="setting-item"><span class="si-label">收入分类</span><span class="si-val">${incCats.length}个</span><span class="si-btn" id="mngIncBtn">管理</span></div>
         <div class="setting-item"><span class="si-label">账户</span><span class="si-val">${accts.length}个</span><span class="si-btn" id="mngAccBtn">管理</span></div>
       </div>
-      <div class="setting-group"><h4>🚗 车辆信息</h4>${info?`<div class="setting-item"><span class="si-label">${info.brand} ${info.model}</span><span class="si-val">${info.plate}</span><span class="si-btn" id="setCarBtn">编辑</span></div>`:`<div class="setting-item"><span class="si-label">未设置</span><span class="si-btn" id="setCarBtn">设置</span></div>`}</div>
+      <div class="setting-group"><h4>🚗 车辆信息</h4>${getCars().map(c=>`<div class="setting-item"><span class="si-label">${c.brand} ${c.model}</span><span class="si-val">${c.plate}</span><span class="si-btn" onclick="selectedCarId='${c.id}';showCarInfoForm('${c.id}')">编辑</span></div>`).join('')}<div class="setting-item"><span class="si-label">+ 添加车辆</span><span class="si-btn" id="setCarBtn">添加</span></div></div>
       <div class="setting-group"><h4>⚖️ 体重设置</h4>
         <div class="setting-item"><span class="si-label">性别</span><span class="si-val">${pf.gender==='male'?'男 ♂':'女 ♀'}</span><span class="si-btn" id="setGenderBtn">切换</span></div>
         <div class="setting-item"><span class="si-label">年龄</span><span class="si-val">${pf.age||'--'} 岁</span><span class="si-btn" id="setAgeBtn">修改</span></div>
