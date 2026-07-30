@@ -201,8 +201,6 @@ body{
 .acc-card .ac-info{flex:1;min-width:0;}
 .acc-card .ac-name{font-size:15px;font-weight:600;}
 .acc-card .ac-meta{font-size:12px;color:var(--text3);margin-top:1px;}
-.acc-card .ac-bar{height:4px;border-radius:2px;background:#eee;margin-top:4px;overflow:hidden;}
-.acc-card .ac-bar-fill{height:100%;border-radius:2px;transition:width .3s;}
 .acc-card .ac-bal{font-size:16px;font-weight:700;}
 .acc-card .ac-arrow{color:var(--text3);font-size:16px;}
 .acc-add-card{
@@ -327,11 +325,11 @@ function setIncCats(a){localStorage.setItem('wb_incCats',JSON.stringify(a))}
 function getAccounts(){
   try{const v=JSON.parse(localStorage.getItem('wb_accounts'));if(!v||!v.length)return defAcc();
   // Migrate old string format
-  if(typeof v[0]==='string'){const n=v.map((s,i)=>({name:s,icon:s.slice(0,2),limit:0,order:i}));setAccounts(n);return n}
+  if(typeof v[0]==='string'){const n=v.map((s,i)=>({name:s,icon:s.slice(0,2),order:i}));setAccounts(n);return n}
   return v.sort((a,b)=>(a.order||0)-(b.order||0));
   }catch{return defAcc()}
 }
-function defAcc(){return[{name:'💰 现金',icon:'💰',limit:0,order:0},{name:'🏦 银行卡',icon:'🏦',limit:0,order:1},{name:'💬 微信',icon:'💬',limit:0,order:2},{name:'📱 支付宝',icon:'📱',limit:0,order:3}]}
+function defAcc(){return[{name:'💰 现金',icon:'💰',order:0},{name:'🏦 银行卡',icon:'🏦',order:1},{name:'💬 微信',icon:'💬',order:2},{name:'📱 支付宝',icon:'📱',order:3}]}
 function setAccounts(a){localStorage.setItem('wb_accounts',JSON.stringify(a))}
 function accName(a){return typeof a==='string'?a:a.name}
 function accIcon(a){return typeof a==='string'?a.slice(0,2):(a.icon||a.name.slice(0,2))}
@@ -476,8 +474,8 @@ async function renderLedger(app,fab){
   else if(ledgerFilter==='install')disp=disp.filter(r=>r.installment);
   if(searchQ){const q=searchQ.toLowerCase();disp=disp.filter(r=>(r.category||'').includes(q)||(r.note||'').toLowerCase().includes(q)||String(r.amount).includes(q)||(r.account||'').includes(q));}
 
-  // Per-account balances + limits (all time)
-  const accData={};accts.forEach(a=>{const n=accName(a);let bal=0,exp=0;records.filter(r=>r.account===n).forEach(r=>{if(r.type==='income'||r.type==='loan_in')bal+=r.amount;else{bal-=r.amount;exp+=r.amount}});accData[n]={bal,exp,limit:a.limit||0,icon:accIcon(a),name:accRaw(a)};});
+  // Per-account balances
+  const accData={};accts.forEach(a=>{const n=accName(a);let bal=0,exp=0;records.filter(r=>r.account===n).forEach(r=>{if(r.type==='income'||r.type==='loan_in')bal+=r.amount;else{bal-=r.amount;exp+=r.amount}});accData[n]={bal,exp,icon:accIcon(a),name:accRaw(a)};});
   const totalBal=Object.values(accData).reduce((s,v)=>s+v.bal,0);
 
   const laObj=ledgerAcc?accts.find(a=>accName(a)===ledgerAcc):null;
@@ -504,12 +502,10 @@ async function renderLedger(app,fab){
           </div>
           <div style="font-size:11px;color:var(--text3);margin-bottom:8px">当前账户：<b style="color:var(--primary)">${laRaw}</b> · <span style="cursor:pointer;color:var(--primary)" onclick="ledgerAcc=null;render()">← 返回全部</span></div>
         `:accts.map((a,i)=>{
-          const n=accName(a);const d=accData[n]||{bal:0,exp:0,limit:0,icon:accIcon(a),name:accRaw(a)};
-          const limitPct=d.limit>0?Math.min(100,(d.exp/d.limit*100)):null;
-          const limitColor=limitPct>80?'#E74C3C':limitPct>50?'#F39C12':'#27AE60';
+          const n=accName(a);const d=accData[n]||{bal:0,exp:0,icon:accIcon(a),name:accRaw(a)};
           return`<div class="acc-card" data-acc="${n}" data-idx="${i}" draggable="true" onclick="ledgerAcc='${n}';render()">
             <div class="ac-icon" style="background:${d.bal>=0?'rgba(39,174,96,.1)':'rgba(231,76,60,.1)'}">${d.icon}</div>
-            <div class="ac-info"><div class="ac-name">${d.name}</div><div class="ac-meta">${(records.filter(r=>r.account===n).length)}笔 · 本月 ${fm(d.exp)}${d.limit>0?' / 限额 '+fm(d.limit):''}</div>${limitPct!==null?`<div class="ac-bar"><div class="ac-bar-fill" style="width:${limitPct}%;background:${limitColor}"></div></div>`:''}</div>
+            <div class="ac-info"><div class="ac-name">${d.name}</div><div class="ac-meta">${(records.filter(r=>r.account===n).length)}笔 · 本月 ${fm(d.exp)}</div></div>
             <div class="ac-bal" style="color:${d.bal>=0?'var(--success)':'var(--danger)'}">${fm(d.bal)}</div>
             <div class="ac-arrow">›</div>
           </div>`;
@@ -575,9 +571,8 @@ function drawAssetTrend(records,accts){
 function addAccPrompt(){
   const icon=prompt('账户图标 (emoji)：','💰')||'💰';
   const name=prompt('账户名称：');if(!name||!name.trim())return;
-  const limit=parseFloat(prompt('月度限额 (0=不限制)：','0'))||0;
   const a=getAccounts();const maxOrder=Math.max(0,...a.map(x=>x.order||0));
-  a.push({name:(icon+' '+name.trim()),icon:icon.trim(),limit,name:name.trim(),order:maxOrder+1});
+  a.push({name:(icon+' '+name.trim()),icon:icon.trim(),name:name.trim(),order:maxOrder+1});
   setAccounts(a);render();
 }
 
@@ -624,7 +619,7 @@ function showLedgerForm(preAmt,opts={}){
   function renderCats(t){const g=$('#catGrid');const cats=t==='income'?getIncCats():getExpCats();g.innerHTML=cats.map((c,i)=>`<span class="cat-chip${i===0?' sel':''}" data-cat="${c}">${c}</span>`).join('');g.querySelectorAll('.cat-chip').forEach(c=>c.onclick=()=>{g.querySelectorAll('.cat-chip').forEach(x=>x.classList.remove('sel'));c.classList.add('sel')})}
   function renderAccs(){const g=$('#accGrid');const accts=getAccounts();g.innerHTML=accts.map((a,i)=>`<span class="cat-chip${preIdx===i||(preIdx<0&&i===0)?' sel':''}" data-acc="${accName(a)}">${accName(a)}</span>`).join('');g.querySelectorAll('.cat-chip').forEach(c=>c.onclick=()=>{g.querySelectorAll('.cat-chip').forEach(x=>x.classList.remove('sel'));c.classList.add('sel')})}
   $('#newCat').addEventListener('keydown',e=>{if(e.key==='Enter'){const v=$('#newCat').value.trim();if(v){const t=document.querySelector('#typeTgl .inc-act,#typeTgl .exp-act');const isInc=t.classList.contains('inc-act');const cats=isInc?getIncCats():getExpCats();if(!cats.includes(v)){cats.push(v);isInc?setIncCats(cats):setExpCats(cats)}renderCats(isInc?'income':'expense')}$('#newCat').value=''}});
-  if(!preAcc){$('#newAcc').addEventListener('keydown',e=>{if(e.key==='Enter'){const v=$('#newAcc').value.trim();if(v){const accts=getAccounts();if(!accts.find(a=>accName(a)===v)){const maxOrd=Math.max(0,...accts.map(x=>x.order||0));accts.push({name:v,icon:v.slice(0,2)||'📦',limit:0,order:maxOrd+1});setAccounts(accts)}renderAccs()}$('#newAcc').value=''}});}
+  if(!preAcc){$('#newAcc').addEventListener('keydown',e=>{if(e.key==='Enter'){const v=$('#newAcc').value.trim();if(v){const accts=getAccounts();if(!accts.find(a=>accName(a)===v)){const maxOrd=Math.max(0,...accts.map(x=>x.order||0));accts.push({name:v,icon:v.slice(0,2)||'📦',order:maxOrd+1});setAccounts(accts)}renderAccs()}$('#newAcc').value=''}});}
   function upd(){const ef=$('#extraFields');let h='';if($('#fInst').checked)h+=`<div class="fg-row"><div class="fg"><label>总期数</label><input type="number" id="fInstTotal" placeholder="12" min="1"></div><div class="fg"><label>第几期</label><input type="number" id="fInstCurrent" placeholder="1" min="1"></div></div>`;if($('#fLoan').checked)h+=`<div class="fg"><label>对方/用途</label><input type="text" id="fLoanNote" placeholder="例如：借给张三"></div>`;ef.innerHTML=h}
   ['#fReimb','#fLoan','#fInst'].forEach(s=>{const el=document.querySelector(s);if(el)el.onchange=upd});
   if(opts.inst||opts.reimb)upd();
@@ -843,19 +838,17 @@ function showAccManager(){
     <div id="accMgrList">${items.map((a,i)=>`<div style="display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid #f0f0f0">
       <span style="font-size:18px;width:30px;text-align:center;cursor:pointer" onclick="const p=prompt('修改图标(emoji):','${a.icon||a.name.slice(0,2)}');if(p){const ac=getAccounts();ac[${i}].icon=p.trim();ac[${i}].name=p.trim()+' '+ac[${i}].name.slice(ac[${i}].name.indexOf(' ')+1);setAccounts(ac);showAccManager()}">${a.icon||a.name.slice(0,2)}</span>
       <span style="flex:1;font-size:14px">${accRaw(a)}</span>
-      <span style="font-size:11px;color:var(--text3)">限额${fm(a.limit||0)}</span>
       <button class="cat-del-btn" data-idx="${i}" style="border:none;background:rgba(231,76,60,.1);color:var(--danger);width:28px;height:28px;border-radius:50%;font-size:14px;cursor:pointer">✕</button>
     </div>`).join('')}</div>
-    <div style="margin-top:10px;display:flex;gap:8px"><input type="text" id="accIcon" placeholder="图标" style="width:50px;padding:8px;border:1px solid #e0e0e0;border-radius:8px;font-size:14px;outline:none;text-align:center" value="💰"><input type="text" id="newAccName" placeholder="账户名称" style="flex:1;padding:8px 10px;border:1px solid #e0e0e0;border-radius:8px;font-size:13px;outline:none"><input type="number" id="newAccLimit" placeholder="限额" style="width:70px;padding:8px;border:1px solid #e0e0e0;border-radius:8px;font-size:13px;outline:none"><button id="addAccBtn" style="padding:8px 12px;border:none;border-radius:8px;background:var(--primary);color:#fff;font-size:13px;cursor:pointer;white-space:nowrap">添加</button></div>
+    <div style="margin-top:10px;display:flex;gap:8px"><input type="text" id="accIcon" placeholder="图标" style="width:50px;padding:8px;border:1px solid #e0e0e0;border-radius:8px;font-size:14px;outline:none;text-align:center" value="💰"><input type="text" id="newAccName" placeholder="账户名称" style="flex:1;padding:8px 10px;border:1px solid #e0e0e0;border-radius:8px;font-size:13px;outline:none"><button id="addAccBtn" style="padding:8px 12px;border:none;border-radius:8px;background:var(--primary);color:#fff;font-size:13px;cursor:pointer;white-space:nowrap">添加</button></div>
   `,async()=>{
     const updated=[];document.querySelectorAll('#accMgrList > div').forEach(d=>{const s=d.querySelector('span:nth-child(2)');if(s)updated.push(s.textContent)});
-    // Preserve existing icons/limits
     const old=getAccounts();
     const merged=updated.map((name,i)=>({...old.find(a=>accRaw(a)===name)||{},name:(old.find(a=>accRaw(a)===name)||{}).name||name,order:i}));
     setAccounts(merged);render();
   });
   document.querySelectorAll('.cat-del-btn').forEach(b=>b.onclick=()=>{const a=getAccounts();a.splice(parseInt(b.dataset.idx),1);setAccounts(a);showAccManager()});
-  $('#addAccBtn').addEventListener('click',()=>{const icon=$('#accIcon').value.trim()||'📦',nm=$('#newAccName').value.trim();if(nm){const a=getAccounts();a.push({name:icon+' '+nm,icon,limit:parseFloat($('#newAccLimit').value)||0,order:a.length});setAccounts(a);showAccManager()}});
+  $('#addAccBtn').addEventListener('click',()=>{const icon=$('#accIcon').value.trim()||'📦',nm=$('#newAccName').value.trim();if(nm){const a=getAccounts();a.push({name:icon+' '+nm,icon,order:a.length});setAccounts(a);showAccManager()}});
   $('#newAccName').addEventListener('keydown',e=>{if(e.key==='Enter'){$('#addAccBtn').click()}});
 }
 
