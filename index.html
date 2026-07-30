@@ -46,12 +46,15 @@ body{
 .widget-title{font-size:13px;color:var(--text2);margin-bottom:12px;font-weight:600;text-transform:uppercase;letter-spacing:.5px;}
 .overview-row{display:flex;gap:10px;margin-bottom:12px;}
 .overview-card{
-  flex:1;background:var(--bg);border-radius:12px;padding:14px 10px;text-align:center;
+  flex:1;border-radius:14px;padding:16px 10px;text-align:center;color:#fff;
 }
-.overview-card .oc-icon{font-size:22px;margin-bottom:4px;}
-.overview-card .oc-val{font-size:15px;font-weight:700;word-break:break-all;}
-.overview-card .oc-label{font-size:10px;color:var(--text2);margin-top:2px;}
-.oc-green{color:var(--success)}.oc-red{color:var(--danger)}.oc-blue{color:var(--primary)}
+.overview-card .oc-icon{font-size:20px;margin-bottom:4px;opacity:.9}
+.overview-card .oc-val{font-size:16px;font-weight:700;word-break:break-all}
+.overview-card .oc-label{font-size:10px;opacity:.8;margin-top:2px}
+.oc-income{background:linear-gradient(135deg,#27AE60,#2ECC71)}
+.oc-expense{background:linear-gradient(135deg,#E74C3C,#C0392B)}
+.oc-balance{background:linear-gradient(135deg,#4A90D9,#357ABD)}
+.oc-reimb{background:linear-gradient(135deg,#F39C12,#E67E22)}
 
 /* Module Entry Cards */
 .mod-entry{
@@ -91,7 +94,7 @@ body{
   text-align:center;box-shadow:0 1px 4px rgba(0,0,0,0.04);
 }
 .summary-card .sc-label{font-size:10px;color:var(--text2);margin-bottom:2px;}
-.summary-card .sc-val{font-size:15px;font-weight:700;word-break:break-all;}
+.summary-card .sc-val{font-size:14px;font-weight:700;word-break:break-all;}
 .sc-green{color:var(--success)}.sc-red{color:var(--danger)}.sc-blue{color:var(--primary)}.sc-warn{color:var(--warning)}
 
 /* Quick Amount */
@@ -198,6 +201,8 @@ body{
 .acc-card .ac-info{flex:1;min-width:0;}
 .acc-card .ac-name{font-size:15px;font-weight:600;}
 .acc-card .ac-meta{font-size:12px;color:var(--text3);margin-top:1px;}
+.acc-card .ac-bar{height:4px;border-radius:2px;background:#eee;margin-top:4px;overflow:hidden;}
+.acc-card .ac-bar-fill{height:100%;border-radius:2px;transition:width .3s;}
 .acc-card .ac-bal{font-size:16px;font-weight:700;}
 .acc-card .ac-arrow{color:var(--text3);font-size:16px;}
 .acc-add-card{
@@ -340,7 +345,7 @@ let page='home',sub='',carTab='fuel',searchQ='',ledgerFilter='all';
 
 // Helpers
 const $=s=>document.querySelector(s);
-function fd(d){return d.slice(0,10)}function fm(n){return'¥'+Number(n).toFixed(2)}function today(){return new Date().toISOString().slice(0,10)}function month(){const n=new Date();return n.getFullYear()+'-'+String(n.getMonth()+1).padStart(2,'0')}
+function fd(d){return d.slice(0,10)}function fm(n){return'¥'+Number(n).toLocaleString('zh-CN',{minimumFractionDigits:2,maximumFractionDigits:2})}function today(){return new Date().toISOString().slice(0,10)}function month(){const n=new Date();return n.getFullYear()+'-'+String(n.getMonth()+1).padStart(2,'0')}
 function toast(m){const t=$('#toast');t.textContent=m;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),1800)}
 function getCarInfo(){try{return JSON.parse(localStorage.getItem('wb_carInfo')||'null')}catch{return null}}
 function setCarInfo(d){localStorage.setItem('wb_carInfo',JSON.stringify(d))}
@@ -399,11 +404,11 @@ async function renderHome(app,fab){
       <div class="widget">
         <div class="widget-title">📊 本月概览</div>
         <div class="overview-row">
-          <div class="overview-card"><div class="oc-icon">💰</div><div class="oc-val oc-green">${fm(income)}</div><div class="oc-label">收入</div></div>
-          <div class="overview-card"><div class="oc-icon">💸</div><div class="oc-val oc-red">${fm(expense)}</div><div class="oc-label">支出</div></div>
-          <div class="overview-card"><div class="oc-icon">💵</div><div class="oc-val oc-blue">${fm(income-expense)}</div><div class="oc-label">结余</div></div>
+          <div class="overview-card oc-income"><div class="oc-icon">💰</div><div class="oc-val">${fm(income)}</div><div class="oc-label">收入</div></div>
+          <div class="overview-card oc-expense"><div class="oc-icon">💸</div><div class="oc-val">${fm(expense)}</div><div class="oc-label">支出</div></div>
+          <div class="overview-card oc-balance"><div class="oc-icon">💵</div><div class="oc-val">${fm(income-expense)}</div><div class="oc-label">结余</div></div>
         </div>
-        ${reimbSum>0?`<div class="overview-card" style="background:#fff8e1;border:1px solid rgba(243,156,18,.15)"><div class="oc-icon">🧾</div><div class="oc-val" style="color:var(--warning)">${fm(reimbSum)}</div><div class="oc-label">待报销</div></div>`:''}
+        ${reimbSum>0?`<div class="overview-card oc-reimb" style="margin-top:8px"><div class="oc-icon">🧾</div><div class="oc-val">${fm(reimbSum)}</div><div class="oc-label">待报销</div></div>`:''}
       </div>
 
       <div class="widget">
@@ -500,10 +505,11 @@ async function renderLedger(app,fab){
           <div style="font-size:11px;color:var(--text3);margin-bottom:8px">当前账户：<b style="color:var(--primary)">${laRaw}</b> · <span style="cursor:pointer;color:var(--primary)" onclick="ledgerAcc=null;render()">← 返回全部</span></div>
         `:accts.map((a,i)=>{
           const n=accName(a);const d=accData[n]||{bal:0,exp:0,limit:0,icon:accIcon(a),name:accRaw(a)};
-          const limitPct=d.limit>0?Math.min(100,(d.exp/d.limit*100)).toFixed(1):null;
+          const limitPct=d.limit>0?Math.min(100,(d.exp/d.limit*100)):null;
+          const limitColor=limitPct>80?'#E74C3C':limitPct>50?'#F39C12':'#27AE60';
           return`<div class="acc-card" data-acc="${n}" data-idx="${i}" draggable="true" onclick="ledgerAcc='${n}';render()">
             <div class="ac-icon" style="background:${d.bal>=0?'rgba(39,174,96,.1)':'rgba(231,76,60,.1)'}">${d.icon}</div>
-            <div class="ac-info"><div class="ac-name">${d.name}${limitPct?` <span style="font-size:10px;color:${parseFloat(limitPct)>80?'var(--danger)':'var(--text3)'}">${limitPct}%</span>`:''}</div><div class="ac-meta">${(records.filter(r=>r.account===n).length)}笔 · ${d.limit>0?'限额 '+fm(d.limit)+' / ':''}本月 ${fm(d.exp)}</div></div>
+            <div class="ac-info"><div class="ac-name">${d.name}</div><div class="ac-meta">${(records.filter(r=>r.account===n).length)}笔 · 本月 ${fm(d.exp)}${d.limit>0?' / 限额 '+fm(d.limit):''}</div>${limitPct!==null?`<div class="ac-bar"><div class="ac-bar-fill" style="width:${limitPct}%;background:${limitColor}"></div></div>`:''}</div>
             <div class="ac-bal" style="color:${d.bal>=0?'var(--success)':'var(--danger)'}">${fm(d.bal)}</div>
             <div class="ac-arrow">›</div>
           </div>`;
