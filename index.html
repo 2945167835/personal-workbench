@@ -367,6 +367,7 @@ let page='home',sub='',carTab='fuel',searchQ='',ledgerFilter='all',selectedCarId
 const $=s=>document.querySelector(s);
 function fd(d){return d.slice(0,10)}function fm(n){return'¥'+Number(n).toLocaleString('zh-CN',{minimumFractionDigits:2,maximumFractionDigits:2})}function today(){return new Date().toISOString().slice(0,10)}function month(){const n=new Date();return n.getFullYear()+'-'+String(n.getMonth()+1).padStart(2,'0')}
 function daysUntil(d){if(!d)return'';const t=(new Date(d)-new Date())/86400000;if(t<0)return' · 已过期';if(t<1)return' · 今天到期';if(t<30)return' · 剩'+Math.ceil(t)+'天';return''}
+function insRow(d){var c=d<=today()?'var(--danger)':new Date(d)-new Date()<30*86400000?'var(--warning)':'';return'<div class="ci-row"><span class="ci-l">交强险</span><span style="color:'+c+'">'+d+daysUntil(d)+'</span></div>'}
 function j(kg){return(kg*2).toFixed(1)} // kg → 斤 for display
 function jr(jin){return parseFloat((jin/2).toFixed(2))} // 斤 → kg for storage
 function toast(m){const t=$('#toast');t.textContent=m;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),1800)}
@@ -410,6 +411,13 @@ async function render(){
 }
 
 // ==================== HOME (Dashboard) ====================
+function renderInsAlerts(){
+  const cars=getCars().filter(c=>c.insuranceExpiry);
+  if(!cars.length)return'';
+  const alerts=cars.filter(c=>{const d=(new Date(c.insuranceExpiry)-new Date())/86400000;return d<30});
+  if(!alerts.length)return'';
+  return'<div class="widget" style="background:#fff8e1"><div class="widget-title">⚠️ 保险提醒</div>'+alerts.map(c=>{const d=Math.ceil((new Date(c.insuranceExpiry)-new Date())/86400000);return'<div style="font-size:12px;color:'+(d<=0?'var(--danger)':'var(--warning)')+';padding:2px 0">'+c.brand+' '+c.model+' · '+c.insuranceExpiry+daysUntil(c.insuranceExpiry)+'</div>'}).join('')+'</div>';
+}
 async function renderHome(app,fab){
   const m=month();
   const [ledgerR,weightR,carR]=await Promise.all([dbAll('ledger'),dbAll('weight'),dbAll('car')]);
@@ -459,7 +467,7 @@ async function renderHome(app,fab){
         </div>
       </div>
 
-      ${(()=>{const cars=getCars().filter(c=>c.insuranceExpiry);if(!cars.length)return'';const alerts=cars.filter(c=>{const d=(new Date(c.insuranceExpiry)-new Date())/86400000;return d<30});if(!alerts.length)return'';return`<div class="widget" style="background:#fff8e1"><div class="widget-title">⚠️ 保险提醒</div>${alerts.map(c=>{const d=Math.ceil((new Date(c.insuranceExpiry)-new Date())/86400000);return`<div style="font-size:12px;color:${d<=0?'var(--danger)':'var(--warning)'};padding:2px 0">${c.brand} ${c.model} · ${c.insuranceExpiry}${daysUntil(c.insuranceExpiry)}</div>`}).join('')}</div>`}})()}
+      ${renderInsAlerts()}
 
       ${recent3.length>0?`
       <div class="widget">
@@ -803,7 +811,7 @@ async function renderCar(app,fab){
   app.innerHTML=`
     <div class="header"><button class="back" onclick="selectedCarId=null;render()">←</button><h1>${info.brand} ${info.model}</h1></div>
     <div class="main">
-      <div class="car-info"><div class="ci-row"><span class="ci-l">车牌</span><span>${info.plate}</span></div><div class="ci-row"><span class="ci-l">购车</span><span>${info.buyDate}</span></div><div class="ci-row"><span class="ci-l">里程</span><span>${info.currentMileage} km</span></div><div class="ci-row"><span class="ci-l">类型</span><span>${isEV?'⚡电动':'⛽燃油'}</span></div>${info.insuranceExpiry?`<div class="ci-row"><span class="ci-l">交强险</span><span style="color:${info.insuranceExpiry<=today()?'var(--danger)':new Date(info.insuranceExpiry)-new Date()<30*86400000?'var(--warning)':''}">${info.insuranceExpiry}${daysUntil(info.insuranceExpiry)}</span></div>`:''}<span class="ci-edit" id="editCarInfo">✎ 编辑</span><span class="ci-edit" id="delCar" style="color:var(--danger);margin-left:12px">删除</span></div>
+      <div class="car-info"><div class="ci-row"><span class="ci-l">车牌</span><span>${info.plate}</span></div><div class="ci-row"><span class="ci-l">购车</span><span>${info.buyDate}</span></div><div class="ci-row"><span class="ci-l">里程</span><span>${info.currentMileage} km</span></div><div class="ci-row"><span class="ci-l">类型</span><span>${isEV?'⚡电动':'⛽燃油'}</span></div>${info.insuranceExpiry?insRow(info.insuranceExpiry):''}<span class="ci-edit" id="editCarInfo">✎ 编辑</span><span class="ci-edit" id="delCar" style="color:var(--danger);margin-left:12px">删除</span></div>
       ${maintWarn?`<div class="alert-card"><div class="al-icon">⚠️</div><div class="al-text">${maintAlert.note||'保养'} · ${maintAlert.nextDate}<span class="alert-badge">到期</span></div></div>`:''}
       <div class="summary-row"><div class="summary-card"><div class="sc-label">本月费用</div><div class="sc-val sc-red">${fm(mExp)}</div></div><div class="summary-card"><div class="sc-label">记录数</div><div class="sc-val sc-blue">${filtered.length}</div></div><div class="summary-card"><div class="sc-label">总计</div><div class="sc-val sc-red">${fm(totalExp)}</div></div>${fuelStat}</div>
       ${fuelChart?`<div class="chart-box"><canvas id="fuelChart"></canvas></div>`:''}
