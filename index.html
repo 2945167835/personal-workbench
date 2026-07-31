@@ -322,7 +322,7 @@ let backupTimer=null;
 async function backupAll(){
   clearTimeout(backupTimer);backupTimer=setTimeout(async()=>{
     try{const[l,w,c]=await Promise.all([dbAll('ledger'),dbAll('weight'),dbAll('car')]);
-    const data={ledger:l,weight:w,car:c,time:Date.now(),settings:{profile:localStorage.getItem('wb_profile'),accounts:localStorage.getItem('wb_accounts'),expCats:localStorage.getItem('wb_expCats'),incCats:localStorage.getItem('wb_incCats'),cars:localStorage.getItem('wb_cars')}};
+    const data={ledger:l,weight:w,car:c,time:Date.now(),settings:{profile:localStorage.getItem('wb_profile'),accounts:localStorage.getItem('wb_accounts'),expCats:localStorage.getItem('wb_expCats'),incCats:localStorage.getItem('wb_incCats'),cars:localStorage.getItem('wb_cars'),dsKey:localStorage.getItem('wb_dsKey')}};
     localStorage.setItem('wb_backup',JSON.stringify(data));}catch{}
   },1000);
 }
@@ -916,7 +916,7 @@ async function renderSettings(app,fab){
 async function expCSV(){
   const l=await dbAll('ledger'),w=await dbAll('weight'),c=await dbAll('car');
   // Export as JSON (full backup format)
-  const json={ledger:l,weight:w,car:c,time:Date.now(),settings:{profile:localStorage.getItem('wb_profile'),accounts:localStorage.getItem('wb_accounts'),expCats:localStorage.getItem('wb_expCats'),incCats:localStorage.getItem('wb_incCats'),cars:localStorage.getItem('wb_cars')}};
+  const json={ledger:l,weight:w,car:c,time:Date.now(),settings:{profile:localStorage.getItem('wb_profile'),accounts:localStorage.getItem('wb_accounts'),expCats:localStorage.getItem('wb_expCats'),incCats:localStorage.getItem('wb_incCats'),cars:localStorage.getItem('wb_cars'),dsKey:localStorage.getItem('wb_dsKey')}};
   const jb=new Blob([JSON.stringify(json,null,2)],{type:'application/json'});
   const ja=document.createElement('a');ja.href=URL.createObjectURL(jb);ja.download='workbench_backup.json';ja.click();
   setTimeout(()=>toast('JSON备份文件已下载'),200);
