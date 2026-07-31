@@ -361,7 +361,7 @@ const OTHER_CATS=['🛡️ 保险','🅿️ 停车','🛣️ 过路费','🧼 �
 const LEDGER_FILTERS=[{id:'all',label:'全部'},{id:'expense',label:'支出'},{id:'income',label:'收入'},{id:'reimb',label:'待报销'},{id:'loan',label:'借入/借出'},{id:'install',label:'分期'}];
 
 // State
-let page='home',sub='',carTab='fuel',searchQ='',ledgerFilter='all',selectedCarId=null;
+let page='home',sub='',carTab='fuel',searchQ='',ledgerFilter='all',selectedCarId=null,ledgerSub='';
 
 // Helpers
 const $=s=>document.querySelector(s);
@@ -393,7 +393,7 @@ function getProfile(){
 function setProfile(d){localStorage.setItem('wb_profile',JSON.stringify(d))}
 
 // ==================== Router ====================
-function go(p,s_=''){page=p;sub=s_;searchQ='';ledgerFilter='all';carTab='fuel';ledgerAcc=null;selectedCarId=null;render()}
+function go(p,s_=''){page=p;sub=s_;searchQ='';ledgerFilter='all';carTab='fuel';ledgerAcc=null;selectedCarId=null;ledgerSub='';render()}
 function goCar(t){page='car';carTab=t;render()}
 
 // ==================== Render ====================
@@ -489,121 +489,105 @@ async function renderHome(app,fab){
 }
 
 // ==================== LEDGER ====================
-let ledgerAcc=null; // selected account filter, null = show all
-
+let ledgerAcc=null;
 async function renderLedger(app,fab){
-  fab.classList.remove('hidden');fab.onclick=()=>showLedgerForm();
-  const m=month();
-  const records=(await dbAll('ledger')).sort((a,b)=>b.date.localeCompare(a.date)||b.id-a.id);
+  fab.classList.add('hidden');
+  const m=month();const records=(await dbAll('ledger')).sort((a,b)=>b.date.localeCompare(a.date)||b.id-a.id);
   const mRecs=records.filter(r=>r.date.startsWith(m));
-  const income=mRecs.filter(r=>r.type==='income'||r.type==='loan_in').reduce((s,r)=>s+r.amount,0);
   const expense=mRecs.filter(r=>r.type==='expense'||r.type==='loan_out').reduce((s,r)=>s+r.amount,0);
-  const reimbSum=records.filter(r=>r.reimbursable&&!r.reimbursed).reduce((s,r)=>s+r.amount,0);
-  const accts=getAccounts();
+  const reimbRecs=records.filter(r=>r.reimbursable&&!r.reimbursed);
+  const reimbSum=reimbRecs.reduce((s,r)=>s+r.amount,0);
+  const loanOut=records.filter(r=>r.type==='loan_out').reduce((s,r)=>s+r.amount,0);
+  const loanIn=records.filter(r=>r.type==='loan_in').reduce((s,r)=>s+r.amount,0);
 
-  // Filter by selected account
-  let disp=records;
-  if(ledgerAcc)disp=disp.filter(r=>r.account===ledgerAcc);
-  if(ledgerFilter==='expense')disp=disp.filter(r=>r.type==='expense'||r.type==='loan_out');
-  else if(ledgerFilter==='income')disp=disp.filter(r=>r.type==='income'||r.type==='loan_in');
-  else if(ledgerFilter==='reimb')disp=disp.filter(r=>r.reimbursable&&!r.reimbursed);
-  else if(ledgerFilter==='loan')disp=disp.filter(r=>r.type==='loan_out'||r.type==='loan_in');
-  else if(ledgerFilter==='install')disp=disp.filter(r=>r.installment);
-  if(searchQ){const q=searchQ.toLowerCase();disp=disp.filter(r=>(r.category||'').includes(q)||(r.note||'').toLowerCase().includes(q)||String(r.amount).includes(q)||(r.account||'').includes(q));}
+  // 报销子页
+  if(ledgerSub==='reimb'){
+    fab.classList.remove('hidden');fab.onclick=()=>showReimbForm();
+    const disp=reimbRecs.sort((a,b)=>b.date.localeCompare(a.date)||b.id-a.id);
+    app.innerHTML=`<div class="header"><button class="back" onclick="ledgerSub='';render()">←</button><h1>报销</h1></div><div class="main">
+      <div class="summary-row"><div class="summary-card"><div class="sc-label">待报销</div><div class="sc-val" style="color:var(--warning)">${fm(reimbSum)}</div></div><div class="summary-card"><div class="sc-label">笔数</div><div class="sc-val sc-blue">${disp.length}</div></div></div>
+      ${disp.length===0?'<div class="empty"><div class="eicon">🧾</div><p>暂无待报销</p></div>':''}
+      ${disp.map(r=>`<div class="list-item" data-id="${r.id}"><div class="cat-dot" style="background:rgba(243,156,18,.1)">🧾</div><div class="linfo"><div class="ltitle">${r.category||''}<span class="tag tag-reimb">待报销</span></div><div class="lsub">${fd(r.date)} ${r.note||''}</div></div><div class="lamount la-out">-${fm(r.amount)}</div><button class="ldel" data-del="${r.id}">✕</button></div>`).join('')}
+    </div>`;bindDel();return;
+  }
+  // 借款子页
+  if(ledgerSub==='loan'){
+    fab.classList.remove('hidden');fab.onclick=()=>showLoanForm();
+    const disp=records.filter(r=>r.type==='loan_out'||r.type==='loan_in').sort((a,b)=>b.date.localeCompare(a.date)||b.id-a.id);
+    app.innerHTML=`<div class="header"><button class="back" onclick="ledgerSub='';render()">←</button><h1>借款</h1></div><div class="main">
+      <div class="summary-row"><div class="summary-card"><div class="sc-label">借出</div><div class="sc-val sc-red">${fm(loanOut)}</div></div><div class="summary-card"><div class="sc-label">借入</div><div class="sc-val sc-green">${fm(loanIn)}</div></div></div>
+      ${disp.length===0?'<div class="empty"><div class="eicon">🤝</div><p>暂无借款记录</p></div>':''}
+      ${disp.map(r=>{const isIn=r.type==='loan_in';return`<div class="list-item" data-id="${r.id}"><div class="cat-dot" style="background:${isIn?'rgba(39,174,96,.1)':'rgba(231,76,60,.1)'}">🤝</div><div class="linfo"><div class="ltitle">${isIn?'借入':'借出'}<span class="tag tag-loan">${isIn?'借入':'借出'}</span></div><div class="lsub">${fd(r.date)} ${r.note||''}</div></div><div class="lamount ${isIn?'la-in':'la-out'}">${isIn?'+':'-'}${fm(r.amount)}</div><button class="ldel" data-del="${r.id}">✕</button></div>`}).join('')}
+    </div>`;bindDel();return;
+  }
 
-  // Per-account balances
-  const accData={};accts.forEach(a=>{const n=accName(a);let bal=0,exp=0;records.filter(r=>r.account===n).forEach(r=>{if(r.type==='income'||r.type==='loan_in')bal+=r.amount;else{bal-=r.amount;exp+=r.amount}});accData[n]={bal,exp,icon:accIcon(a),name:accRaw(a)};});
-  const totalBal=Object.values(accData).reduce((s,v)=>s+v.bal,0);
-
-  const laObj=ledgerAcc?accts.find(a=>accName(a)===ledgerAcc):null;
-  const laRaw=laObj?accRaw(laObj):'';
-
+  // 主面板
   app.innerHTML=`
-    <div class="header"><button class="back" onclick="go('home')">←</button><h1>记账${ledgerAcc?' · '+laRaw:''}</h1>${ledgerAcc?`<button class="h-btn" onclick="ledgerAcc=null;render()" style="font-size:12px;width:auto;padding:4px 10px;border-radius:12px;background:var(--card);border:1px solid #ddd;cursor:pointer">全部</button>`:''}</div>
+    <div class="header"><button class="back" onclick="go('home')">←</button><h1>记账</h1></div>
     <div class="main">
       <div class="widget">
-        <div class="widget-title">📊 资产总览</div>
-        <div style="font-size:28px;font-weight:700;margin-bottom:2px;color:${totalBal>=0?'var(--success)':'var(--danger)'}">${fm(totalBal)}</div>
-        <div style="font-size:11px;color:var(--text2)">总资产 · 本月 ${fm(income)} / ${fm(expense)}</div>
-        ${reimbSum>0?`<div style="margin-top:6px;font-size:11px;color:var(--warning)">🧾 待报销 ${fm(reimbSum)}</div>`:''}
-      </div>
-      ${records.length>=3?`<div class="chart-box"><canvas id="assetTrend"></canvas></div>`:''}
-
-      <div class="acc-section">
-        <div class="acc-label">💳 账户${ledgerAcc?'':' · 点击进入记账'}</div>
-        ${ledgerAcc?`
-          <div class="add-bar"><input type="number" id="quickAmt" placeholder="输入金额，快速记账..." step="0.01" min="0"><button class="add-btn" id="quickAddBtn">记一笔</button></div>
-          <div style="display:flex;gap:6px;margin-bottom:8px">
-            <span style="font-size:11px;background:rgba(243,156,18,.1);color:var(--warning);padding:4px 10px;border-radius:10px;cursor:pointer" onclick="showReimbForm()">🧾 报销</span>
-            <span style="font-size:11px;background:rgba(155,89,182,.1);color:var(--purple);padding:4px 10px;border-radius:10px;cursor:pointer" onclick="showInstForm()">📆 分期</span>
-          </div>
-          <div style="font-size:11px;color:var(--text3);margin-bottom:8px">当前账户：<b style="color:var(--primary)">${laRaw}</b> · <span style="cursor:pointer;color:var(--primary)" onclick="ledgerAcc=null;render()">← 返回全部</span></div>
-        `:accts.map((a,i)=>{
-          const n=accName(a);const d=accData[n]||{bal:0,exp:0,icon:accIcon(a),name:accRaw(a)};
-          return`<div class="acc-card" data-acc="${n}" data-idx="${i}" draggable="true" onclick="ledgerAcc='${n}';render()">
-            <div class="ac-icon" style="background:${d.bal>=0?'rgba(39,174,96,.1)':'rgba(231,76,60,.1)'}">${d.icon}</div>
-            <div class="ac-info"><div class="ac-name">${d.name}</div><div class="ac-meta">${(records.filter(r=>r.account===n).length)}笔 · 本月 ${fm(d.exp)}</div></div>
-            <div class="ac-bal" style="color:${d.bal>=0?'var(--success)':'var(--danger)'}">${fm(d.bal)}</div>
-            <div class="ac-arrow">›</div>
-          </div>`;
-        }).join('')+`<div class="acc-add-card" onclick="addAccPrompt()">+ 添加账户</div>`}
+        <div class="widget-title">📊 数据面板</div>
+        <div class="overview-row">
+          <div class="overview-card oc-expense"><div class="oc-icon">💸</div><div class="oc-val">${fm(expense)}</div><div class="oc-label">本月支出</div></div>
+          <div class="overview-card" style="background:linear-gradient(135deg,#F39C12,#E67E22)"><div class="oc-icon">🧾</div><div class="oc-val">${fm(reimbSum)}</div><div class="oc-label">待报销</div></div>
+        </div>
+        <div class="overview-row" style="margin-top:8px">
+          <div class="overview-card" style="background:linear-gradient(135deg,#E74C3C,#C0392B)"><div class="oc-icon">📤</div><div class="oc-val">${fm(loanOut)}</div><div class="oc-label">借出</div></div>
+          <div class="overview-card oc-income"><div class="oc-icon">📥</div><div class="oc-val">${fm(loanIn)}</div><div class="oc-label">借入</div></div>
+        </div>
       </div>
 
-      <div class="filter-row">${LEDGER_FILTERS.map(f=>`<span class="filter-chip${f.id===ledgerFilter?' sel':''}" data-fid="${f.id}">${f.label}</span>`).join('')}</div>
-      <div class="search-wrap"><input type="text" id="ledgerSearch" placeholder="🔍 搜索..." value="${searchQ}"></div>
-      <div class="section-title">记录 (${disp.length}条)</div>
-      ${disp.length===0?'<div class="empty"><div class="eicon">📝</div><p>暂无记录</p></div>':''}
-      ${disp.map(r=>{
-        const tags=[];if(r.reimbursable&&!r.reimbursed)tags.push('<span class="tag tag-reimb">待报销</span>');else if(r.reimbursed)tags.push('<span class="tag tag-reimb">已报销</span>');
-        if(r.type==='loan_out')tags.push('<span class="tag tag-loan">借出</span>');else if(r.type==='loan_in')tags.push('<span class="tag tag-loan">借入</span>');
-        if(r.installment)tags.push(`<span class="tag tag-inst">${r.installCurrent||1}/${r.installTotal||'?'}期</span>`);
-        const isIn=r.type==='income'||r.type==='loan_in';
-        return`<div class="list-item" data-id="${r.id}"><div class="cat-dot" style="background:${isIn?'rgba(39,174,96,.1)':'rgba(231,76,60,.1)'}">${(r.category||'💸').slice(0,2)}</div><div class="linfo"><div class="ltitle">${r.category||''}${tags.join('')}</div><div class="lsub">${fd(r.date)} ${r.account||''} ${r.note||''}</div></div><div class="lamount ${isIn?'la-in':'la-out'}">${isIn?'+':'-'}${fm(r.amount)}</div><button class="ldel" data-del="${r.id}">✕</button></div>`;
+      <div style="display:flex;gap:8px;margin-bottom:12px">
+        <div style="flex:1;background:rgba(243,156,18,.08);border:2px solid rgba(243,156,18,.15);border-radius:14px;padding:16px;text-align:center;cursor:pointer" onclick="ledgerSub='reimb';render()">
+          <div style="font-size:28px">🧾</div><div style="font-size:15px;font-weight:700;margin-top:4px">报销</div><div style="font-size:11px;color:var(--text3);margin-top:2px">${reimbRecs.length}笔待报销</div>
+        </div>
+        <div style="flex:1;background:rgba(155,89,182,.08);border:2px solid rgba(155,89,182,.15);border-radius:14px;padding:16px;text-align:center;cursor:pointer" onclick="ledgerSub='loan';render()">
+          <div style="font-size:28px">🤝</div><div style="font-size:15px;font-weight:700;margin-top:4px">借款</div><div style="font-size:11px;color:var(--text3);margin-top:2px">借出${fm(loanOut)} · 借入${fm(loanIn)}</div>
+        </div>
+      </div>
+
+      ${records.filter(r=>!r.reimbursable&&r.type!=='loan_out'&&r.type!=='loan_in').length>0?`
+      <div class="widget"><div class="widget-title">📋 其他记录</div>
+      ${records.filter(r=>!r.reimbursable&&r.type!=='loan_out'&&r.type!=='loan_in').slice(0,10).map(r=>{
+        const isIn=r.type==='income';return`<div class="recent-item"><div class="ri-dot ${isIn?'income':'expense'}"></div><div class="ri-info"><div class="ri-title">${r.category||''}</div><div class="ri-sub">${fd(r.date)} ${r.note||''}</div></div><div class="ri-amount" style="color:${isIn?'var(--success)':'var(--danger)'}">${isIn?'+':'-'}${fm(r.amount)}</div></div>`;
       }).join('')}
-    </div>
-  `;
-  bindDel();
-  // Drag to reorder accounts
-  if(!ledgerAcc){enableDragReorder();}
-  app.querySelectorAll('.filter-chip').forEach(c=>c.onclick=()=>{ledgerFilter=c.dataset.fid;render();});
-  $('#ledgerSearch')?.addEventListener('input',e=>{searchQ=e.target.value;render();});
-  $('#quickAddBtn')?.addEventListener('click',()=>{
-    const amt=parseFloat($('#quickAmt')?.value);if(!amt||amt<=0){toast('请输入金额');return}
-    showLedgerForm(amt);
-  });
-  $('#quickAmt')?.addEventListener('keydown',e=>{if(e.key==='Enter')$('#quickAddBtn')?.click()});
-  if(ledgerAcc)fab.classList.add('hidden');
-  if(records.length>=3)setTimeout(()=>drawAssetTrend(records,accts),100);
+      </div>`:''}
+    </div>`;
 }
+function showReimbForm(){showLedgerForm(null,{reimb:true})}
+function showLoanForm(){showLedgerForm(null,{loan:true})}
 
-function drawAssetTrend(records,accts){
-  const c=$('#assetTrend');if(!c)return;
-  // Compute monthly cumulative balance
-  const sorted=records.map(r=>({...r})).sort((a,b)=>a.date.localeCompare(b.date));
-  // Get month range
-  const months=[];const now=new Date();
-  for(let i=5;i>=0;i--){const d=new Date(now.getFullYear(),now.getMonth()-i,1);months.push(d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0'));}
-  // Cumulate balance month by month
-  let running=0;const data=[];const events=[];
-  sorted.forEach(r=>{if(r.type==='income'||r.type==='loan_in')running+=r.amount;else running-=r.amount;events.push({date:r.date,bal:running});});
-  months.forEach(m=>{const e=events.filter(x=>x.date.startsWith(m)).pop();data.push({month:m.slice(5),bal:e?e.bal:(data.length?data[data.length-1].bal:0)});});
-
-  const ctx=c.getContext('2d');const dpr=window.devicePixelRatio||1;
-  const W=c.parentElement.clientWidth-28,H=180;c.width=W*dpr;c.height=H*dpr;c.style.width=W+'px';c.style.height=H+'px';ctx.scale(dpr,dpr);
-  const pad={t:16,r:12,b:28,l:44},pw=W-pad.l-pad.r,ph=H-pad.t-pad.b;
-  const vals=data.map(d=>d.bal);const minV=Math.min(0,Math.floor(Math.min(...vals)-500)),maxV=Math.ceil(Math.max(...vals)+500)||1;
-  ctx.strokeStyle='#eee';ctx.lineWidth=1;
-  for(let i=0;i<=4;i++){const v=minV+(maxV-minV)*i/4,y=pad.t+ph*(1-i/4);ctx.beginPath();ctx.moveTo(pad.l,y);ctx.lineTo(W-pad.r,y);ctx.stroke();ctx.fillStyle='#999';ctx.font='9px sans-serif';ctx.textAlign='right';ctx.fillText(fm(v),pad.l-4,y+3)}
-  // Area fill
-  const zeroY=pad.t+ph-((0-minV)/(maxV-minV))*ph;
-  ctx.fillStyle='rgba(39,174,96,.08)';ctx.beginPath();data.forEach((d,i)=>{const x=pad.l+(i/(data.length-1))*pw;const y=pad.t+ph-((d.bal-minV)/(maxV-minV))*ph;i===0?ctx.moveTo(x,y):ctx.lineTo(x,y)});ctx.lineTo(pad.l+pw,zeroY);ctx.lineTo(pad.l,zeroY);ctx.fill();
-  // Line
-  ctx.strokeStyle='#27AE60';ctx.lineWidth=3;ctx.lineJoin='round';ctx.beginPath();
-  data.forEach((d,i)=>{const x=pad.l+(i/(data.length-1))*pw;const y=pad.t+ph-((d.bal-minV)/(maxV-minV))*ph;i===0?ctx.moveTo(x,y):ctx.lineTo(x,y)});ctx.stroke();
-  // Dots
-  data.forEach((d,i)=>{const x=pad.l+(i/(data.length-1))*pw;const y=pad.t+ph-((d.bal-minV)/(maxV-minV))*ph;ctx.fillStyle='#27AE60';ctx.beginPath();ctx.arc(x,y,4,0,Math.PI*2);ctx.fill();ctx.fillStyle='#fff';ctx.beginPath();ctx.arc(x,y,2,0,Math.PI*2);ctx.fill();ctx.fillStyle='#666';ctx.font='9px sans-serif';ctx.textAlign='center';ctx.fillText(d.month,x,H-pad.b+14)});
-  ctx.fillStyle='#666';ctx.font='10px sans-serif';ctx.textAlign='center';ctx.fillText('资产趋势',W/2,10);
-  c.classList.add('ready');
+function showLedgerForm(preAmt,opts={}){
+  const title=opts.reimb?'报销':opts.loan?'借款':'记一笔';
+  const forceExpense=opts.reimb;
+  const forceLoan=opts.loan;
+  showModal(title,`
+    ${!forceExpense&&!forceLoan?`<div class="fg"><div class="type-tgl" id="typeTgl"><button class="inc-act" data-t="income">收入</button><button data-t="expense">支出</button></div></div>`:''}
+    <div class="fg"><label>金额</label><input type="number" id="fAmt" placeholder="0.00" step="0.01" min="0" value="${preAmt||''}"></div>
+    <div class="fg"><label>${opts.loan?'对方':'分类'}</label><div class="cat-grid" id="catGrid"></div><div style="margin-top:6px"><input type="text" id="newCat" placeholder="+ 新建${opts.loan?'对方':'分类'}" style="width:100%;padding:6px 10px;border:1px dashed #ccc;border-radius:8px;font-size:12px;outline:none"></div></div>
+    ${opts.loan?`<div class="chk-row"><label><input type="checkbox" id="fLoanDir" checked> 借出</label></div>`:''}
+    <div class="fg"><label>日期</label><input type="date" id="fDate" value="${today()}"></div>
+    <div class="fg"><label>备注</label><input type="text" id="fNote" placeholder="可选"></div>
+  `,async()=>{
+    const amt=parseFloat($('#fAmt').value);const cat=document.querySelector('#catGrid .sel')?.dataset.cat;
+    if(!amt||amt<=0){toast('请输入金额');throw new Error()}if(!cat){toast(opts.loan?'请输入对方名称':'请选择分类');throw new Error()}
+    let type='expense';if(!forceExpense&&!forceLoan){const tgl=document.querySelector('#typeTgl .inc-act,#typeTgl .exp-act');type=tgl.classList.contains('inc-act')?'income':'expense'}
+    if(forceLoan){const dir=$('#fLoanDir')?.checked!==false;type=dir?'loan_out':'loan_in'}
+    const extra={};if(forceLoan)extra.loan=true;
+    await dbAdd('ledger',{type,amount:amt,category:cat,date:$('#fDate').value,note:$('#fNote').value.trim(),reimbursable:!!opts.reimb,reimbursed:false,...extra,createdAt:Date.now()});
+    render();
+  });
+  if(!forceExpense&&!forceLoan){
+    const tgl=$('#typeTgl');tgl.querySelectorAll('button').forEach(b=>b.onclick=()=>{tgl.querySelectorAll('button').forEach(x=>x.className='');b.className=b.dataset.t==='income'?'inc-act':'exp-act';renderCats(b.dataset.t)});
+    renderCats('income');
+    function renderCats(t){const g=$('#catGrid');const cats=t==='income'?getIncCats():getExpCats();g.innerHTML=cats.map((c,i)=>`<span class="cat-chip${i===0?' sel':''}" data-cat="${c}">${c}</span>`).join('');g.querySelectorAll('.cat-chip').forEach(c=>c.onclick=()=>{g.querySelectorAll('.cat-chip').forEach(x=>x.classList.remove('sel'));c.classList.add('sel')})}
+  }else if(opts.loan){
+    const g=$('#catGrid');g.innerHTML=`<span class="cat-chip sel" data-cat="🤝 借款">🤝 借款</span>`;
+  }else{
+    const g=$('#catGrid');renderCatsR('expense');
+    function renderCatsR(t){const cats=getExpCats();g.innerHTML=cats.map((c,i)=>`<span class="cat-chip${i===0?' sel':''}" data-cat="${c}">${c}</span>`).join('');g.querySelectorAll('.cat-chip').forEach(c=>c.onclick=()=>{g.querySelectorAll('.cat-chip').forEach(x=>x.classList.remove('sel'));c.classList.add('sel')})}
+  }
+  $('#newCat').addEventListener('keydown',e=>{if(e.key==='Enter'){const v=$('#newCat').value.trim();if(!v)return;if(opts.loan){const g=$('#catGrid');g.innerHTML=`<span class="cat-chip sel" data-cat="🤝 ${v}">🤝 ${v}</span>`;$('#newCat').value=''}else{const t=forceExpense?'expense':(document.querySelector('#typeTgl .inc-act,#typeTgl .exp-act')?.classList.contains('inc-act')?'income':'expense');const cats=t==='income'?getIncCats():getExpCats();if(!cats.includes(v)){cats.push(v);t==='income'?setIncCats(cats):setExpCats(cats)}renderCats(t);$('#newCat').value=''}}});
 }
 
 function addAccPrompt(){
