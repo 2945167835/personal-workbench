@@ -312,10 +312,31 @@ body{
 // ==================== IndexedDB ====================
 const DB_NAME='WorkbenchDB',DB_VER=3;let db;
 function openDB(){return new Promise((r,j)=>{const req=indexedDB.open(DB_NAME,DB_VER);req.onupgradeneeded=e=>{const d=e.target.result;if(!d.objectStoreNames.contains('ledger')){const s=d.createObjectStore('ledger',{keyPath:'id',autoIncrement:true});s.createIndex('date','date');s.createIndex('type','type');}if(!d.objectStoreNames.contains('weight')){const s=d.createObjectStore('weight',{keyPath:'id',autoIncrement:true});s.createIndex('date','date',{unique:true});}if(!d.objectStoreNames.contains('car')){const s=d.createObjectStore('car',{keyPath:'id',autoIncrement:true});s.createIndex('date','date');s.createIndex('carType','carType');}};req.onsuccess=e=>{db=e.target.result;r(db);};req.onerror=()=>j(req.error);});}
-function dbAdd(s,d){return new Promise((r,j)=>{const t=db.transaction(s,'readwrite');const q=t.objectStore(s).add(d);q.onsuccess=()=>r(q.result);q.onerror=()=>j(q.error);});}
-function dbPut(s,d){return new Promise((r,j)=>{const t=db.transaction(s,'readwrite');const q=t.objectStore(s).put(d);q.onsuccess=()=>r(q.result);q.onerror=()=>j(q.error);});}
+function dbAdd(s,d){return new Promise((r,j)=>{const t=db.transaction(s,'readwrite');const q=t.objectStore(s).add(d);q.onsuccess=()=>{r(q.result);backupAll()};q.onerror=()=>j(q.error);});}
+function dbPut(s,d){return new Promise((r,j)=>{const t=db.transaction(s,'readwrite');const q=t.objectStore(s).put(d);q.onsuccess=()=>{r(q.result);backupAll()};q.onerror=()=>j(q.error);});}
 function dbAll(s,n){return new Promise((r,j)=>{const t=db.transaction(s,'readonly');const o=t.objectStore(s);const q=n?o.index(n).getAll():o.getAll();q.onsuccess=()=>r(q.result);q.onerror=()=>j(q.error);});}
-function dbDel(s,id){return new Promise((r,j)=>{const t=db.transaction(s,'readwrite');const q=t.objectStore(s).delete(id);q.onsuccess=()=>r();q.onerror=()=>j(q.error);});}
+function dbDel(s,id){return new Promise((r,j)=>{const t=db.transaction(s,'readwrite');const q=t.objectStore(s).delete(id);q.onsuccess=()=>{r();backupAll()};q.onerror=()=>j(q.error);});}
+
+// ==================== Auto Backup ====================
+let backupTimer=null;
+async function backupAll(){
+  clearTimeout(backupTimer);backupTimer=setTimeout(async()=>{
+    try{const[l,w,c]=await Promise.all([dbAll('ledger'),dbAll('weight'),dbAll('car')]);
+    const data={ledger:l,weight:w,car:c,time:Date.now(),settings:{profile:localStorage.getItem('wb_profile'),accounts:localStorage.getItem('wb_accounts'),expCats:localStorage.getItem('wb_expCats'),incCats:localStorage.getItem('wb_incCats'),cars:localStorage.getItem('wb_cars')}};
+    localStorage.setItem('wb_backup',JSON.stringify(data));}catch{}
+  },1000);
+}
+async function restoreFromBackup(){
+  try{const raw=localStorage.getItem('wb_backup');if(!raw)return false;
+  const data=JSON.parse(raw);if(!data.ledger||!data.time)return false;
+  const[l,w,c]=await Promise.all([dbAll('ledger'),dbAll('weight'),dbAll('car')]);
+  if(l.length>0||w.length>0||c.length>0)return false; // already has data
+  for(const r of data.ledger)await dbAdd('ledger',r);
+  for(const r of data.weight)await dbAdd('weight',r);
+  for(const r of data.car)await dbAdd('car',r);
+  if(data.settings){for(const[k,v]of Object.entries(data.settings)){if(v)localStorage.setItem('wb_'+k.replace('settings.',''),v);}}
+  return true;}catch{return false;}
+}
 
 // ==================== Config ====================
 // User-defined categories & accounts — stored in localStorage
@@ -857,7 +878,7 @@ async function renderSettings(app,fab){
         <div class="setting-item"><span class="si-label">初始体重</span><span class="si-val">${pf.initWeight?j(pf.initWeight)+' 斤':'未设置'}</span><span class="si-btn" id="setIwBtn">${pf.initWeight?'修改':'设置'}</span></div>
         <div class="setting-item"><span class="si-label">目标体重</span><span class="si-val">${pf.targetWeight?j(pf.targetWeight)+' 斤':'未设置'}</span><span class="si-btn" id="setTwBtn">${pf.targetWeight?'修改':'设置'}</span></div>
       </div>
-      <div class="setting-group"><h4>📦 数据</h4><div class="setting-item"><span class="si-label">导出 CSV</span><span class="si-btn" id="expBtn">导出</span></div><div class="setting-item"><span class="si-label">清除所有数据</span><span class="si-btn danger" id="clrBtn">清除</span></div></div>
+      <div class="setting-group"><h4>📦 数据</h4><div class="setting-item"><span class="si-label">备份数据</span><span class="si-btn" id="backupBtn">备份</span></div><div class="setting-item"><span class="si-label">恢复数据</span><span class="si-btn" id="restoreBtn">恢复</span></div><div class="setting-item"><span class="si-label">导出 CSV</span><span class="si-btn" id="expBtn">导出</span></div><div class="setting-item"><span class="si-label">导入 JSON</span><span class="si-btn" id="impBtn">导入</span></div><div class="setting-item"><span class="si-label">清除所有数据</span><span class="si-btn danger" id="clrBtn">清除</span></div></div>
     </div>
   `;
   $('#setCarBtn')?.addEventListener('click',showCarInfoForm);
@@ -866,7 +887,10 @@ async function renderSettings(app,fab){
   $('#setHtBtn')?.addEventListener('click',()=>{const v=parseFloat(prompt('身高 (cm)',pf.height));if(v&&v>50&&v<250){const p=getProfile();p.height=v;setProfile(p);render()}});
   $('#setIwBtn')?.addEventListener('click',()=>{const v=parseFloat(prompt('初始体重 (斤)',pf.initWeight?j(pf.initWeight):''));if(v&&v>40&&v<600){const p=getProfile();p.initWeight=jr(v);setProfile(p);render()}});
   $('#setTwBtn')?.addEventListener('click',()=>{const v=parseFloat(prompt('目标体重 (斤)',pf.targetWeight?j(pf.targetWeight):''));if(v&&v>40&&v<600){const p=getProfile();p.targetWeight=jr(v);p.startDate=today();setProfile(p);render()}});
+  $('#backupBtn')?.addEventListener('click',async()=>{await backupAll();toast('备份完成')});
+  $('#restoreBtn')?.addEventListener('click',()=>showConfirm('从备份恢复数据？当前数据将被覆盖。',async()=>{const raw=localStorage.getItem('wb_backup');if(!raw){toast('无备份数据');return}const data=JSON.parse(raw);await Promise.all(['ledger','weight','car'].map(s=>dbAll(s).then(rs=>Promise.all(rs.map(r=>dbDel(s,r.id))))));for(const r of data.ledger)await dbAdd('ledger',r);for(const r of data.weight)await dbAdd('weight',r);for(const r of data.car)await dbAdd('car',r);if(data.settings){for(const[k,v]of Object.entries(data.settings)){if(v)localStorage.setItem('wb_'+k.replace('settings.',''),v);}}render();toast('恢复完成')}));
   $('#expBtn')?.addEventListener('click',expCSV);
+  $('#impBtn')?.addEventListener('click',()=>{const inp=document.createElement('input');inp.type='file';inp.accept='.json';inp.onchange=async()=>{const f=inp.files[0];if(!f)return;const text=await f.text();try{const data=JSON.parse(text);await Promise.all(['ledger','weight','car'].map(s=>dbAll(s).then(rs=>Promise.all(rs.map(r=>dbDel(s,r.id))))));for(const r of data.ledger||[])await dbAdd('ledger',r);for(const r of data.weight||[])await dbAdd('weight',r);for(const r of data.car||[])await dbAdd('car',r);if(data.settings){for(const[k,v]of Object.entries(data.settings)){if(v)localStorage.setItem('wb_'+k.replace('settings.',''),v);}}render();toast('导入完成')}catch{toast('文件格式错误')}};inp.click()});
   $('#clrBtn')?.addEventListener('click',()=>showConfirm('确定清除所有数据？不可恢复！',async()=>{await Promise.all(['ledger','weight','car'].map(s=>dbAll(s).then(rs=>Promise.all(rs.map(r=>dbDel(s,r.id))))));localStorage.clear();toast('已清除');render()}));
   // Category/Account management
   $('#mngExpBtn')?.addEventListener('click',()=>showCatManager('支出分类',getExpCats,setExpCats));
@@ -874,7 +898,13 @@ async function renderSettings(app,fab){
   $('#mngAccBtn')?.addEventListener('click',()=>showAccManager());
 }
 async function expCSV(){
-  const l=await dbAll('ledger'),w=await dbAll('weight'),c=await dbAll('car');let csv='\uFEFF=== 记账 ===\n类型,分类,金额,日期,账户,报销,分期,备注\n';l.forEach(r=>csv+=`${r.type},${r.category||''},${r.amount},${r.date},${r.account||''},${r.reimbursable?'是':'否'},${r.installment?r.installCurrent+'/'+r.installTotal:''},${r.note||''}\n`);csv+='\n=== 体重 ===\n体重(kg),日期,备注\n';w.forEach(r=>csv+=`${r.weight},${r.date},${r.note||''}\n`);csv+='\n=== 用车 ===\n类型,金额,日期,里程,用量,备注\n';c.forEach(r=>csv+=`${r.carType},${r.amount||0},${r.date},${r.mileage||''},${r.liters||''},${r.note||''}\n`);const b=new Blob([csv],{type:'text/csv;charset=utf-8'});const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download='workbench.csv';a.click();toast('导出成功')}
+  const l=await dbAll('ledger'),w=await dbAll('weight'),c=await dbAll('car');
+  // Export as JSON (full backup format)
+  const json={ledger:l,weight:w,car:c,time:Date.now(),settings:{profile:localStorage.getItem('wb_profile'),accounts:localStorage.getItem('wb_accounts'),expCats:localStorage.getItem('wb_expCats'),incCats:localStorage.getItem('wb_incCats'),cars:localStorage.getItem('wb_cars')}};
+  const jb=new Blob([JSON.stringify(json,null,2)],{type:'application/json'});
+  const ja=document.createElement('a');ja.href=URL.createObjectURL(jb);ja.download='workbench_backup.json';ja.click();
+  setTimeout(()=>toast('JSON备份文件已下载'),200);
+}
 
 function showCatManager(title,getFn,setFn){
   const items=getFn();
@@ -922,7 +952,7 @@ function showConfirm(m,f){const o=$('#confirmOverlay');o.innerHTML=`<div class="
 function bindDel(){document.querySelectorAll('[data-del]').forEach(b=>b.onclick=e=>{e.stopPropagation();showConfirm('确定删除？',async()=>{const s=page==='car'?'car':page;await dbDel(s,Number(b.dataset.del));render()})})}
 
 // Init
-async function init(){await openDB();render();if('serviceWorker'in navigator){navigator.serviceWorker.getRegistrations().then(regs=>regs.forEach(r=>r.unregister()));navigator.serviceWorker.register('sw.js?v=3.1').catch(()=>{})}window.addEventListener('resize',()=>{if(page!=='home')render()})}
+async function init(){await openDB();const restored=await restoreFromBackup();if(restored){render();toast('数据已自动恢复')}else render();if('serviceWorker'in navigator){navigator.serviceWorker.getRegistrations().then(regs=>regs.forEach(r=>r.unregister()));navigator.serviceWorker.register('sw.js?v=3.1').catch(()=>{})}window.addEventListener('resize',()=>{if(page!=='home')render()})}
 document.addEventListener('DOMContentLoaded',init);
 </script>
 </body>
