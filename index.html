@@ -868,33 +868,30 @@ function showCarForm(){
 async function renderDeepSeek(app,fab){
   fab.classList.add('hidden');
   const key=localStorage.getItem('wb_dsKey')||'';
-  let balance=null,error=null;
-  if(key){
-    try{
-      const r=await fetch('https://api.deepseek.com/user/balance',{headers:{Authorization:'Bearer '+key}});
-      const d=await r.json();
-      if(d.balance_infos)balance=d.balance_infos;
-      else error=d.error?.message||'未知错误';
-    }catch{error='网络错误'}
-  }
   app.innerHTML=`
     <div class="header"><button class="back" onclick="go('home')">←</button><h1>DeepSeek</h1></div>
     <div class="main">
-      ${!key?`<div class="widget" style="text-align:center"><p style="margin-bottom:8px;color:var(--text3)">未设置 API Key</p><span class="ci-edit" id="setDsKey" style="font-size:14px">✎ 设置</span></div>`:balance?balance.map(b=>`
-        <div class="widget" style="text-align:center">
-          <div style="font-size:36px;font-weight:700;color:${parseFloat(b.total_balance)>0?'var(--success)':'var(--danger)'}">¥${parseFloat(b.total_balance).toFixed(2)}</div>
-          <div style="font-size:12px;color:var(--text3);margin-top:4px">总余额${b.currency} · 充值 ¥${parseFloat(b.topped_up_balance).toFixed(2)} · 赠送 ¥${parseFloat(b.granted_balance).toFixed(2)}</div>
-        </div>
-        <div class="widget">
-          <div class="widget-title">🔑 API Key</div>
-          <div style="font-size:12px;color:var(--text3);word-break:break-all">${key.slice(0,8)}...${key.slice(-4)}</div>
-          <span class="ci-edit" id="setDsKey" style="margin-top:4px">✎ 修改</span>
-        </div>
-      `.join('')):error?`<div class="widget" style="text-align:center"><p style="color:var(--danger)">${error}</p><span class="ci-edit" id="setDsKey">✎ 重新设置</span></div>`:''}
+      ${!key?`<div class="widget" style="text-align:center"><p style="margin-bottom:10px;color:var(--text3)">未设置 API Key</p><button class="btn-primary" id="setDsKey" style="width:auto;margin:0 auto;padding:8px 24px">✎ 设置 API Key</button></div>`:`
+        <div class="widget" style="text-align:center"><div id="dsBalance" style="font-size:14px;color:var(--text3);padding:20px">查询中...</div></div>
+        <div class="widget"><div class="widget-title">🔑 API Key</div><div style="font-size:12px;color:var(--text3);word-break:break-all">${key.slice(0,10)}...${key.slice(-4)}</div><span class="ci-edit" id="setDsKey">✎ 修改</span></div>
+      `}
     </div>`;
   $('#setDsKey')?.addEventListener('click',()=>{
     const v=prompt('输入 DeepSeek API Key (sk-...)',key);if(v&&v.trim()){localStorage.setItem('wb_dsKey',v.trim());render()}
   });
+  if(!key)return;
+  // Fetch balance in background
+  try{
+    const ctrl=new AbortController();setTimeout(()=>ctrl.abort(),8000);
+    const r=await fetch('https://api.deepseek.com/user/balance',{headers:{Authorization:'Bearer '+key},signal:ctrl.signal});
+    const d=await r.json();
+    const el=$('#dsBalance');if(!el)return;
+    if(d.balance_infos&&d.balance_infos.length){
+      const b=d.balance_infos[0];
+      el.innerHTML=`<div style="font-size:36px;font-weight:700;color:${parseFloat(b.total_balance)>0?'var(--success)':'var(--danger)'}">¥${parseFloat(b.total_balance).toFixed(2)}</div>
+        <div style="font-size:12px;color:var(--text3);margin-top:4px">总余额${b.currency} · 充值 ¥${parseFloat(b.topped_up_balance).toFixed(2)} · 赠送 ¥${parseFloat(b.granted_balance).toFixed(2)}</div>`;
+    }else{el.innerHTML=`<p style="color:var(--danger)">${d.error?.message||'查询失败'}</p>`}
+  }catch{const el=$('#dsBalance');if(el)el.innerHTML='<p style="color:var(--danger)">网络错误或 API Key 无效</p>'}
 }
 
 // ==================== SETTINGS ====================
