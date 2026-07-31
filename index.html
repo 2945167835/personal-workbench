@@ -453,6 +453,9 @@ async function renderHome(app,fab){
         <div class="mod-entry" onclick="go('car')">
           <div class="me-icon me-car">🚗</div><div class="me-info"><div class="me-name">用车</div><div class="me-desc">${getCars().length}辆车 · ${carR.length}条记录 · 本月${fm(mCar)}</div></div><div class="me-arrow">›</div>
         </div>
+        <div class="mod-entry" onclick="go('deepseek')">
+          <div class="me-icon" style="background:rgba(52,152,219,.1)">🤖</div><div class="me-info"><div class="me-name">DeepSeek</div><div class="me-desc">API 余额查询</div></div><div class="me-arrow">›</div>
+        </div>
       </div>
 
       ${recent3.length>0?`
@@ -477,10 +480,6 @@ async function renderHome(app,fab){
           }
         }).join('')}
       </div>`:''}
-
-      <div class="mod-entry" onclick="go('deepseek')">
-        <div class="me-icon" style="background:rgba(52,152,219,.1)">🤖</div><div class="me-info"><div class="me-name">DeepSeek</div><div class="me-desc">API 余额查询</div></div><div class="me-arrow">›</div>
-      </div>
 
       <div class="mod-entry" onclick="go('settings')" style="margin-top:4px">
         <div class="me-icon" style="background:rgba(149,165,166,.1)">⚙️</div><div class="me-info"><div class="me-name">设置</div><div class="me-desc">车辆信息 · 体重目标 · 数据管理</div></div><div class="me-arrow">›</div>
