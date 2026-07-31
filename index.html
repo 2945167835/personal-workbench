@@ -879,7 +879,16 @@ async function renderSettings(app,fab){
         <div class="setting-item"><span class="si-label">初始体重</span><span class="si-val">${pf.initWeight?j(pf.initWeight)+' 斤':'未设置'}</span><span class="si-btn" id="setIwBtn">${pf.initWeight?'修改':'设置'}</span></div>
         <div class="setting-item"><span class="si-label">目标体重</span><span class="si-val">${pf.targetWeight?j(pf.targetWeight)+' 斤':'未设置'}</span><span class="si-btn" id="setTwBtn">${pf.targetWeight?'修改':'设置'}</span></div>
       </div>
-      <div class="setting-group"><h4>📦 数据</h4><div class="setting-item"><span class="si-label">备份数据</span><span class="si-btn" id="backupBtn">备份</span></div><div class="setting-item"><span class="si-label">恢复数据</span><span class="si-btn" id="restoreBtn">恢复</span></div><div class="setting-item"><span class="si-label">导出 CSV</span><span class="si-btn" id="expBtn">导出</span></div><div class="setting-item"><span class="si-label">导入 JSON</span><span class="si-btn" id="impBtn">导入</span></div><div class="setting-item"><span class="si-label">清除所有数据</span><span class="si-btn danger" id="clrBtn">清除</span></div></div>
+      <div class="setting-group"><h4>📦 数据</h4>
+        <div class="setting-item"><span class="si-label">GitHub Token</span><input type="password" id="ghToken" placeholder="ghp_xxx" value="${localStorage.getItem('wb_ghToken')||''}" style="width:120px;padding:4px 8px;border:1px solid #e0e0e0;border-radius:6px;font-size:12px;outline:none" onchange="localStorage.setItem('wb_ghToken',this.value)"></div>
+        <div class="setting-item"><span class="si-label">上传到云端</span><span class="si-btn" id="cloudUpBtn">↑ 上传</span></div>
+        <div class="setting-item"><span class="si-label">从云端下载</span><span class="si-btn" id="cloudDownBtn">↓ 下载</span></div>
+        <div class="setting-item"><span class="si-label">备份数据</span><span class="si-btn" id="backupBtn">备份</span></div>
+        <div class="setting-item"><span class="si-label">恢复数据</span><span class="si-btn" id="restoreBtn">恢复</span></div>
+        <div class="setting-item"><span class="si-label">导出 JSON</span><span class="si-btn" id="expBtn">导出</span></div>
+        <div class="setting-item"><span class="si-label">导入 JSON</span><span class="si-btn" id="impBtn">导入</span></div>
+        <div class="setting-item"><span class="si-label">清除所有数据</span><span class="si-btn danger" id="clrBtn">清除</span></div>
+      </div>
     </div>
   `;
   $('#setCarBtn')?.addEventListener('click',showCarInfoForm);
@@ -888,6 +897,8 @@ async function renderSettings(app,fab){
   $('#setHtBtn')?.addEventListener('click',()=>{const v=parseFloat(prompt('身高 (cm)',pf.height));if(v&&v>50&&v<250){const p=getProfile();p.height=v;setProfile(p);render()}});
   $('#setIwBtn')?.addEventListener('click',()=>{const v=parseFloat(prompt('初始体重 (斤)',pf.initWeight?j(pf.initWeight):''));if(v&&v>40&&v<600){const p=getProfile();p.initWeight=jr(v);setProfile(p);render()}});
   $('#setTwBtn')?.addEventListener('click',()=>{const v=parseFloat(prompt('目标体重 (斤)',pf.targetWeight?j(pf.targetWeight):''));if(v&&v>40&&v<600){const p=getProfile();p.targetWeight=jr(v);p.startDate=today();setProfile(p);render()}});
+  $('#cloudUpBtn')?.addEventListener('click',cloudUpload);
+  $('#cloudDownBtn')?.addEventListener('click',cloudDownload);
   $('#backupBtn')?.addEventListener('click',async()=>{await backupAll();toast('备份完成')});
   $('#restoreBtn')?.addEventListener('click',()=>showConfirm('从备份恢复数据？当前数据将被覆盖。',async()=>{const raw=localStorage.getItem('wb_backup');if(!raw){toast('无备份数据');return}const data=JSON.parse(raw);await Promise.all(['ledger','weight','car'].map(s=>dbAll(s).then(rs=>Promise.all(rs.map(r=>dbDel(s,r.id))))));for(const r of data.ledger)await dbAdd('ledger',r);for(const r of data.weight)await dbAdd('weight',r);for(const r of data.car)await dbAdd('car',r);if(data.settings){for(const[k,v]of Object.entries(data.settings)){if(v)localStorage.setItem('wb_'+k.replace('settings.',''),v);}}render();toast('恢复完成')}));
   $('#expBtn')?.addEventListener('click',expCSV);
@@ -905,6 +916,44 @@ async function expCSV(){
   const jb=new Blob([JSON.stringify(json,null,2)],{type:'application/json'});
   const ja=document.createElement('a');ja.href=URL.createObjectURL(jb);ja.download='workbench_backup.json';ja.click();
   setTimeout(()=>toast('JSON备份文件已下载'),200);
+}
+
+// ==================== Cloud Sync (GitHub Gist) ====================
+async function getGistId(){
+  let id=localStorage.getItem('wb_gistId');
+  if(id)return id;
+  const token=localStorage.getItem('wb_ghToken');
+  if(!token)return null;
+  try{const r=await fetch('https://api.github.com/gists?per_page=100',{headers:{Authorization:'token '+token}});
+  const gists=await r.json();const g=gists.find(x=>x.description==='WorkbenchData');if(g){localStorage.setItem('wb_gistId',g.id);return g.id}}catch{}
+  return null;
+}
+async function cloudUpload(){
+  const token=localStorage.getItem('wb_ghToken');if(!token){toast('请先填写 GitHub Token');return}
+  const l=await dbAll('ledger'),w=await dbAll('weight'),c=await dbAll('car');
+  const content=JSON.stringify({ledger:l,weight:w,car:c,time:Date.now(),settings:{profile:localStorage.getItem('wb_profile'),accounts:localStorage.getItem('wb_accounts'),expCats:localStorage.getItem('wb_expCats'),incCats:localStorage.getItem('wb_incCats'),cars:localStorage.getItem('wb_cars')}});
+  const id=await getGistId();
+  try{
+    if(id){const r=await fetch('https://api.github.com/gists/'+id,{method:'PATCH',headers:{Authorization:'token '+token,'Content-Type':'application/json'},body:JSON.stringify({files:{'workbench.json':{content}}})});if(r.ok){toast('云端已更新');return}}
+    const r=await fetch('https://api.github.com/gists',{method:'POST',headers:{Authorization:'token '+token,'Content-Type':'application/json'},body:JSON.stringify({description:'WorkbenchData',public:false,files:{'workbench.json':{content}}})});
+    if(r.ok){const g=await r.json();localStorage.setItem('wb_gistId',g.id);toast('已上传到云端')}else toast('上传失败: '+r.status)
+  }catch{toast('网络错误')}
+}
+async function cloudDownload(){
+  const token=localStorage.getItem('wb_ghToken');if(!token){toast('请先填写 GitHub Token');return}
+  const id=await getGistId();if(!id){toast('云端暂无数据');return}
+  try{const r=await fetch('https://api.github.com/gists/'+id,{headers:{Authorization:'token '+token}});
+  if(!r.ok){toast('下载失败: '+r.status);return}
+  const g=await r.json();const f=g.files['workbench.json'];if(!f){toast('无数据文件');return}
+  const data=JSON.parse(f.content);
+  showConfirm(`云端数据时间：${new Date(data.time).toLocaleString()}\n恢复后将覆盖本地数据。`,async()=>{
+    await Promise.all(['ledger','weight','car'].map(s=>dbAll(s).then(rs=>Promise.all(rs.map(r=>dbDel(s,r.id))))));
+    for(const r of data.ledger||[])await dbAdd('ledger',r);
+    for(const r of data.weight||[])await dbAdd('weight',r);
+    for(const r of data.car||[])await dbAdd('car',r);
+    if(data.settings){for(const[k,v]of Object.entries(data.settings)){if(v)localStorage.setItem('wb_'+k.replace('settings.',''),v);}}
+    render();toast('云端恢复完成')
+  })}catch{toast('网络错误')}
 }
 
 function showCatManager(title,getFn,setFn){
