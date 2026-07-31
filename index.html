@@ -700,7 +700,7 @@ async function renderWeight(app,fab){
       ${pf.targetWeight&&records.length>=5?`<div class="widget" style="text-align:center"><div style="font-size:12px;color:var(--text2)">📈 趋势预测</div><div style="font-size:14px;margin-top:4px">${pred(records,pf.targetWeight)}</div></div>`:''}
       <div class="section-title">历史记录</div>
       ${records.length===0?'<div class="empty"><div class="eicon">⚖️</div><p>暂无记录</p></div>':''}
-      ${records.slice().reverse().map(r=>{const idx=records.indexOf(r),prev=records[idx-1];const diff=prev?(r.weight-prev.weight):null;return`<div class="list-item" data-id="${r.id}"><div class="cat-dot" style="background:rgba(74,144,217,.1)">⚖️</div><div class="linfo"><div class="ltitle">${j(r.weight)} 斤</div><div class="lsub">${fd(r.date)} ${r.note||''}</div></div><div class="lamount" style="color:${diff>0?'var(--danger)':diff<0?'var(--success)':'var(--text3)'}">${diff?j(Math.abs(diff))+' 斤':''}</div><button class="ldel" data-del="${r.id}">✕</button></div>`}).join('')}
+      ${records.slice().reverse().map(r=>{const idx=records.indexOf(r),prev=records[idx-1];const diff=prev?(r.weight-prev.weight):null;return`<div class="list-item" data-id="${r.id}"><div class="cat-dot" style="background:rgba(74,144,217,.1)">⚖️</div><div class="linfo"><div class="ltitle">${j(r.weight)} 斤</div><div class="lsub">${fd(r.date)} ${r.note||''}</div></div><div class="lamount" style="color:${diff>0?'var(--danger)':diff<0?'var(--success)':'var(--text3)'}">${diff?(diff>0?'↑':'↓')+j(Math.abs(diff))+' 斤':''}</div><button class="ldel" data-del="${r.id}">✕</button></div>`}).join('')}
     </div>
   `;
   bindDel();
