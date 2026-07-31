@@ -405,6 +405,7 @@ async function render(){
   else if(page==='weight')await renderWeight(app,fab);
   else if(page==='car')await renderCar(app,fab);
   else if(page==='settings')await renderSettings(app,fab);
+  else if(page==='deepseek')await renderDeepSeek(app,fab);
 }
 
 // ==================== HOME (Dashboard) ====================
@@ -476,6 +477,10 @@ async function renderHome(app,fab){
           }
         }).join('')}
       </div>`:''}
+
+      <div class="mod-entry" onclick="go('deepseek')">
+        <div class="me-icon" style="background:rgba(52,152,219,.1)">🤖</div><div class="me-info"><div class="me-name">DeepSeek</div><div class="me-desc">API 余额查询</div></div><div class="me-arrow">›</div>
+      </div>
 
       <div class="mod-entry" onclick="go('settings')" style="margin-top:4px">
         <div class="me-icon" style="background:rgba(149,165,166,.1)">⚙️</div><div class="me-info"><div class="me-name">设置</div><div class="me-desc">车辆信息 · 体重目标 · 数据管理</div></div><div class="me-arrow">›</div>
@@ -859,6 +864,39 @@ function showCarForm(){
   $('#fCarType').onchange=function(){carTab=this.value;showCarForm()};
 }
 
+// ==================== DEEPSEEK ====================
+async function renderDeepSeek(app,fab){
+  fab.classList.add('hidden');
+  const key=localStorage.getItem('wb_dsKey')||'';
+  let balance=null,error=null;
+  if(key){
+    try{
+      const r=await fetch('https://api.deepseek.com/user/balance',{headers:{Authorization:'Bearer '+key}});
+      const d=await r.json();
+      if(d.balance_infos)balance=d.balance_infos;
+      else error=d.error?.message||'未知错误';
+    }catch{error='网络错误'}
+  }
+  app.innerHTML=`
+    <div class="header"><button class="back" onclick="go('home')">←</button><h1>DeepSeek</h1></div>
+    <div class="main">
+      ${!key?`<div class="widget" style="text-align:center"><p style="margin-bottom:8px;color:var(--text3)">未设置 API Key</p><span class="ci-edit" id="setDsKey" style="font-size:14px">✎ 设置</span></div>`:balance?balance.map(b=>`
+        <div class="widget" style="text-align:center">
+          <div style="font-size:36px;font-weight:700;color:${parseFloat(b.total_balance)>0?'var(--success)':'var(--danger)'}">¥${parseFloat(b.total_balance).toFixed(2)}</div>
+          <div style="font-size:12px;color:var(--text3);margin-top:4px">总余额${b.currency} · 充值 ¥${parseFloat(b.topped_up_balance).toFixed(2)} · 赠送 ¥${parseFloat(b.granted_balance).toFixed(2)}</div>
+        </div>
+        <div class="widget">
+          <div class="widget-title">🔑 API Key</div>
+          <div style="font-size:12px;color:var(--text3);word-break:break-all">${key.slice(0,8)}...${key.slice(-4)}</div>
+          <span class="ci-edit" id="setDsKey" style="margin-top:4px">✎ 修改</span>
+        </div>
+      `.join('')):error?`<div class="widget" style="text-align:center"><p style="color:var(--danger)">${error}</p><span class="ci-edit" id="setDsKey">✎ 重新设置</span></div>`:''}
+    </div>`;
+  $('#setDsKey')?.addEventListener('click',()=>{
+    const v=prompt('输入 DeepSeek API Key (sk-...)',key);if(v&&v.trim()){localStorage.setItem('wb_dsKey',v.trim());render()}
+  });
+}
+
 // ==================== SETTINGS ====================
 async function renderSettings(app,fab){
   const info=getCarInfo(),pf=getProfile();
@@ -866,6 +904,7 @@ async function renderSettings(app,fab){
   app.innerHTML=`
     <div class="header"><button class="back" onclick="go('home')">←</button><h1>设置</h1></div>
     <div class="main">
+      <div class="setting-group"><h4>🤖 DeepSeek</h4><div class="setting-item"><span class="si-label">API Key</span><span class="si-val">${(localStorage.getItem('wb_dsKey')||'').slice(0,10)}...</span><span class="si-btn" id="setDsKeyBtn">设置</span></div></div>
       <div class="setting-group"><h4>💰 记账设置</h4>
         <div class="setting-item"><span class="si-label">支出分类</span><span class="si-val">${expCats.length}个</span><span class="si-btn" id="mngExpBtn">管理</span></div>
         <div class="setting-item"><span class="si-label">收入分类</span><span class="si-val">${incCats.length}个</span><span class="si-btn" id="mngIncBtn">管理</span></div>
@@ -882,6 +921,7 @@ async function renderSettings(app,fab){
       <div class="setting-group"><h4>📦 数据</h4><div class="setting-item"><span class="si-label">备份数据</span><span class="si-btn" id="backupBtn">备份</span></div><div class="setting-item"><span class="si-label">恢复数据</span><span class="si-btn" id="restoreBtn">恢复</span></div><div class="setting-item"><span class="si-label">导出 JSON</span><span class="si-btn" id="expBtn">导出</span></div><div class="setting-item"><span class="si-label">导入 JSON</span><span class="si-btn" id="impBtn">导入</span></div><div class="setting-item"><span class="si-label">清除所有数据</span><span class="si-btn danger" id="clrBtn">清除</span></div></div>
     </div>
   `;
+  $('#setDsKeyBtn')?.addEventListener('click',()=>{const v=prompt('DeepSeek API Key (sk-...)',localStorage.getItem('wb_dsKey')||'');if(v&&v.trim()){localStorage.setItem('wb_dsKey',v.trim());render()}});
   $('#setCarBtn')?.addEventListener('click',showCarInfoForm);
   $('#setGenderBtn')?.addEventListener('click',()=>{const p=getProfile();p.gender=p.gender==='male'?'female':'male';setProfile(p);render()});
   $('#setAgeBtn')?.addEventListener('click',()=>{const v=parseInt(prompt('年龄',pf.age||''));if(v&&v>0&&v<120){const p=getProfile();p.age=v;setProfile(p);render()}});
