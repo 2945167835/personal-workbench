@@ -670,9 +670,9 @@ async function renderWeight(app,fab){
   const height=pf.height;let bmi='',bl='';
   if(latest&&height){const h=parseFloat(height)/100;bmi=(latest.weight/(h*h)).toFixed(1);bl=bmiTag(bmi,height)}
   const initWt=pf.initWeight||(records[0]?records[0].weight:null);
-  const totalChange=initWt&&latest?(latest.weight-initWt).toFixed(1):null;
+  const totalChange=initWt&&latest?parseFloat((latest.weight-initWt).toFixed(1)):null;
   const avg7=records.length>=7?avgL(records,7):null,avg30=records.length>=2?avgL(records,30):null;
-  const mRecs=records.filter(r=>r.date.startsWith(month()));const mChange=mRecs.length>=2?(mRecs[mRecs.length-1].weight-mRecs[0].weight).toFixed(1):null;
+  const mRecs=records.filter(r=>r.date.startsWith(month()));const mChange=mRecs.length>=2?parseFloat((mRecs[mRecs.length-1].weight-mRecs[0].weight).toFixed(1)):null;
   const weeks=cW(records);
   const bmr=latest&&pf.age?calcBMR(latest.weight,pf):null;
   const idealMin=pf.gender==='female'?18.5*((height/100)**2):20*((height/100)**2);
@@ -684,7 +684,7 @@ async function renderWeight(app,fab){
       <div class="bmi-box" style="cursor:pointer" onclick="showWeightForm()">
         <div class="bmi-big">${latest?j(latest.weight)+' 斤':'-- 斤'}</div>
         <div class="bmi-tag">${pf.gender==='male'?'♂':'♀'} ${pf.age}岁 · 身高${pf.height}cm${bmi?' · BMI '+bmi+' '+bl:''}${pf.targetWeight?' · 目标 '+j(pf.targetWeight)+' 斤':''}</div>
-        ${initWt&&latest?`<div style="margin-top:8px;font-size:11px;color:var(--text3)">初始 ${j(initWt)}斤 → 当前 ${j(latest.weight)}斤 · 变化 ${totalChange>0?'+':''}${j(Math.abs(totalChange))}斤</div>`:''}
+        ${initWt&&latest?`<div style="margin-top:8px;font-size:11px;color:var(--text3)">初始 ${j(initWt)}斤 → 当前 ${j(latest.weight)}斤 · 变化 ${totalChange>=0?'+':'-'}${j(Math.abs(totalChange))}斤</div>`:''}
         ${bmr?`<div style="margin-top:4px;font-size:11px;color:var(--text3)">基础代谢 ≈ ${bmr} kcal/天 · 理想体重 ${j(idealMin)}~${j(idealMax)}斤</div>`:''}
         <div style="margin-top:12px;padding:8px;background:rgba(74,144,217,.08);border-radius:8px;font-size:13px;color:var(--primary);font-weight:500">+ 记录今日体重</div>
       </div>
@@ -692,8 +692,8 @@ async function renderWeight(app,fab){
         <input type="number" id="quickWt" placeholder="${latest?'上次 '+j(latest.weight)+' 斤 — 输入今日体重':''}" step="0.1" min="40" max="600" style="flex:1;border:none;outline:none;font-size:15px;font-family:inherit;background:transparent">
         <button class="add-btn" id="quickWtBtn">记录</button>
       </div>
-      ${pf.targetWeight?`<div class="summary-row"><div class="summary-card"><div class="sc-label">距目标</div><div class="sc-val ${latest&&latest.weight>pf.targetWeight?'sc-red':'sc-blue'}">${latest?j(Math.abs(latest.weight-pf.targetWeight)):'--'} 斤</div></div><div class="summary-card"><div class="sc-label">已完成</div><div class="sc-val sc-blue">${initWt&&pf.targetWeight&&initWt!==pf.targetWeight?Math.abs((((latest?latest.weight:initWt)-initWt)/(pf.targetWeight-initWt)*100).toFixed(1)):'--'}%</div></div></div>`:''}
-      <div class="summary-row"><div class="summary-card"><div class="sc-label">7日均值</div><div class="sc-val sc-blue">${avg7?j(parseFloat(avg7)):'--'} 斤</div></div><div class="summary-card"><div class="sc-label">30日均值</div><div class="sc-val sc-blue">${avg30?j(parseFloat(avg30)):'--'} 斤</div></div><div class="summary-card"><div class="sc-label">本月变化</div><div class="sc-val ${mChange>0?'sc-red':'sc-blue'}">${mChange?j(Math.abs(parseFloat(mChange))):'--'} 斤</div></div></div>
+      ${pf.targetWeight?`<div class="summary-row"><div class="summary-card"><div class="sc-label">距目标</div><div class="sc-val ${latest&&latest.weight>pf.targetWeight?'sc-red':'sc-blue'}">${latest?j(Math.abs(latest.weight-pf.targetWeight)):'--'} 斤</div><div class="ssub" style="font-size:10px;color:${latest&&latest.weight>pf.targetWeight?'var(--danger)':'var(--success)'}">${latest&&latest.weight>pf.targetWeight?'还需减 ':'还需增 '}${j(Math.abs(latest.weight-pf.targetWeight))} 斤</div></div><div class="summary-card"><div class="sc-label">已完成</div><div class="sc-val sc-blue">${initWt&&pf.targetWeight&&initWt!==pf.targetWeight?Math.abs((((latest?latest.weight:initWt)-initWt)/(pf.targetWeight-initWt)*100).toFixed(1)):'--'}%</div></div></div>`:''}
+      <div class="summary-row"><div class="summary-card"><div class="sc-label">7日均值</div><div class="sc-val sc-blue">${avg7?j(avg7):'--'} 斤</div></div><div class="summary-card"><div class="sc-label">30日均值</div><div class="sc-val sc-blue">${avg30?j(avg30):'--'} 斤</div></div><div class="summary-card"><div class="sc-label">本月变化</div><div class="sc-val ${mChange>0?'sc-red':'sc-blue'}">${mChange!==null?(mChange>=0?'+':'-')+j(Math.abs(mChange)):'--'} 斤</div></div></div>
       ${weeks.length>0?`<div class="summary-row">${weeks.map(w=>`<div class="summary-card"><div class="sc-label">${w.label}</div><div class="sc-val" style="font-size:13px">${w.avg}</div><div class="sc-label">${w.diff}</div></div>`).join('')}</div>`:''}
       ${records.length>=2?`<div class="chart-box"><canvas id="wtChart"></canvas></div>`:''}
       ${records.length>=3?`<div class="chart-box"><canvas id="wtSmooth"></canvas></div>`:''}
@@ -720,8 +720,8 @@ async function renderWeight(app,fab){
 }
 function bmiTag(b,h){const v=parseFloat(b);if(h>0){const ideal=18.5;if(v<ideal)return'偏瘦';if(v<24)return'正常';if(v<28)return'偏胖';return'肥胖'}if(v<18.5)return'偏瘦';if(v<24)return'正常';if(v<28)return'偏胖';return'肥胖'}
 function calcBMR(wt,pf){if(!pf.age||!pf.height)return null;const h=pf.height;return pf.gender==='male'?Math.round(66+13.7*wt+5*h-6.8*pf.age):Math.round(655+9.6*wt+1.8*h-4.7*pf.age)}
-function avgL(r,n){const s=r.slice(-n);return(s.reduce((a,r)=>a+r.weight,0)/s.length).toFixed(1)}
-function cW(records){if(records.length<7)return[];const w=[],n=new Date();for(let i=3;i>=0;i--){const e=new Date(n);e.setDate(e.getDate()-i*7);const s=new Date(e);s.setDate(s.getDate()-6);const wk=records.filter(r=>r.date>=s.toISOString().slice(0,10)&&r.date<=e.toISOString().slice(0,10));if(!wk.length)continue;const a=(wk.reduce((s,r)=>s+r.weight,0)/wk.length);const p=w[w.length-1];const d=p?(a-p.avg):null;w.push({label:`W${4-i}`,avg:j(a)+'斤',diff:d!==null?(d>=0?'+':'')+j(Math.abs(d))+'斤':''})}return w}
+function avgL(r,n){const s=r.slice(-n);return parseFloat((s.reduce((a,r)=>a+r.weight,0)/s.length).toFixed(1))}
+function cW(records){if(records.length<7)return[];const w=[],n=new Date();for(let i=3;i>=0;i--){const e=new Date(n);e.setDate(e.getDate()-i*7);const s=new Date(e);s.setDate(s.getDate()-6);const wk=records.filter(r=>r.date>=s.toISOString().slice(0,10)&&r.date<=e.toISOString().slice(0,10));if(!wk.length)continue;const a=parseFloat((wk.reduce((s,r)=>s+r.weight,0)/wk.length).toFixed(1));const p=w[w.length-1];const d=p!==undefined?(a-p._raw):null;w.push({label:`W${4-i}`,avg:j(a)+'斤',diff:d!==null?(d>=0?'+':'')+j(Math.abs(d))+'斤':'',_raw:a})}return w}
 function pred(r,g){const l=r.slice(-5);if(l.length<2)return'数据不足';let sx=0,sy=0,sxy=0,sx2=0,n=l.length;l.forEach((r,i)=>{sx+=i;sy+=r.weight;sxy+=i*r.weight;sx2+=i*i});const sl=(n*sxy-sx*sy)/(n*sx2-sx*sx);if(Math.abs(sl)<0.001)return'体重趋于稳定';const d=(g-l[n-1].weight)/sl;if(d<=0)return sl<0?'已达成目标！🎉':'体重在上升，暂无法预测';const p=new Date();p.setDate(p.getDate()+Math.round(d));return`预计 ${p.toLocaleDateString('zh-CN')} 达到目标（约${Math.round(d)}天后）`}
 
 function drawWtChart(records,h){
