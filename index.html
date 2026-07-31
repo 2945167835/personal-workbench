@@ -677,6 +677,7 @@ async function renderWeight(app,fab){
   const bmr=latest&&pf.age?calcBMR(latest.weight,pf):null;
   const idealMin=pf.gender==='female'?18.5*((height/100)**2):20*((height/100)**2);
   const idealMax=24*((height/100)**2);
+  const progress=initWt&&pf.targetWeight&&initWt!==pf.targetWeight?Math.max(0,Math.min(100,((latest?latest.weight:initWt)-initWt)/(pf.targetWeight-initWt)*100)):null;
 
   app.innerHTML=`
     <div class="header"><button class="back" onclick="go('home')">←</button><h1>体重</h1></div>
@@ -692,7 +693,7 @@ async function renderWeight(app,fab){
         <input type="number" id="quickWt" placeholder="${latest?'上次 '+j(latest.weight)+' 斤 — 输入今日体重':''}" step="0.1" min="40" max="600" style="flex:1;border:none;outline:none;font-size:15px;font-family:inherit;background:transparent">
         <button class="add-btn" id="quickWtBtn">记录</button>
       </div>
-      ${pf.targetWeight?`<div class="summary-row"><div class="summary-card"><div class="sc-label">距目标</div><div class="sc-val ${latest&&latest.weight>pf.targetWeight?'sc-red':'sc-blue'}">${latest?j(Math.abs(latest.weight-pf.targetWeight)):'--'} 斤</div><div class="ssub" style="font-size:10px;color:${latest&&latest.weight>pf.targetWeight?'var(--danger)':'var(--success)'}">${latest&&latest.weight>pf.targetWeight?'还需减 ':'还需增 '}${j(Math.abs(latest.weight-pf.targetWeight))} 斤</div></div><div class="summary-card"><div class="sc-label">已完成</div><div class="sc-val sc-blue">${initWt&&pf.targetWeight&&initWt!==pf.targetWeight?Math.abs((((latest?latest.weight:initWt)-initWt)/(pf.targetWeight-initWt)*100).toFixed(1)):'--'}%</div></div></div>`:''}
+      ${pf.targetWeight?`<div class="summary-row"><div class="summary-card"><div class="sc-label">距目标</div><div class="sc-val ${latest&&latest.weight>pf.targetWeight?'sc-red':'sc-blue'}">${latest?j(Math.abs(latest.weight-pf.targetWeight)):'--'} 斤</div><div class="ssub" style="font-size:10px;color:${latest&&latest.weight>pf.targetWeight?'var(--danger)':'var(--success)'}">${latest&&latest.weight>pf.targetWeight?'还需减 ':'还需增 '}${j(Math.abs(latest.weight-pf.targetWeight))} 斤</div></div><div class="summary-card"><div class="sc-label">已完成</div><div class="sc-val sc-blue">${progress!==null?progress.toFixed(1):'--'}%</div></div></div>`:''}
       <div class="summary-row"><div class="summary-card"><div class="sc-label">7日均值</div><div class="sc-val sc-blue">${avg7?j(avg7):'--'} 斤</div></div><div class="summary-card"><div class="sc-label">30日均值</div><div class="sc-val sc-blue">${avg30?j(avg30):'--'} 斤</div></div><div class="summary-card"><div class="sc-label">本月变化</div><div class="sc-val ${mChange>0?'sc-red':'sc-blue'}">${mChange!==null?(mChange>=0?'+':'-')+j(Math.abs(mChange)):'--'} 斤</div></div></div>
       ${weeks.length>0?`<div class="summary-row">${weeks.map(w=>`<div class="summary-card"><div class="sc-label">${w.label}</div><div class="sc-val" style="font-size:13px">${w.avg}</div><div class="sc-label">${w.diff}</div></div>`).join('')}</div>`:''}
       ${records.length>=2?`<div class="chart-box"><canvas id="wtChart"></canvas></div>`:''}
