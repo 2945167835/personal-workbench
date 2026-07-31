@@ -427,7 +427,7 @@ async function renderHome(app,fab){
   weightR.forEach(r=>recent.push({type:'weight',date:r.date,data:r,sort:r.date+r.id}));
   carR.forEach(r=>recent.push({type:'car',date:r.date,data:r,sort:r.date+r.id}));
   recent.sort((a,b)=>b.sort.localeCompare(a.sort));
-  const recent8=recent.slice(0,8);
+  const recent3=recent.slice(0,3);
 
   app.innerHTML=`
     <div class="header"><h1>个人工作台</h1></div>
@@ -455,10 +455,10 @@ async function renderHome(app,fab){
         </div>
       </div>
 
-      ${recent8.length>0?`
+      ${recent3.length>0?`
       <div class="widget">
         <div class="widget-title">🕐 最近记录</div>
-        ${recent8.map(r=>{
+        ${recent3.map(r=>{
           if(r.type==='ledger'){
             const d=r.data;const sign=(d.type==='income'||d.type==='loan_in')?'+':'-';
             const cls=(d.type==='income'||d.type==='loan_in')?'income':'expense';
