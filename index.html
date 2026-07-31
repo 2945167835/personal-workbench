@@ -873,7 +873,6 @@ async function renderDeepSeek(app,fab){
     <div class="main">
       <div class="widget" style="text-align:center"><div id="dsBalance" style="font-size:14px;color:var(--text3);padding:10px">点击下方按钮查询</div></div>
       <button class="btn-primary" id="dsQueryBtn" style="margin-bottom:12px">🔄 查询余额</button>
-      <div class="widget"><div style="font-size:12px;color:var(--text3);word-break:break-all">🔑 ${key.slice(0,10)}...${key.slice(-4)}<br><span style="color:var(--primary);cursor:pointer" onclick="go('settings')">去设置修改 →</span></div></div>
     </div>`;
   $('#dsQueryBtn').addEventListener('click',async()=>{
     const el=$('#dsBalance');el.innerHTML='查询中...';
