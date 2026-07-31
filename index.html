@@ -864,11 +864,13 @@ async function renderDeepSeek(app,fab){
   fab.classList.add('hidden');
   const key=localStorage.getItem('wb_dsKey')||'';
   if(!key){app.innerHTML=`<div class="header"><button class="back" onclick="go('home')">←</button><h1>DeepSeek</h1></div><div class="main"><div class="widget" style="text-align:center"><p style="color:var(--text3);margin-bottom:10px">未设置 API Key</p><span class="ci-edit" onclick="go('settings')" style="font-size:14px">去设置页填写 →</span></div></div>`;return}
+  const history=JSON.parse(localStorage.getItem('wb_dsHistory')||'[]');
   app.innerHTML=`
     <div class="header"><button class="back" onclick="go('home')">←</button><h1>DeepSeek</h1></div>
     <div class="main">
-      <div class="widget" style="text-align:center"><div id="dsBalance" style="font-size:14px;color:var(--text3);padding:10px">点击下方按钮查询</div></div>
+      <div class="widget" style="text-align:center"><div id="dsBalance" style="font-size:14px;color:var(--text3);padding:10px">${history.length?'上次 ¥'+parseFloat(history[0].balance).toFixed(2)+' · 点击查询最新':'点击下方按钮查询'}</div></div>
       <button class="btn-primary" id="dsQueryBtn" style="margin-bottom:12px">🔄 查询余额</button>
+      ${history.length?`<div class="widget"><div class="widget-title">📈 用量记录</div>${history.map(h=>`<div style="display:flex;justify-content:space-between;padding:4px 0;font-size:12px;border-bottom:1px solid #f5f5f5"><span style="color:var(--text3)">${h.time.slice(0,16)}</span><span style="font-weight:600;color:${parseFloat(h.balance)>0?'var(--success)':'var(--danger)'}">¥${parseFloat(h.balance).toFixed(2)}</span></div>`).join('')}</div>`:''}
     </div>`;
   $('#dsQueryBtn').addEventListener('click',async()=>{
     const el=$('#dsBalance');el.innerHTML='查询中...';
@@ -879,6 +881,9 @@ async function renderDeepSeek(app,fab){
       if(d.balance_infos&&d.balance_infos.length){
         const b=d.balance_infos[0];
         el.innerHTML=`<div style="font-size:36px;font-weight:700;color:${parseFloat(b.total_balance)>0?'var(--success)':'var(--danger)'}">¥${parseFloat(b.total_balance).toFixed(2)}</div><div style="font-size:12px;color:var(--text3);margin-top:4px">总余额${b.currency} · 充值 ¥${parseFloat(b.topped_up_balance).toFixed(2)} · 赠送 ¥${parseFloat(b.granted_balance).toFixed(2)}</div>`;
+        const hist=[{time:new Date().toISOString().replace('T',' '),balance:b.total_balance,total:parseFloat(b.total_balance)},...JSON.parse(localStorage.getItem('wb_dsHistory')||'[]')].slice(0,50);
+        localStorage.setItem('wb_dsHistory',JSON.stringify(hist));
+        render();
       }else{el.innerHTML=`<p style="color:var(--danger)">${d.error?.message||'查询失败'}</p>`}
     }catch{el.innerHTML='<p style="color:var(--danger)">网络错误或 Key 无效</p>'}
   });
