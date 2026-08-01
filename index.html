@@ -685,7 +685,7 @@ async function renderWeight(app,fab){
         <div class="bmi-big">${latest?j(latest.weight)+' 斤':'-- 斤'}</div>
         <div class="bmi-tag">${pf.gender==='male'?'♂':'♀'} ${pf.age}岁 · 身高${pf.height}cm${bmi?' · BMI '+bmi+' '+bl:''}${pf.targetWeight?' · 目标 '+j(pf.targetWeight)+' 斤':''}</div>
         ${initWt&&latest?`<div style="margin-top:8px;font-size:11px;color:var(--text3)">初始 ${j(initWt)}斤 → 当前 ${j(latest.weight)}斤 · 变化 ${totalChange>=0?'+':'-'}${j(Math.abs(totalChange))}斤</div>`:''}
-        ${bmr?`<div style="margin-top:4px;font-size:11px;color:var(--text3)">基础代谢 ≈ ${bmr} kcal/天 · 理想体重 ${j(idealMin)}~${j(idealMax)}斤</div>`:''}
+        ${bmr?`<div style="margin-top:4px;font-size:11px;color:var(--text3)">${pf.gender==='male'?'♂ 基础代谢':'♀ 基础代谢'} ≈ ${bmr} kcal/天 · ${pf.gender==='male'?'♂ 理想体重':'♀ 理想体重'} ${j(idealMin)}~${j(idealMax)}斤</div>`:''}
         <div style="margin-top:12px;padding:8px;background:rgba(74,144,217,.08);border-radius:8px;font-size:13px;color:var(--primary);font-weight:500">+ 记录今日体重</div>
       </div>
       <div class="add-bar" style="margin-bottom:12px">
