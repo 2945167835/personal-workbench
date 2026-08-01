@@ -503,9 +503,7 @@ async function renderHome(app,fab){
 let ledgerAcc=null;
 async function renderLedger(app,fab){
   fab.classList.add('hidden');
-  const m=month();const records=(await dbAll('ledger')).sort((a,b)=>b.date.localeCompare(a.date)||b.id-a.id);
-  const mRecs=records.filter(r=>r.date.startsWith(m));
-  const expense=mRecs.filter(r=>r.type==='expense'||r.type==='loan_out').reduce((s,r)=>s+r.amount,0);
+  const records=(await dbAll('ledger')).sort((a,b)=>b.date.localeCompare(a.date)||b.id-a.id);
   const reimbRecs=records.filter(r=>r.reimbursable&&!r.reimbursed);
   const reimbSum=reimbRecs.reduce((s,r)=>s+r.amount,0);
   const loanOut=records.filter(r=>r.type==='loan_out').reduce((s,r)=>s+r.amount,0);
@@ -539,30 +537,20 @@ async function renderLedger(app,fab){
       <div class="widget">
         <div class="widget-title">📊 数据面板</div>
         <div class="overview-row">
-          <div class="overview-card oc-expense"><div class="oc-icon">💸</div><div class="oc-val">${fm(expense)}</div><div class="oc-label">本月支出</div></div>
           <div class="overview-card" style="background:linear-gradient(135deg,#F39C12,#E67E22)"><div class="oc-icon">🧾</div><div class="oc-val">${fm(reimbSum)}</div><div class="oc-label">待报销</div></div>
-        </div>
-        <div class="overview-row" style="margin-top:8px">
-          <div class="overview-card" style="background:linear-gradient(135deg,#E74C3C,#C0392B)"><div class="oc-icon">📤</div><div class="oc-val">${fm(loanOut)}</div><div class="oc-label">借出</div></div>
+          <div class="overview-card oc-expense"><div class="oc-icon">📤</div><div class="oc-val">${fm(loanOut)}</div><div class="oc-label">借出</div></div>
           <div class="overview-card oc-income"><div class="oc-icon">📥</div><div class="oc-val">${fm(loanIn)}</div><div class="oc-label">借入</div></div>
         </div>
       </div>
 
-      <div style="display:flex;gap:8px;margin-bottom:12px">
-        <div style="flex:1;background:rgba(243,156,18,.08);border:2px solid rgba(243,156,18,.15);border-radius:14px;padding:16px;text-align:center;cursor:pointer" onclick="ledgerSub='reimb';render()">
-          <div style="font-size:28px">🧾</div><div style="font-size:15px;font-weight:700;margin-top:4px">报销</div><div style="font-size:11px;color:var(--text3);margin-top:2px">${reimbRecs.length}笔待报销</div>
+      <div style="display:flex;gap:10px;margin-bottom:12px">
+        <div style="flex:1;background:linear-gradient(135deg,rgba(243,156,18,.1),rgba(243,156,18,.05));border:2px solid rgba(243,156,18,.2);border-radius:14px;padding:20px 16px;text-align:center;cursor:pointer" onclick="ledgerSub='reimb';render()">
+          <div style="font-size:32px">🧾</div><div style="font-size:16px;font-weight:700;margin:4px 0">报销</div><div style="font-size:12px;color:var(--warning);font-weight:600">${fm(reimbSum)}</div><div style="font-size:10px;color:var(--text3)">${reimbRecs.length}笔待处理</div>
         </div>
-        <div style="flex:1;background:rgba(155,89,182,.08);border:2px solid rgba(155,89,182,.15);border-radius:14px;padding:16px;text-align:center;cursor:pointer" onclick="ledgerSub='loan';render()">
-          <div style="font-size:28px">🤝</div><div style="font-size:15px;font-weight:700;margin-top:4px">借款</div><div style="font-size:11px;color:var(--text3);margin-top:2px">借出${fm(loanOut)} · 借入${fm(loanIn)}</div>
+        <div style="flex:1;background:linear-gradient(135deg,rgba(155,89,182,.1),rgba(155,89,182,.05));border:2px solid rgba(155,89,182,.2);border-radius:14px;padding:20px 16px;text-align:center;cursor:pointer" onclick="ledgerSub='loan';render()">
+          <div style="font-size:32px">🤝</div><div style="font-size:16px;font-weight:700;margin:4px 0">借款</div><div style="font-size:12px;font-weight:600"><span style="color:var(--danger)">出${fm(loanOut)}</span> · <span style="color:var(--success)">入${fm(loanIn)}</span></div><div style="font-size:10px;color:var(--text3)">${records.filter(r=>r.type==='loan_out'||r.type==='loan_in').length}笔记录</div>
         </div>
       </div>
-
-      ${records.filter(r=>!r.reimbursable&&r.type!=='loan_out'&&r.type!=='loan_in').length>0?`
-      <div class="widget"><div class="widget-title">📋 其他记录</div>
-      ${records.filter(r=>!r.reimbursable&&r.type!=='loan_out'&&r.type!=='loan_in').slice(0,10).map(r=>{
-        const isIn=r.type==='income';return`<div class="recent-item"><div class="ri-dot ${isIn?'income':'expense'}"></div><div class="ri-info"><div class="ri-title">${r.category||''}</div><div class="ri-sub">${fd(r.date)} ${r.note||''}</div></div><div class="ri-amount" style="color:${isIn?'var(--success)':'var(--danger)'}">${isIn?'+':'-'}${fm(r.amount)}</div></div>`;
-      }).join('')}
-      </div>`:''}
     </div>`;
 }
 function showReimbForm(){showLedgerForm(null,{reimb:true})}
