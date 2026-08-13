@@ -493,27 +493,41 @@ async function aiAnalyze(){
   if(!records.length){toast('请先记录体重数据');return}
   const pf=getProfile();
   const prompt=buildAiPrompt(records,pf);
-  showModal('🤖 AI 体重分析',`<div style="text-align:center;padding:24px 0"><div style="font-size:36px;margin-bottom:10px">🤖</div><div style="font-size:14px;color:var(--text2)">正在分析你的体重数据…</div><div style="font-size:11px;color:var(--text3);margin-top:8px">约需 5~15 秒，请稍候</div></div>`);
-  try{
-    const ctrl=new AbortController();setTimeout(()=>ctrl.abort(),30000);
-    const r=await fetch('https://api.deepseek.com/chat/completions',{
-      method:'POST',
-      headers:{'Content-Type':'application/json','Authorization':'Bearer '+key},
-      body:JSON.stringify({model:'deepseek-v4-flash',messages:[{role:'system',content:AI_SYSTEM},{role:'user',content:prompt}],temperature:0.6,max_tokens:3000,stream:false}),
-      signal:ctrl.signal
-    });
-    const d=await r.json();
-    const report=d.choices?.[0]?.message?.content;
-    if(!report)throw new Error(d.error?.message||'分析失败');
-    const latest=records[records.length-1];
-    saveAiReport({id:Date.now(),time:Date.now(),date:fd(latest.date),weight:latest.weight,report:report});
-    showAiReport(report);
-  }catch(e){
-    closeModal();
-    if(e.name==='AbortError'){showModal('❌ 分析超时',`<div style="font-size:14px;text-align:left;line-height:1.7">请求超过 30 秒未响应，可能网络较慢，请稍后重试。</div>`);return}
-    const msg=(e.message||'网络错误');
-    showModal('❌ 分析失败',`<div style="font-size:14px;color:var(--danger);text-align:left;padding:6px 0;word-break:break-word">${msg}</div><div style="font-size:12px;color:var(--text2);text-align:left;margin-top:10px;line-height:1.8">可能原因：<br>① DeepSeek API Key 无效或已过期<br>② 账户余额不足（8月6日起 DeepSeek 已预告涨价）<br>③ 网络连接异常<br><br>建议到「设置」确认 Key，并到 DeepSeek 页查询余额后重试。</div>`);
+  showModal('🤖 AI 体重分析',`<div style="text-align:center;padding:24px 0"><div style="font-size:36px;margin-bottom:10px">🤖</div><div style="font-size:14px;color:var(--text2)">正在分析你的体重数据…</div><div style="font-size:11px;color:var(--text3);margin-top:8px">约需 3~10 秒，请稍候</div></div>`);
+  // 最多尝试 2 次，网络类错误自动重试
+  let lastErr=null;
+  for(let attempt=1;attempt<=2;attempt++){
+    try{
+      const report=await callDeepSeek(key,prompt);
+      const latest=records[records.length-1];
+      saveAiReport({id:Date.now(),time:Date.now(),date:fd(latest.date),weight:latest.weight,report:report});
+      showAiReport(report);
+      return;
+    }catch(e){
+      lastErr=e;
+      const retryable=e.name==='AbortError'||e.message==='Failed to fetch'||e.message==='NetworkError when attempting to fetch resource'||!e.message;
+      if(attempt<2&&retryable){continue}
+      break;
+    }
   }
+  closeModal();
+  const e=lastErr||{message:'未知错误'};
+  if(e.name==='AbortError'){showModal('❌ 分析超时',`<div style="font-size:14px;text-align:left;line-height:1.7">请求超时（已自动重试仍失败）。可能网络较慢，请稍后重试。</div>`);return}
+  const msg=(e.message||'网络错误');
+  showModal('❌ 分析失败',`<div style="font-size:14px;color:var(--danger);text-align:left;padding:6px 0;word-break:break-word">${msg}</div><div style="font-size:12px;color:var(--text2);text-align:left;margin-top:10px;line-height:1.8">可能原因：<br>① DeepSeek API Key 无效或已过期<br>② 账户余额不足（8月6日起 DeepSeek 已预告涨价）<br>③ 网络连接异常<br><br>建议到「设置」确认 Key，并到 DeepSeek 页查询余额后重试。</div>`);
+}
+async function callDeepSeek(key,prompt){
+  const ctrl=new AbortController();setTimeout(()=>ctrl.abort(),60000);
+  const r=await fetch('https://api.deepseek.com/chat/completions',{
+    method:'POST',
+    headers:{'Content-Type':'application/json','Authorization':'Bearer '+key},
+    body:JSON.stringify({model:'deepseek-v4-flash',messages:[{role:'system',content:AI_SYSTEM},{role:'user',content:prompt}],temperature:0.6,max_tokens:3000,stream:false,thinking:{type:'disabled'}}),
+    signal:ctrl.signal
+  });
+  const d=await r.json();
+  const report=d.choices?.[0]?.message?.content;
+  if(!report)throw new Error(d.error?.message||'分析失败');
+  return report;
 }
 function showAiReport(report){
   showModal('🤖 AI 体重分析报告',`<div class="ai-report">${md(report)}</div><div style="margin-top:14px;padding:10px 12px;background:rgba(149,165,166,.1);border-radius:8px;font-size:11px;color:var(--text3);text-align:left">📌 本报告由 AI 生成，仅供参考，不构成医疗建议。如有健康问题请咨询专业医生。</div>`);
