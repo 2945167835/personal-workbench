@@ -38,23 +38,12 @@ body{
 /* Main */
 .main{flex:1;overflow-y:auto;padding:8px 10px 80px;-webkit-overflow-scrolling:touch;}
 
-/* Dashboard Widget */
+/* Widget */
 .widget{
   background:var(--card);border-radius:var(--radius);padding:14px 12px;
   margin-bottom:12px;box-shadow:var(--shadow);
 }
 .widget-title{font-size:12px;color:var(--text2);margin-bottom:10px;font-weight:600;text-transform:uppercase;letter-spacing:.3px;}
-.overview-row{display:flex;gap:10px;margin-bottom:12px;}
-.overview-card{
-  flex:1;border-radius:14px;padding:16px 10px;text-align:center;color:#fff;
-}
-.overview-card .oc-icon{font-size:20px;margin-bottom:4px;opacity:.9}
-.overview-card .oc-val{font-size:16px;font-weight:700;word-break:break-all}
-.overview-card .oc-label{font-size:10px;opacity:.8;margin-top:2px}
-.oc-income{background:linear-gradient(135deg,#27AE60,#2ECC71)}
-.oc-expense{background:linear-gradient(135deg,#E74C3C,#C0392B)}
-.oc-balance{background:linear-gradient(135deg,#4A90D9,#357ABD)}
-.oc-reimb{background:linear-gradient(135deg,#F39C12,#E67E22)}
 
 /* Module Entry Cards */
 .mod-entry{
@@ -71,7 +60,7 @@ body{
 .mod-entry .me-name{font-size:15px;font-weight:600;}
 .mod-entry .me-desc{font-size:12px;color:var(--text2);margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
 .mod-entry .me-arrow{color:var(--text3);font-size:16px;}
-.me-ledger{background:rgba(39,174,96,.1)}.me-weight{background:rgba(74,144,217,.1)}.me-car{background:rgba(243,156,18,.1)}
+.me-weight{background:rgba(74,144,217,.1)}
 
 /* Recent List */
 .recent-item{
@@ -80,13 +69,12 @@ body{
 }
 .recent-item:last-child{border-bottom:none;}
 .recent-item .ri-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
-.ri-dot.income{background:var(--success)}.ri-dot.expense{background:var(--danger)}.ri-dot.weight{background:var(--primary)}.ri-dot.car{background:var(--warning)}
+.ri-dot.weight{background:var(--primary)}
 .recent-item .ri-info{flex:1;min-width:0;}
 .recent-item .ri-title{font-size:13px;}
 .recent-item .ri-sub{font-size:11px;color:var(--text3);}
 .recent-item .ri-amount{font-size:14px;font-weight:600;}
 
-/* ====== Module Pages ====== */
 /* Summary */
 .summary-row{display:flex;gap:8px;margin-bottom:12px;}
 .summary-card{
@@ -97,30 +85,6 @@ body{
 .summary-card .sc-val{font-size:14px;font-weight:700;word-break:break-all;}
 .sc-green{color:var(--success)}.sc-red{color:var(--danger)}.sc-blue{color:var(--primary)}.sc-warn{color:var(--warning)}
 
-/* Quick Amount */
-.quick-row{display:flex;gap:6px;margin-bottom:12px;flex-wrap:wrap;}
-.quick-btn{
-  padding:5px 14px;border-radius:16px;border:1px solid #ddd;background:var(--card);
-  font-size:13px;cursor:pointer;font-family:inherit;
-}
-.quick-btn:active{background:var(--primary);color:#fff;border-color:var(--primary);}
-
-/* Filter */
-.filter-row{display:flex;gap:6px;margin-bottom:12px;flex-wrap:wrap;}
-.filter-chip{
-  padding:4px 12px;border-radius:14px;font-size:11px;cursor:pointer;
-  border:1px solid #ddd;background:var(--card);
-}
-.filter-chip.sel{background:var(--primary);color:#fff;border-color:var(--primary);}
-
-/* Search */
-.search-wrap{margin-bottom:12px;}
-.search-wrap input{
-  width:100%;padding:9px 14px;border:1px solid #e0e0e0;border-radius:20px;
-  font-size:13px;outline:none;background:var(--card);font-family:inherit;
-}
-.search-wrap input:focus{border-color:var(--primary);}
-
 /* Chart */
 .chart-box{
   background:var(--card);border-radius:var(--radius);padding:14px;
@@ -128,14 +92,6 @@ body{
 }
 .chart-box canvas{width:100%;height:200px;opacity:0;transition:opacity .2s}
 .chart-box canvas.ready{opacity:1}
-
-/* Sub Tabs */
-.subtabs{display:flex;gap:6px;margin-bottom:12px;}
-.subtab{
-  flex:1;padding:8px;text-align:center;border-radius:10px;font-size:12px;cursor:pointer;
-  background:var(--card);border:1px solid #e0e0e0;
-}
-.subtab.act{background:var(--primary);color:#fff;border-color:var(--primary);}
 
 /* List */
 .list-item{
@@ -150,11 +106,8 @@ body{
 }
 .list-item .linfo{flex:1;min-width:0;overflow:hidden;}
 .list-item .ltitle{font-size:13px;font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
-.list-item .ltitle .tag{font-size:9px;padding:1px 4px;border-radius:6px;margin-left:3px;font-weight:400;vertical-align:middle;}
-.tag-reimb{background:rgba(243,156,18,.12);color:var(--warning)}.tag-loan{background:rgba(231,76,60,.1);color:var(--danger)}.tag-inst{background:rgba(155,89,182,.1);color:var(--purple)}.tag-acc{background:rgba(52,152,219,.1);color:#3498DB}
 .list-item .lsub{font-size:11px;color:var(--text3);margin-top:1px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
-.list-item .lamount{font-size:13px;font-weight:600;white-space:nowrap;flex-shrink:0;min-width:0;max-width:35%;overflow:hidden;text-overflow:ellipsis;}
-.la-in{color:var(--success)}.la-out{color:var(--danger)}
+.list-item .lamount{font-size:13px;font-weight:600;white-space:nowrap;flex-shrink:0;}
 .list-item .ldel{
   position:absolute;right:6px;top:50%;transform:translateY(-50%);width:26px;height:26px;
   border-radius:50%;border:none;background:rgba(231,76,60,.08);color:var(--danger);
@@ -170,47 +123,6 @@ body{
 .bmi-box .bmi-big{font-size:30px;font-weight:700;color:var(--primary)}
 .bmi-box .bmi-tag{font-size:11px;color:var(--text2);margin-top:2px;}
 
-/* Car info */
-.car-info{
-  background:var(--card);border-radius:var(--radius);padding:14px;margin-bottom:12px;
-  box-shadow:0 1px 4px rgba(0,0,0,0.04);
-}
-.car-info .ci-row{display:flex;justify-content:space-between;padding:3px 0;font-size:12px;}
-.car-info .ci-l{color:var(--text2)}.car-info .ci-edit{color:var(--primary);font-size:11px;cursor:pointer;margin-top:6px;display:inline-block;}
-
-/* Alert */
-.alert-card{
-  background:#fff3f3;border:1px solid rgba(231,76,60,.15);border-radius:12px;padding:12px;
-  margin-bottom:12px;display:flex;align-items:center;gap:10px;
-}
-.alert-card .al-icon{font-size:20px;}
-.alert-card .al-text{font-size:13px;color:var(--danger);flex:1;}
-.alert-badge{display:inline-block;background:var(--danger);color:#fff;font-size:9px;padding:1px 5px;border-radius:8px;margin-left:4px;animation:pulse 2s infinite;}
-@keyframes pulse{0%,100%{opacity:1}50%{opacity:.6}}
-
-/* Account cards */
-.acc-section{margin-bottom:12px;}
-.acc-section .acc-label{font-size:12px;color:var(--text2);margin-bottom:8px;font-weight:600;}
-.acc-card{
-  background:var(--card);border-radius:12px;padding:12px 14px;margin-bottom:6px;
-  display:flex;align-items:center;gap:10px;
-  box-shadow:0 1px 3px rgba(0,0,0,0.04);cursor:pointer;transition:transform .15s;
-  border:2px solid transparent;
-}
-.acc-card:active{transform:scale(.98);}
-.acc-card .ac-icon{font-size:22px;width:40px;height:40px;border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
-.acc-card .ac-info{flex:1;min-width:0;}
-.acc-card .ac-name{font-size:14px;font-weight:600;}
-.acc-card .ac-meta{font-size:11px;color:var(--text3);margin-top:1px;}
-.acc-card .ac-bal{font-size:15px;font-weight:700;}
-.acc-card .ac-arrow{color:var(--text3);font-size:14px;}
-.acc-add-card{
-  background:transparent;border:2px dashed #ddd;border-radius:14px;
-  padding:14px 16px;text-align:center;color:var(--text3);
-  cursor:pointer;font-size:14px;
-}
-.acc-add-card:active{background:#f5f5f5;}
-
 /* Inline add bar */
 .add-bar{
   display:flex;gap:8px;padding:10px 14px;background:var(--card);border-radius:14px;
@@ -221,15 +133,6 @@ body{
   padding:8px 18px;border:none;border-radius:10px;background:var(--primary);color:#fff;
   font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;white-space:nowrap;
 }
-  position:fixed;bottom:calc(var(--safe-bottom) + 24px);right:24px;z-index:50;
-  width:52px;height:52px;border-radius:50%;
-  background:linear-gradient(135deg,var(--primary),#357ABD);
-  color:#fff;border:none;font-size:26px;
-  box-shadow:0 4px 20px rgba(74,144,217,.35);
-  display:flex;align-items:center;justify-content:center;cursor:pointer;
-  transition:transform .2s;
-}
-.fab:active{transform:scale(.9);}
 
 /* Section */
 .section-title{font-size:12px;font-weight:600;color:var(--text2);margin:14px 0 8px;}
@@ -240,7 +143,7 @@ body{
 .empty .eicon{font-size:40px;margin-bottom:8px;}
 .empty p{font-size:13px;}
 
-/* ====== Modal ====== */
+/* Modal */
 .modal-overlay{
   position:fixed;inset:0;background:rgba(0,0,0,0.4);z-index:200;
   display:flex;align-items:flex-end;justify-content:center;animation:fadeIn .2s;
@@ -260,18 +163,6 @@ body{
   font-size:14px;outline:none;background:#f8f9fa;font-family:inherit;
 }
 .fg input:focus,.fg select:focus,.fg textarea:focus{border-color:var(--primary);background:#fff;}
-.fg textarea{resize:vertical;min-height:50px;}
-.fg-row{display:flex;gap:8px;}.fg-row .fg{flex:1;}
-.type-tgl{display:flex;border-radius:10px;overflow:hidden;border:1px solid #e0e0e0;}
-.type-tgl button{flex:1;padding:10px;border:none;background:#f8f9fa;font-size:14px;cursor:pointer;font-family:inherit;}
-.type-tgl button.inc-act{background:var(--success);color:#fff}
-.type-tgl button.exp-act{background:var(--danger);color:#fff}
-.cat-grid{display:flex;flex-wrap:wrap;gap:6px;}
-.cat-chip{padding:5px 12px;border-radius:14px;border:1px solid #e0e0e0;font-size:12px;cursor:pointer;background:#f8f9fa;}
-.cat-chip.sel{background:var(--primary);color:#fff;border-color:var(--primary);}
-.chk-row{display:flex;gap:16px;flex-wrap:wrap;margin-bottom:12px;}
-.chk-row label{display:flex;align-items:center;gap:4px;font-size:13px;color:var(--text2);cursor:pointer;}
-.chk-row input[type=checkbox]{width:16px;height:16px;accent-color:var(--primary);}
 .btn-primary{display:block;width:100%;padding:12px;border:none;border-radius:10px;background:var(--primary);color:#fff;font-size:15px;font-weight:600;cursor:pointer;font-family:inherit;margin-top:8px;}
 .btn-primary:active{opacity:.85;}
 
@@ -302,16 +193,15 @@ body{
 </head>
 <body>
 <div class="app" id="app"></div>
-<div class="fab hidden" id="fab">+</div>
 <div class="modal-overlay hidden" id="modalOverlay"></div>
 <div class="confirm-overlay hidden" id="confirmOverlay"></div>
 <div class="toast" id="toast"></div>
 
 <script>
-// === v3.1 ===
+// === v4.0 (仅体重 + DeepSeek) ===
 // ==================== IndexedDB ====================
-const DB_NAME='WorkbenchDB',DB_VER=3;let db;
-function openDB(){return new Promise((r,j)=>{const req=indexedDB.open(DB_NAME,DB_VER);req.onupgradeneeded=e=>{const d=e.target.result;if(!d.objectStoreNames.contains('ledger')){const s=d.createObjectStore('ledger',{keyPath:'id',autoIncrement:true});s.createIndex('date','date');s.createIndex('type','type');}if(!d.objectStoreNames.contains('weight')){const s=d.createObjectStore('weight',{keyPath:'id',autoIncrement:true});s.createIndex('date','date',{unique:true});}if(!d.objectStoreNames.contains('car')){const s=d.createObjectStore('car',{keyPath:'id',autoIncrement:true});s.createIndex('date','date');s.createIndex('carType','carType');}};req.onsuccess=e=>{db=e.target.result;r(db);};req.onerror=()=>j(req.error);});}
+const DB_NAME='WorkbenchDB',DB_VER=5;let db;
+function openDB(){return new Promise((r,j)=>{const req=indexedDB.open(DB_NAME,DB_VER);req.onupgradeneeded=e=>{const d=e.target.result;['ledger','car','meal'].forEach(s=>{if(d.objectStoreNames.contains(s))d.deleteObjectStore(s)});if(!d.objectStoreNames.contains('weight')){const s=d.createObjectStore('weight',{keyPath:'id',autoIncrement:true});s.createIndex('date','date',{unique:true});}};req.onsuccess=e=>{db=e.target.result;r(db);};req.onerror=()=>j(req.error);});}
 function dbAdd(s,d){return new Promise((r,j)=>{const t=db.transaction(s,'readwrite');const q=t.objectStore(s).add(d);q.onsuccess=()=>{r(q.result);backupAll()};q.onerror=()=>j(q.error);});}
 function dbPut(s,d){return new Promise((r,j)=>{const t=db.transaction(s,'readwrite');const q=t.objectStore(s).put(d);q.onsuccess=()=>{r(q.result);backupAll()};q.onerror=()=>j(q.error);});}
 function dbAll(s,n){return new Promise((r,j)=>{const t=db.transaction(s,'readonly');const o=t.objectStore(s);const q=n?o.index(n).getAll():o.getAll();q.onsuccess=()=>r(q.result);q.onerror=()=>j(q.error);});}
@@ -321,337 +211,109 @@ function dbDel(s,id){return new Promise((r,j)=>{const t=db.transaction(s,'readwr
 let backupTimer=null;
 async function backupAll(){
   clearTimeout(backupTimer);backupTimer=setTimeout(async()=>{
-    try{const[l,w,c]=await Promise.all([dbAll('ledger'),dbAll('weight'),dbAll('car')]);
-    const data={ledger:l,weight:w,car:c,time:Date.now(),settings:{profile:localStorage.getItem('wb_profile'),accounts:localStorage.getItem('wb_accounts'),expCats:localStorage.getItem('wb_expCats'),incCats:localStorage.getItem('wb_incCats'),cars:localStorage.getItem('wb_cars'),dsKey:localStorage.getItem('wb_dsKey')}};
-    localStorage.setItem('wb_backup',JSON.stringify(data));}catch{}
+    try{
+      const w=await dbAll('weight');
+      const data={weight:w,time:Date.now(),settings:{profile:localStorage.getItem('wb_profile'),dsKey:localStorage.getItem('wb_dsKey'),dsHistory:localStorage.getItem('wb_dsHistory')}};
+      localStorage.setItem('wb_backup',JSON.stringify(data));
+    }catch{}
   },1000);
 }
-async function restoreFromBackup(){
+async function restoreFromBackup(force=false){
   try{const raw=localStorage.getItem('wb_backup');if(!raw)return false;
-  const data=JSON.parse(raw);if(!data.ledger||!data.time)return false;
-  const[l,w,c]=await Promise.all([dbAll('ledger'),dbAll('weight'),dbAll('car')]);
-  if(l.length>0||w.length>0||c.length>0)return false; // already has data
-  for(const r of data.ledger)await dbAdd('ledger',r);
+  const data=JSON.parse(raw);if(!data.weight||!data.time)return false;
+  const w=await dbAll('weight');
+  if(!force&&w.length>0)return false; // already has data, skip auto-restore
+  if(force){const ws=await dbAll('weight');await Promise.all(ws.map(r=>dbDel('weight',r.id)))}
   for(const r of data.weight)await dbAdd('weight',r);
-  for(const r of data.car)await dbAdd('car',r);
   if(data.settings){for(const[k,v]of Object.entries(data.settings)){if(v)localStorage.setItem('wb_'+k.replace('settings.',''),v);}}
   return true;}catch{return false;}
 }
 
-// ==================== Config ====================
-// User-defined categories & accounts — stored in localStorage
-function getExpCats(){try{const v=JSON.parse(localStorage.getItem('wb_expCats'));return v&&v.length?v:['🍜 餐饮','🚌 交通','🛒 购物','🏠 居家','🎮 娱乐','📦 其他']}catch{return['🍜 餐饮','🚌 交通','🛒 购物','🏠 居家','🎮 娱乐','📦 其他']}}
-function setExpCats(a){localStorage.setItem('wb_expCats',JSON.stringify(a))}
-function getIncCats(){try{const v=JSON.parse(localStorage.getItem('wb_incCats'));return v&&v.length?v:['💰 工资','🎁 奖金','💼 兼职','📈 投资','📦 其他']}catch{return['💰 工资','🎁 奖金','💼 兼职','📈 投资','📦 其他']}}
-function setIncCats(a){localStorage.setItem('wb_incCats',JSON.stringify(a))}
-function getAccounts(){
-  try{const v=JSON.parse(localStorage.getItem('wb_accounts'));if(!v||!v.length)return defAcc();
-  // Migrate old string format
-  if(typeof v[0]==='string'){const n=v.map((s,i)=>({name:s,icon:s.slice(0,2),order:i}));setAccounts(n);return n}
-  return v.sort((a,b)=>(a.order||0)-(b.order||0));
-  }catch{return defAcc()}
-}
-function defAcc(){return[{name:'💰 现金',icon:'💰',order:0},{name:'🏦 银行卡',icon:'🏦',order:1},{name:'💬 微信',icon:'💬',order:2},{name:'📱 支付宝',icon:'📱',order:3}]}
-function setAccounts(a){localStorage.setItem('wb_accounts',JSON.stringify(a))}
-function accName(a){return typeof a==='string'?a:a.name}
-function accIcon(a){return typeof a==='string'?a.slice(0,2):(a.icon||a.name.slice(0,2))}
-function accRaw(a){return typeof a==='string'?a.slice(2):a.name.slice(2)}
-const CAR_SUBTABS=[{id:'fuel'},{id:'maintenance',label:'🔧 保养'},{id:'other',label:'📦 其他'},{id:'all',label:'📋 全部'}];
-const OTHER_CATS=['🛡️ 保险','🅿️ 停车','🛣️ 过路费','🧼 洗车','🔩 维修','📋 年检','🔧 改装','📦 其他'];
-const LEDGER_FILTERS=[{id:'all',label:'全部'},{id:'expense',label:'支出'},{id:'income',label:'收入'},{id:'reimb',label:'待报销'},{id:'loan',label:'借入/借出'},{id:'install',label:'分期'}];
-
-// State
-let page='home',sub='',carTab='fuel',searchQ='',ledgerFilter='all',selectedCarId=null,ledgerSub='';
-
-// Helpers
-const $=s=>document.querySelector(s);
-function fd(d){return d.slice(0,10)}function fm(n){return'¥'+Number(n).toLocaleString('zh-CN',{minimumFractionDigits:2,maximumFractionDigits:2})}function today(){return new Date().toISOString().slice(0,10)}function month(){const n=new Date();return n.getFullYear()+'-'+String(n.getMonth()+1).padStart(2,'0')}
-function daysUntil(d){if(!d)return'';const t=(new Date(d)-new Date())/86400000;if(t<0)return' · 已过期';if(t<1)return' · 今天到期';if(t<30)return' · 剩'+Math.ceil(t)+'天';return''}
-function insRow(d){var c=d<=today()?'var(--danger)':new Date(d)-new Date()<30*86400000?'var(--warning)':'';return'<div class="ci-row"><span class="ci-l">交强险</span><span style="color:'+c+'">'+d+daysUntil(d)+'</span></div>'}
-function j(kg){return(kg*2).toFixed(1)} // kg → 斤 for display
-function jr(jin){return parseFloat((jin/2).toFixed(2))} // 斤 → kg for storage
-function toast(m){const t=$('#toast');t.textContent=m;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),1800)}
-function getCars(){
-  try{const v=JSON.parse(localStorage.getItem('wb_cars'));if(v&&v.length)return v}catch{}
-  // Migrate old single car format
-  const old=JSON.parse(localStorage.getItem('wb_carInfo')||'null');
-  if(old){const c=[{...old,id:'car_'+Date.now()}];setCars(c);localStorage.removeItem('wb_carInfo');return c}
-  return [];
-}
-function setCars(d){localStorage.setItem('wb_cars',JSON.stringify(d))}
-function getCarInfo(){const c=getCars();return selectedCarId?c.find(x=>x.id===selectedCarId)||c[0]:c[0]||null}
-function setCarInfo(d){const c=getCars();const idx=c.findIndex(x=>x.id===d.id);if(idx>=0)c[idx]=d;else{d.id=d.id||'car_'+Date.now();c.push(d)}setCars(c)}
-function getWeightGoal(){return getProfile().targetWeight||null}
-function setWeightGoal(t){const p=getProfile();p.targetWeight=t;p.startDate=today();setProfile(p)}
-
+// ==================== Profile ====================
 function getProfile(){
   try{const v=JSON.parse(localStorage.getItem('wb_profile'));if(v)return v}catch{}
-  // Migrate old data
   const h=parseFloat(localStorage.getItem('wb_height'))||170;
-  const oldG=JSON.parse(localStorage.getItem('wb_wtGoal')||'null');
-  const d={gender:'male',age:28,height:h,initWeight:null,targetWeight:oldG?oldG.target:null};
+  const d={gender:'male',age:28,height:h,initWeight:null,targetWeight:null};
   setProfile(d);return d;
 }
 function setProfile(d){localStorage.setItem('wb_profile',JSON.stringify(d))}
 
-// ==================== Router ====================
-function go(p,s_=''){page=p;sub=s_;searchQ='';ledgerFilter='all';carTab='fuel';ledgerAcc=null;selectedCarId=null;ledgerSub='';render()}
-function goCar(t){page='car';carTab=t;render()}
+// ==================== State / Router ====================
+let page='home';
+function go(p){page=p;render()}
+
+// Helpers
+const $=s=>document.querySelector(s);
+function fd(d){return d.slice(0,10)}function today(){return new Date().toISOString().slice(0,10)}function month(){const n=new Date();return n.getFullYear()+'-'+String(n.getMonth()+1).padStart(2,'0')}
+function j(kg){return(kg*2).toFixed(1)} // kg → 斤 for display
+function jr(jin){return parseFloat((jin/2).toFixed(2))} // 斤 → kg for storage
+function toast(m){const t=$('#toast');t.textContent=m;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),1800)}
 
 // ==================== Render ====================
 async function render(){
-  const app=$('#app'),fab=$('#fab');
-  fab.classList.add('hidden');
-  if(page==='home')await renderHome(app,fab);
-  else if(page==='ledger')await renderLedger(app,fab);
-  else if(page==='weight')await renderWeight(app,fab);
-  else if(page==='car')await renderCar(app,fab);
-  else if(page==='settings')await renderSettings(app,fab);
-  else if(page==='deepseek')await renderDeepSeek(app,fab);
+  const app=$('#app');
+  if(page==='home')await renderHome(app);
+  else if(page==='weight')await renderWeight(app);
+  else if(page==='deepseek')await renderDeepSeek(app);
+  else if(page==='settings')await renderSettings(app);
 }
 
-// ==================== HOME (Dashboard) ====================
-function renderInsAlerts(){
-  const cars=getCars().filter(c=>c.insuranceExpiry);
-  if(!cars.length)return'';
-  const alerts=cars.filter(c=>{const d=(new Date(c.insuranceExpiry)-new Date())/86400000;return d<30});
-  if(!alerts.length)return'';
-  return'<div class="widget" style="background:#fff8e1"><div class="widget-title">⚠️ 保险提醒</div>'+alerts.map(c=>{const d=Math.ceil((new Date(c.insuranceExpiry)-new Date())/86400000);return'<div style="font-size:12px;color:'+(d<=0?'var(--danger)':'var(--warning)')+';padding:2px 0">'+c.brand+' '+c.model+' · '+c.insuranceExpiry+daysUntil(c.insuranceExpiry)+'</div>'}).join('')+'</div>';
-}
-async function renderHome(app,fab){
-  const m=month();
-  const [ledgerR,weightR,carR]=await Promise.all([dbAll('ledger'),dbAll('weight'),dbAll('car')]);
-  const mRecs=ledgerR.filter(r=>r.date.startsWith(m));
-  const income=mRecs.filter(r=>r.type==='income'||r.type==='loan_in').reduce((s,r)=>s+r.amount,0);
-  const expense=mRecs.filter(r=>r.type==='expense'||r.type==='loan_out').reduce((s,r)=>s+r.amount,0);
-  const reimbSum=ledgerR.filter(r=>r.reimbursable&&!r.reimbursed).reduce((s,r)=>s+r.amount,0);
-  const latestWt=weightR.sort((a,b)=>a.date.localeCompare(b.date)).pop();
-  const goal=getWeightGoal(); // number or null
-  const info=getCarInfo();
-  const mCar=carR.filter(r=>r.date.startsWith(m)).reduce((s,r)=>s+(r.amount||0),0);
-
-  // Recent 8 records across all modules
-  const recent=[];
-  ledgerR.forEach(r=>recent.push({type:'ledger',date:r.date,data:r,sort:r.date+r.id}));
-  weightR.forEach(r=>recent.push({type:'weight',date:r.date,data:r,sort:r.date+r.id}));
-  carR.forEach(r=>recent.push({type:'car',date:r.date,data:r,sort:r.date+r.id}));
-  recent.sort((a,b)=>b.sort.localeCompare(a.sort));
-  const recent3=recent.slice(0,3);
+// ==================== HOME ====================
+async function renderHome(app){
+  const weightR=(await dbAll('weight')).sort((a,b)=>a.date.localeCompare(b.date));
+  const latest=weightR[weightR.length-1];
+  const pf=getProfile();
+  const goal=pf.targetWeight||null;
+  const initWt=pf.initWeight||(weightR[0]?weightR[0].weight:null);
+  const height=pf.height;
+  let bmi='',bl='';
+  if(latest&&height){bmi=(latest.weight/((height/100)**2)).toFixed(1);bl=bmiTag(bmi,height)}
+  const progress=initWt&&goal&&initWt!==goal?Math.max(0,Math.min(100,((latest?latest.weight:initWt)-initWt)/(goal-initWt)*100)):null;
+  const dsHistory=JSON.parse(localStorage.getItem('wb_dsHistory')||'[]');
+  const dsLast=dsHistory[0];
+  const recent3=weightR.slice().reverse().slice(0,3);
 
   app.innerHTML=`
     <div class="header"><h1>个人工作台</h1></div>
     <div class="main">
-      <div class="widget">
-        <div class="widget-title">📊 本月概览</div>
-        <div class="overview-row">
-          <div class="overview-card oc-income"><div class="oc-icon">💰</div><div class="oc-val">${fm(income)}</div><div class="oc-label">收入</div></div>
-          <div class="overview-card oc-expense"><div class="oc-icon">💸</div><div class="oc-val">${fm(expense)}</div><div class="oc-label">支出</div></div>
-          <div class="overview-card oc-balance"><div class="oc-icon">💵</div><div class="oc-val">${fm(income-expense)}</div><div class="oc-label">结余</div></div>
-        </div>
-        ${reimbSum>0?`<div class="overview-card oc-reimb" style="margin-top:8px"><div class="oc-icon">🧾</div><div class="oc-val">${fm(reimbSum)}</div><div class="oc-label">待报销</div></div>`:''}
+      <div class="widget" style="text-align:center;cursor:pointer" onclick="go('weight')">
+        <div class="widget-title">⚖️ 当前体重</div>
+        <div style="font-size:44px;font-weight:700;color:var(--primary);margin:6px 0">${latest?j(latest.weight)+' 斤':'-- 斤'}</div>
+        <div style="font-size:12px;color:var(--text3)">${latest?'记录于 '+fd(latest.date):'暂无记录，点击开始'}</div>
+        ${bmi?`<div style="margin-top:6px;font-size:12px;color:var(--text2)">BMI ${bmi} · ${bl}${goal?' · 目标 '+j(goal)+' 斤':''}</div>`:(goal?`<div style="margin-top:6px;font-size:12px;color:var(--text2)">目标 ${j(goal)} 斤</div>`:'')}
+        ${progress!==null?`<div style="margin-top:10px;height:6px;background:#eee;border-radius:3px;overflow:hidden"><div style="height:100%;width:${progress.toFixed(1)}%;background:linear-gradient(90deg,var(--primary),#357ABD);border-radius:3px"></div></div><div style="font-size:11px;color:var(--text2);margin-top:4px">目标完成 ${progress.toFixed(1)}%</div>`:''}
       </div>
 
       <div class="widget">
         <div class="widget-title">⚡ 快捷入口</div>
-        <div class="mod-entry" onclick="go('ledger')">
-          <div class="me-icon me-ledger">💰</div><div class="me-info"><div class="me-name">记账</div><div class="me-desc">本月${ledgerR.filter(r=>r.date.startsWith(m)).length}笔记录</div></div><div class="me-arrow">›</div>
-        </div>
         <div class="mod-entry" onclick="go('weight')">
-          <div class="me-icon me-weight">⚖️</div><div class="me-info"><div class="me-name">体重</div><div class="me-desc">${latestWt?j(latestWt.weight)+' 斤'+(goal?' · 目标 '+j(goal)+' 斤':''):'暂无记录'}</div></div><div class="me-arrow">›</div>
-        </div>
-        <div class="mod-entry" onclick="go('car')">
-          <div class="me-icon me-car">🚗</div><div class="me-info"><div class="me-name">用车</div><div class="me-desc">${getCars().length}辆车 · ${carR.length}条记录 · 本月${fm(mCar)}</div></div><div class="me-arrow">›</div>
+          <div class="me-icon me-weight">⚖️</div><div class="me-info"><div class="me-name">体重</div><div class="me-desc">${latest?j(latest.weight)+' 斤'+(goal?' · 目标 '+j(goal)+' 斤':''):'记录体重、BMI、趋势'}</div></div><div class="me-arrow">›</div>
         </div>
         <div class="mod-entry" onclick="go('deepseek')">
-          <div class="me-icon" style="background:rgba(52,152,219,.1)">🤖</div><div class="me-info"><div class="me-name">DeepSeek</div><div class="me-desc">API 余额查询</div></div><div class="me-arrow">›</div>
+          <div class="me-icon" style="background:rgba(52,152,219,.1)">🤖</div><div class="me-info"><div class="me-name">DeepSeek</div><div class="me-desc">${dsLast?'余额 ¥'+dsLast.total.toFixed(2):'API 余额查询'}</div></div><div class="me-arrow">›</div>
         </div>
       </div>
 
-      ${renderInsAlerts()}
-
       ${recent3.length>0?`
       <div class="widget">
-        <div class="widget-title">🕐 最近记录</div>
+        <div class="widget-title">🕐 最近体重</div>
         ${recent3.map(r=>{
-          if(r.type==='ledger'){
-            const d=r.data;const sign=(d.type==='income'||d.type==='loan_in')?'+':'-';
-            const cls=(d.type==='income'||d.type==='loan_in')?'income':'expense';
-            return`<div class="recent-item" onclick="go('ledger')">
-              <div class="ri-dot ${cls}"></div><div class="ri-info"><div class="ri-title">${d.category||''}</div><div class="ri-sub">${fd(d.date)} ${d.account||''}</div></div>
-              <div class="ri-amount" style="color:${cls==='income'?'var(--success)':'var(--danger)'}">${sign}${fm(d.amount)}</div></div>`;
-          }else if(r.type==='weight'){
-            return`<div class="recent-item" onclick="go('weight')">
-              <div class="ri-dot weight"></div><div class="ri-info"><div class="ri-title">体重记录</div><div class="ri-sub">${fd(r.data.date)}</div></div>
-              <div class="ri-amount" style="color:var(--primary)">${j(r.data.weight)} 斤</div></div>`;
-          }else{
-            const car=getCars().find(c=>c.id===r.data.carId);const ev=car?.fuelType==='electric';
-            return`<div class="recent-item" onclick="go('car')">
-              <div class="ri-dot car"></div><div class="ri-info"><div class="ri-title">${car?car.brand+' '+car.model+' ':''}${r.data.carType==='fuel'?(ev?'充电':'加油'):r.data.carType==='maintenance'?'保养':'其他用车'}</div><div class="ri-sub">${fd(r.data.date)}</div></div>
-              <div class="ri-amount" style="color:var(--danger)">-${fm(r.data.amount||0)}</div></div>`;
-          }
+          const idx=weightR.indexOf(r);const prev=weightR[idx-1];const diff=prev?(r.weight-prev.weight):null;
+          return`<div class="recent-item" onclick="go('weight')">
+            <div class="ri-dot weight"></div><div class="ri-info"><div class="ri-title">${j(r.weight)} 斤</div><div class="ri-sub">${fd(r.date)}</div></div>
+            <div class="ri-amount" style="color:${diff>0?'var(--danger)':diff<0?'var(--success)':'var(--text3)'}">${diff?(diff>0?'↑':'↓')+j(Math.abs(diff))+' 斤':''}</div></div>`;
         }).join('')}
       </div>`:''}
 
       <div class="mod-entry" onclick="go('settings')" style="margin-top:4px">
-        <div class="me-icon" style="background:rgba(149,165,166,.1)">⚙️</div><div class="me-info"><div class="me-name">设置</div><div class="me-desc">车辆信息 · 体重目标 · 数据管理</div></div><div class="me-arrow">›</div>
+        <div class="me-icon" style="background:rgba(149,165,166,.1)">⚙️</div><div class="me-info"><div class="me-name">设置</div><div class="me-desc">DeepSeek Key · 体重目标 · 数据管理</div></div><div class="me-arrow">›</div>
       </div>
     </div>
   `;
 }
 
-// ==================== LEDGER ====================
-let ledgerAcc=null;
-async function renderLedger(app,fab){
-  fab.classList.add('hidden');
-  const records=(await dbAll('ledger')).sort((a,b)=>b.date.localeCompare(a.date)||b.id-a.id);
-  const reimbRecs=records.filter(r=>r.reimbursable&&!r.reimbursed);
-  const reimbSum=reimbRecs.reduce((s,r)=>s+r.amount,0);
-  const loanOut=records.filter(r=>r.type==='loan_out').reduce((s,r)=>s+r.amount,0);
-  const loanIn=records.filter(r=>r.type==='loan_in').reduce((s,r)=>s+r.amount,0);
-
-  // 报销子页
-  if(ledgerSub==='reimb'){
-    fab.classList.remove('hidden');fab.onclick=()=>showReimbForm();
-    const disp=reimbRecs.sort((a,b)=>b.date.localeCompare(a.date)||b.id-a.id);
-    app.innerHTML=`<div class="header"><button class="back" onclick="ledgerSub='';render()">←</button><h1>报销</h1></div><div class="main">
-      <div class="summary-row"><div class="summary-card"><div class="sc-label">待报销</div><div class="sc-val" style="color:var(--warning)">${fm(reimbSum)}</div></div><div class="summary-card"><div class="sc-label">笔数</div><div class="sc-val sc-blue">${disp.length}</div></div></div>
-      ${disp.length===0?'<div class="empty"><div class="eicon">🧾</div><p>暂无待报销</p></div>':''}
-      ${disp.map(r=>`<div class="list-item" data-id="${r.id}"><div class="cat-dot" style="background:rgba(243,156,18,.1)">🧾</div><div class="linfo"><div class="ltitle">${r.category||''}<span class="tag tag-reimb">待报销</span></div><div class="lsub">${fd(r.date)} ${r.note||''}</div></div><div class="lamount la-out">-${fm(r.amount)}</div><button class="ldel" data-del="${r.id}">✕</button></div>`).join('')}
-    </div>`;bindDel();return;
-  }
-  // 借款子页
-  if(ledgerSub==='loan'){
-    fab.classList.remove('hidden');fab.onclick=()=>showLoanForm();
-    const disp=records.filter(r=>r.type==='loan_out'||r.type==='loan_in').sort((a,b)=>b.date.localeCompare(a.date)||b.id-a.id);
-    app.innerHTML=`<div class="header"><button class="back" onclick="ledgerSub='';render()">←</button><h1>借款</h1></div><div class="main">
-      <div class="summary-row"><div class="summary-card"><div class="sc-label">借出</div><div class="sc-val sc-red">${fm(loanOut)}</div></div><div class="summary-card"><div class="sc-label">借入</div><div class="sc-val sc-green">${fm(loanIn)}</div></div></div>
-      ${disp.length===0?'<div class="empty"><div class="eicon">🤝</div><p>暂无借款记录</p></div>':''}
-      ${disp.map(r=>{const isIn=r.type==='loan_in';return`<div class="list-item" data-id="${r.id}"><div class="cat-dot" style="background:${isIn?'rgba(39,174,96,.1)':'rgba(231,76,60,.1)'}">🤝</div><div class="linfo"><div class="ltitle">${isIn?'借入':'借出'}<span class="tag tag-loan">${isIn?'借入':'借出'}</span></div><div class="lsub">${fd(r.date)} ${r.note||''}</div></div><div class="lamount ${isIn?'la-in':'la-out'}">${isIn?'+':'-'}${fm(r.amount)}</div><button class="ldel" data-del="${r.id}">✕</button></div>`}).join('')}
-    </div>`;bindDel();return;
-  }
-
-  // 主面板
-  app.innerHTML=`
-    <div class="header"><button class="back" onclick="go('home')">←</button><h1>记账</h1></div>
-    <div class="main">
-      <div class="widget">
-        <div class="widget-title">📊 数据面板</div>
-        <div class="overview-row">
-          <div class="overview-card" style="background:linear-gradient(135deg,#F39C12,#E67E22)"><div class="oc-icon">🧾</div><div class="oc-val">${fm(reimbSum)}</div><div class="oc-label">待报销</div></div>
-          <div class="overview-card oc-expense"><div class="oc-icon">📤</div><div class="oc-val">${fm(loanOut)}</div><div class="oc-label">借出</div></div>
-          <div class="overview-card oc-income"><div class="oc-icon">📥</div><div class="oc-val">${fm(loanIn)}</div><div class="oc-label">借入</div></div>
-        </div>
-      </div>
-
-      <div style="display:flex;gap:10px;margin-bottom:12px">
-        <div style="flex:1;background:linear-gradient(135deg,rgba(243,156,18,.1),rgba(243,156,18,.05));border:2px solid rgba(243,156,18,.2);border-radius:14px;padding:20px 16px;text-align:center;cursor:pointer" onclick="ledgerSub='reimb';render()">
-          <div style="font-size:32px">🧾</div><div style="font-size:16px;font-weight:700;margin:4px 0">报销</div><div style="font-size:12px;color:var(--warning);font-weight:600">${fm(reimbSum)}</div><div style="font-size:10px;color:var(--text3)">${reimbRecs.length}笔待处理</div>
-        </div>
-        <div style="flex:1;background:linear-gradient(135deg,rgba(155,89,182,.1),rgba(155,89,182,.05));border:2px solid rgba(155,89,182,.2);border-radius:14px;padding:20px 16px;text-align:center;cursor:pointer" onclick="ledgerSub='loan';render()">
-          <div style="font-size:32px">🤝</div><div style="font-size:16px;font-weight:700;margin:4px 0">借款</div><div style="font-size:12px;font-weight:600"><span style="color:var(--danger)">出${fm(loanOut)}</span> · <span style="color:var(--success)">入${fm(loanIn)}</span></div><div style="font-size:10px;color:var(--text3)">${records.filter(r=>r.type==='loan_out'||r.type==='loan_in').length}笔记录</div>
-        </div>
-      </div>
-    </div>`;
-}
-function showReimbForm(){showLedgerForm(null,{reimb:true})}
-function showLoanForm(){showLedgerForm(null,{loan:true})}
-
-function showLedgerForm(preAmt,opts={}){
-  const title=opts.reimb?'报销':opts.loan?'借款':'记一笔';
-  const forceExpense=opts.reimb;
-  const forceLoan=opts.loan;
-  showModal(title,`
-    ${!forceExpense&&!forceLoan?`<div class="fg"><div class="type-tgl" id="typeTgl"><button class="inc-act" data-t="income">收入</button><button data-t="expense">支出</button></div></div>`:''}
-    <div class="fg"><label>金额</label><input type="number" id="fAmt" placeholder="0.00" step="0.01" min="0" value="${preAmt||''}"></div>
-    <div class="fg"><label>${opts.loan?'对方':'分类'}</label><div class="cat-grid" id="catGrid"></div><div style="margin-top:6px"><input type="text" id="newCat" placeholder="+ 新建${opts.loan?'对方':'分类'}" style="width:100%;padding:6px 10px;border:1px dashed #ccc;border-radius:8px;font-size:12px;outline:none"></div></div>
-    ${opts.loan?`<div class="chk-row"><label><input type="checkbox" id="fLoanDir" checked> 借出</label></div>`:''}
-    <div class="fg"><label>日期</label><input type="date" id="fDate" value="${today()}"></div>
-    <div class="fg"><label>备注</label><input type="text" id="fNote" placeholder="可选"></div>
-  `,async()=>{
-    const amt=parseFloat($('#fAmt').value);const cat=document.querySelector('#catGrid .sel')?.dataset.cat;
-    if(!amt||amt<=0){toast('请输入金额');throw new Error()}if(!cat){toast(opts.loan?'请输入对方名称':'请选择分类');throw new Error()}
-    let type='expense';if(!forceExpense&&!forceLoan){const tgl=document.querySelector('#typeTgl .inc-act,#typeTgl .exp-act');type=tgl.classList.contains('inc-act')?'income':'expense'}
-    if(forceLoan){const dir=$('#fLoanDir')?.checked!==false;type=dir?'loan_out':'loan_in'}
-    const extra={};if(forceLoan)extra.loan=true;
-    await dbAdd('ledger',{type,amount:amt,category:cat,date:$('#fDate').value,note:$('#fNote').value.trim(),reimbursable:!!opts.reimb,reimbursed:false,...extra,createdAt:Date.now()});
-    render();
-  });
-  if(!forceExpense&&!forceLoan){
-    const tgl=$('#typeTgl');tgl.querySelectorAll('button').forEach(b=>b.onclick=()=>{tgl.querySelectorAll('button').forEach(x=>x.className='');b.className=b.dataset.t==='income'?'inc-act':'exp-act';renderCats(b.dataset.t)});
-    renderCats('income');
-    function renderCats(t){const g=$('#catGrid');const cats=t==='income'?getIncCats():getExpCats();g.innerHTML=cats.map((c,i)=>`<span class="cat-chip${i===0?' sel':''}" data-cat="${c}">${c}</span>`).join('');g.querySelectorAll('.cat-chip').forEach(c=>c.onclick=()=>{g.querySelectorAll('.cat-chip').forEach(x=>x.classList.remove('sel'));c.classList.add('sel')})}
-  }else if(opts.loan){
-    const g=$('#catGrid');g.innerHTML=`<span class="cat-chip sel" data-cat="🤝 借款">🤝 借款</span>`;
-  }else{
-    const g=$('#catGrid');renderCatsR('expense');
-    function renderCatsR(t){const cats=getExpCats();g.innerHTML=cats.map((c,i)=>`<span class="cat-chip${i===0?' sel':''}" data-cat="${c}">${c}</span>`).join('');g.querySelectorAll('.cat-chip').forEach(c=>c.onclick=()=>{g.querySelectorAll('.cat-chip').forEach(x=>x.classList.remove('sel'));c.classList.add('sel')})}
-  }
-  $('#newCat').addEventListener('keydown',e=>{if(e.key==='Enter'){const v=$('#newCat').value.trim();if(!v)return;if(opts.loan){const g=$('#catGrid');g.innerHTML=`<span class="cat-chip sel" data-cat="🤝 ${v}">🤝 ${v}</span>`;$('#newCat').value=''}else{const t=forceExpense?'expense':(document.querySelector('#typeTgl .inc-act,#typeTgl .exp-act')?.classList.contains('inc-act')?'income':'expense');const cats=t==='income'?getIncCats():getExpCats();if(!cats.includes(v)){cats.push(v);t==='income'?setIncCats(cats):setExpCats(cats)}renderCats(t);$('#newCat').value=''}}});
-}
-
-function addAccPrompt(){
-  const icon=prompt('账户图标 (emoji)：','💰')||'💰';
-  const name=prompt('账户名称：');if(!name||!name.trim())return;
-  const a=getAccounts();const maxOrder=Math.max(0,...a.map(x=>x.order||0));
-  a.push({name:(icon+' '+name.trim()),icon:icon.trim(),name:name.trim(),order:maxOrder+1});
-  setAccounts(a);render();
-}
-
-function enableDragReorder(){
-  const cards=document.querySelectorAll('.acc-card');let dragIdx=-1,targetIdx=-1;
-  cards.forEach((card,i)=>{
-    card.addEventListener('dragstart',e=>{dragIdx=i;e.dataTransfer.effectAllowed='move';card.style.opacity='0.5'});
-    card.addEventListener('dragend',e=>{card.style.opacity='1';if(dragIdx>=0&&targetIdx>=0&&dragIdx!==targetIdx){const a=getAccounts();const[moved]=a.splice(dragIdx,1);a.splice(targetIdx,0,moved);a.forEach((x,j)=>x.order=j);setAccounts(a);render()}dragIdx=targetIdx=-1});
-    card.addEventListener('dragover',e=>{e.preventDefault();targetIdx=i});
-  });
-}
-function delAcc(name){
-  showConfirm(`确定删除账户「${accRaw({name})}」？`,()=>{const a=getAccounts().filter(x=>accName(x)!==name);setAccounts(a);if(ledgerAcc===name)ledgerAcc=null;render();});
-}
-
-function showLedgerForm(preAmt,opts={}){
-  const preAcc=ledgerAcc;
-  const accts=getAccounts();const preIdx=preAcc?accts.findIndex(a=>accName(a)===preAcc):-1;
-  const laRaw=preAcc?(accts.find(a=>accName(a)===preAcc)||{}).name||preAcc:'';
-  showModal(preAcc?`记一笔 · ${accRaw({name:laRaw})}`:'记一笔',`
-    <div class="fg"><div class="type-tgl" id="typeTgl"><button class="inc-act" data-t="income">收入</button><button data-t="expense">支出</button></div></div>
-    <div class="fg"><label>金额</label><input type="number" id="fAmt" placeholder="0.00" step="0.01" min="0" value="${preAmt||''}"></div>
-    <div class="fg"><label>分类</label><div class="cat-grid" id="catGrid"></div><div style="margin-top:6px"><input type="text" id="newCat" placeholder="+ 新建分类" style="width:100%;padding:6px 10px;border:1px dashed #ccc;border-radius:8px;font-size:12px;outline:none"></div></div>
-    ${preAcc?`<div class="fg"><label>账户</label><div style="padding:10px 12px;background:#f0f6ff;border-radius:10px;font-size:14px;color:var(--primary);font-weight:500">${laRaw}<input type="hidden" id="fAccVal" value="${preAcc}"></div></div>`:`<div class="fg"><label>账户</label><div class="cat-grid" id="accGrid"></div><div style="margin-top:6px"><input type="text" id="newAcc" placeholder="+ 新建账户" style="width:100%;padding:6px 10px;border:1px dashed #ccc;border-radius:8px;font-size:12px;outline:none"></div></div>`}
-    <div class="chk-row"><label><input type="checkbox" id="fReimb" ${opts.reimb?'checked':''}> 可报销</label><label><input type="checkbox" id="fLoan"> 借钱</label><label><input type="checkbox" id="fInst" ${opts.inst?'checked':''}> 分期</label></div>
-    <div id="extraFields"></div>
-    <div class="fg"><label>日期</label><input type="date" id="fDate" value="${today()}"></div>
-    <div class="fg"><label>备注</label><input type="text" id="fNote" placeholder="可选"></div>
-  `,async()=>{
-    const tgl=document.querySelector('#typeTgl .inc-act,#typeTgl .exp-act');const isIncome=tgl.classList.contains('inc-act');
-    const amt=parseFloat($('#fAmt').value);const cat=document.querySelector('#catGrid .sel')?.dataset.cat;
-    const acc=preAcc?$('#fAccVal').value:document.querySelector('#accGrid .sel')?.dataset.acc;
-    if(!amt||amt<=0){toast('请输入金额');throw new Error()}if(!cat){toast('请选择分类');throw new Error()}
-    const reimb=$('#fReimb').checked,loan=$('#fLoan').checked,inst=$('#fInst').checked;
-    let type=isIncome?'income':'expense';const extra={};
-    if(loan){type=isIncome?'loan_in':'loan_out';extra.loan=true}
-    if(inst){extra.installment=true;extra.installTotal=parseInt($('#fInstTotal')?.value)||0;extra.installCurrent=parseInt($('#fInstCurrent')?.value)||1}
-    await dbAdd('ledger',{type,amount:amt,category:cat,date:$('#fDate').value,note:$('#fNote').value.trim(),account:acc,reimbursable:reimb,reimbursed:false,...extra,createdAt:Date.now()});
-    render();
-  });
-  const tgl=$('#typeTgl');tgl.querySelectorAll('button').forEach(b=>b.onclick=()=>{tgl.querySelectorAll('button').forEach(x=>x.className='');b.className=b.dataset.t==='income'?'inc-act':'exp-act';renderCats(b.dataset.t)});
-  renderCats('income');
-  if(!preAcc)renderAccs();
-  function renderCats(t){const g=$('#catGrid');const cats=t==='income'?getIncCats():getExpCats();g.innerHTML=cats.map((c,i)=>`<span class="cat-chip${i===0?' sel':''}" data-cat="${c}">${c}</span>`).join('');g.querySelectorAll('.cat-chip').forEach(c=>c.onclick=()=>{g.querySelectorAll('.cat-chip').forEach(x=>x.classList.remove('sel'));c.classList.add('sel')})}
-  function renderAccs(){const g=$('#accGrid');const accts=getAccounts();g.innerHTML=accts.map((a,i)=>`<span class="cat-chip${preIdx===i||(preIdx<0&&i===0)?' sel':''}" data-acc="${accName(a)}">${accName(a)}</span>`).join('');g.querySelectorAll('.cat-chip').forEach(c=>c.onclick=()=>{g.querySelectorAll('.cat-chip').forEach(x=>x.classList.remove('sel'));c.classList.add('sel')})}
-  $('#newCat').addEventListener('keydown',e=>{if(e.key==='Enter'){const v=$('#newCat').value.trim();if(v){const t=document.querySelector('#typeTgl .inc-act,#typeTgl .exp-act');const isInc=t.classList.contains('inc-act');const cats=isInc?getIncCats():getExpCats();if(!cats.includes(v)){cats.push(v);isInc?setIncCats(cats):setExpCats(cats)}renderCats(isInc?'income':'expense')}$('#newCat').value=''}});
-  if(!preAcc){$('#newAcc').addEventListener('keydown',e=>{if(e.key==='Enter'){const v=$('#newAcc').value.trim();if(v){const accts=getAccounts();if(!accts.find(a=>accName(a)===v)){const maxOrd=Math.max(0,...accts.map(x=>x.order||0));accts.push({name:v,icon:v.slice(0,2)||'📦',order:maxOrd+1});setAccounts(accts)}renderAccs()}$('#newAcc').value=''}});}
-  function upd(){const ef=$('#extraFields');let h='';if($('#fInst').checked)h+=`<div class="fg-row"><div class="fg"><label>总期数</label><input type="number" id="fInstTotal" placeholder="12" min="1"></div><div class="fg"><label>第几期</label><input type="number" id="fInstCurrent" placeholder="1" min="1"></div></div>`;if($('#fLoan').checked)h+=`<div class="fg"><label>对方/用途</label><input type="text" id="fLoanNote" placeholder="例如：借给张三"></div>`;ef.innerHTML=h}
-  ['#fReimb','#fLoan','#fInst'].forEach(s=>{const el=document.querySelector(s);if(el)el.onchange=upd});
-  if(opts.inst||opts.reimb)upd();
-}
-
-function showReimbForm(){showLedgerForm(null,{reimb:true})}
-function showInstForm(){showLedgerForm(null,{inst:true})}
-
 // ==================== WEIGHT ====================
-async function renderWeight(app,fab){
-  fab.classList.add('hidden'); // weight uses inline recording instead
+async function renderWeight(app){
   const records=(await dbAll('weight')).sort((a,b)=>a.date.localeCompare(b.date));
   const latest=records[records.length-1];const pf=getProfile();
   const height=pf.height;let bmi='',bl='';
@@ -680,7 +342,7 @@ async function renderWeight(app,fab){
         <input type="number" id="quickWt" placeholder="${latest?'上次 '+j(latest.weight)+' 斤 — 输入今日体重':''}" step="0.1" min="40" max="600" style="flex:1;border:none;outline:none;font-size:15px;font-family:inherit;background:transparent">
         <button class="add-btn" id="quickWtBtn">记录</button>
       </div>
-      ${pf.targetWeight?`<div class="summary-row"><div class="summary-card"><div class="sc-label">距目标</div><div class="sc-val ${latest&&latest.weight>pf.targetWeight?'sc-red':'sc-blue'}">${latest?j(Math.abs(latest.weight-pf.targetWeight)):'--'} 斤</div><div class="ssub" style="font-size:10px;color:${latest&&latest.weight>pf.targetWeight?'var(--danger)':'var(--success)'}">${latest&&latest.weight>pf.targetWeight?'还需减 ':'还需增 '}${j(Math.abs(latest.weight-pf.targetWeight))} 斤</div></div><div class="summary-card"><div class="sc-label">已完成</div><div class="sc-val sc-blue">${progress!==null?progress.toFixed(1):'--'}%</div></div></div>`:''}
+      ${pf.targetWeight?`<div class="summary-row"><div class="summary-card"><div class="sc-label">距目标</div><div class="sc-val ${latest&&latest.weight>pf.targetWeight?'sc-red':'sc-blue'}">${latest?j(Math.abs(latest.weight-pf.targetWeight)):'--'} 斤</div><div style="font-size:10px;color:${latest&&latest.weight>pf.targetWeight?'var(--danger)':'var(--success)'}">${latest&&latest.weight>pf.targetWeight?'还需减 ':'还需增 '}${latest?j(Math.abs(latest.weight-pf.targetWeight)):'--'} 斤</div></div><div class="summary-card"><div class="sc-label">已完成</div><div class="sc-val sc-blue">${progress!==null?progress.toFixed(1):'--'}%</div></div></div>`:''}
       <div class="summary-row"><div class="summary-card"><div class="sc-label">7日均值</div><div class="sc-val sc-blue">${avg7?j(avg7):'--'} 斤</div></div><div class="summary-card"><div class="sc-label">30日均值</div><div class="sc-val sc-blue">${avg30?j(avg30):'--'} 斤</div></div><div class="summary-card"><div class="sc-label">本月变化</div><div class="sc-val ${mChange>0?'sc-red':'sc-blue'}">${mChange!==null?(mChange>=0?'+':'-')+j(Math.abs(mChange)):'--'} 斤</div></div></div>
       ${weeks.length>0?`<div class="summary-row">${weeks.map(w=>`<div class="summary-card"><div class="sc-label">${w.label}</div><div class="sc-val" style="font-size:13px">${w.avg}</div><div class="sc-label">${w.diff}</div></div>`).join('')}</div>`:''}
       ${records.length>=2?`<div class="chart-box"><canvas id="wtChart"></canvas></div>`:''}
@@ -706,7 +368,7 @@ async function renderWeight(app,fab){
   $('#quickWt')?.addEventListener('keydown',e=>{if(e.key==='Enter')$('#quickWtBtn')?.click()});
   if(records.length>=2)setTimeout(()=>drawWtChart(records,parseFloat(height)),100);if(records.length>=3)setTimeout(()=>drawSmooth(records),150);
 }
-function bmiTag(b,h){const v=parseFloat(b);if(h>0){const ideal=18.5;if(v<ideal)return'偏瘦';if(v<24)return'正常';if(v<28)return'偏胖';return'肥胖'}if(v<18.5)return'偏瘦';if(v<24)return'正常';if(v<28)return'偏胖';return'肥胖'}
+function bmiTag(b,h){const v=parseFloat(b);if(h>0){if(v<18.5)return'偏瘦';if(v<24)return'正常';if(v<28)return'偏胖';return'肥胖'}if(v<18.5)return'偏瘦';if(v<24)return'正常';if(v<28)return'偏胖';return'肥胖'}
 function calcBMR(wt,pf){if(!pf.age||!pf.height)return null;const h=pf.height;return pf.gender==='male'?Math.round(66+13.7*wt+5*h-6.8*pf.age):Math.round(655+9.6*wt+1.8*h-4.7*pf.age)}
 function avgL(r,n){const s=r.slice(-n);return parseFloat((s.reduce((a,r)=>a+r.weight,0)/s.length).toFixed(1))}
 function cW(records){if(records.length<7)return[];const w=[],n=new Date();for(let i=3;i>=0;i--){const e=new Date(n);e.setDate(e.getDate()-i*7);const s=new Date(e);s.setDate(s.getDate()-6);const wk=records.filter(r=>r.date>=s.toISOString().slice(0,10)&&r.date<=e.toISOString().slice(0,10));if(!wk.length)continue;const a=parseFloat((wk.reduce((s,r)=>s+r.weight,0)/wk.length).toFixed(1));const p=w[w.length-1];const d=p!==undefined?(a-p._raw):null;w.push({label:`W${4-i}`,avg:j(a)+'斤',diff:d!==null?(d>=0?'+':'')+j(Math.abs(d))+'斤':'',_raw:a})}return w}
@@ -755,103 +417,10 @@ function showWeightForm(){
   });
 }
 
-// ==================== CAR ====================
-async function renderCar(app,fab){
-  const cars=getCars();
-  // Car list view (no car selected)
-  if(!selectedCarId){
-    fab.classList.add('hidden');
-    const allRecs=(await dbAll('car')).sort((a,b)=>b.date.localeCompare(a.date)||b.id-a.id);
-    app.innerHTML=`
-      <div class="header"><button class="back" onclick="go('home')">←</button><h1>用车</h1></div>
-      <div class="main">
-        <div class="acc-section">
-          <div class="acc-label">🚗 我的车辆 · 点击进入记录</div>
-          ${cars.map(c=>{
-            const recs=allRecs.filter(r=>r.carId===c.id);const isEV=c.fuelType==='electric';
-            const mExp=recs.filter(r=>r.date.startsWith(month())).reduce((s,r)=>s+(r.amount||0),0);
-            return`<div class="acc-card" onclick="selectedCarId='${c.id}';render()" draggable="true">
-              <div class="ac-icon" style="background:rgba(74,144,217,.1)">${isEV?'⚡':'⛽'}</div>
-              <div class="ac-info"><div class="ac-name">${c.brand} ${c.model}</div><div class="ac-meta">${c.plate} · ${c.currentMileage}km · ${isEV?'电动':'燃油'} · ${recs.length}条</div></div>
-              <div class="ac-bal" style="color:var(--danger)">${fm(mExp)}</div><div class="ac-arrow">›</div>
-            </div>`;
-          }).join('')}
-          <div class="acc-add-card" onclick="showCarInfoForm()">+ 添加车辆</div>
-        </div>
-        ${cars.length>0?`<div class="section-title">全部记录 (${allRecs.length}条)</div>
-        ${allRecs.slice(0,20).map(r=>{const c=cars.find(x=>x.id===r.carId);const ev=c?.fuelType==='electric';const icon=r.carType==='fuel'?(ev?'⚡':'⛽'):r.carType==='maintenance'?'🔧':'📦';return`<div class="list-item" data-id="${r.id}"><div class="cat-dot" style="background:rgba(243,156,18,.1)">${icon}</div><div class="linfo"><div class="ltitle">${c?c.brand+' '+c.model+' ':''}${r.carType==='fuel'?(ev?'充电':'加油'):r.carType==='maintenance'?'保养':r.note||'其他'}</div><div class="lsub">${fd(r.date)} ${r.mileage?r.mileage+'km ':''}${r.liters?(ev?r.liters+'kWh ':r.liters+'L '):''}</div></div><div class="lamount la-out">-${fm(r.amount||0)}</div><button class="ldel" data-del="${r.id}">✕</button></div>`}).join('')}`:''}
-      </div>`;
-    bindDel();return;
-  }
-  // Single car view
-  const info=getCarInfo();if(!info){selectedCarId=null;render();return}
-  fab.classList.remove('hidden');fab.onclick=()=>showCarForm();
-  const isEV=info.fuelType==='electric';
-  const records=(await dbAll('car')).filter(r=>r.carId===selectedCarId).sort((a,b)=>b.date.localeCompare(a.date)||b.id-a.id);
-  const filtered=carTab==='all'?records:records.filter(r=>r.carType===carTab);
-  const maintAlert=records.filter(r=>r.carType==='maintenance'&&r.nextDate).sort((a,b)=>b.date.localeCompare(a.date))[0];
-  const maintWarn=maintAlert&&maintAlert.nextDate&&maintAlert.nextDate<=today();
-  const fuelRecs=records.filter(r=>r.carType==='fuel').sort((a,b)=>a.date.localeCompare(b.date));
-  let fuelStat='',fuelChart=false;
-  if(fuelRecs.length>=2){let tKm=0,tU=0;for(let i=1;i<fuelRecs.length;i++){tKm+=fuelRecs[i].mileage-fuelRecs[i-1].mileage;tU+=fuelRecs[i].liters||0}const avg=tKm>0?(tU/tKm*100).toFixed(1):'--';fuelStat=`<div class="summary-card"><div class="sc-label">百公里${isEV?'电耗':'油耗'}</div><div class="sc-val sc-blue">${avg} ${isEV?'kWh':'L'}</div></div>`;fuelChart=true}
-  const totalExp=filtered.reduce((s,r)=>s+(r.amount||0),0);const mExp=filtered.filter(r=>r.date.startsWith(month())).reduce((s,r)=>s+(r.amount||0),0);
-
-  app.innerHTML=`
-    <div class="header"><button class="back" onclick="selectedCarId=null;render()">←</button><h1>${info.brand} ${info.model}</h1></div>
-    <div class="main">
-      <div class="car-info"><div class="ci-row"><span class="ci-l">车牌</span><span>${info.plate}</span></div><div class="ci-row"><span class="ci-l">购车</span><span>${info.buyDate}</span></div><div class="ci-row"><span class="ci-l">里程</span><span>${info.currentMileage} km</span></div><div class="ci-row"><span class="ci-l">类型</span><span>${isEV?'⚡电动':'⛽燃油'}</span></div>${info.insuranceExpiry?insRow(info.insuranceExpiry):''}<span class="ci-edit" id="editCarInfo">✎ 编辑</span><span class="ci-edit" id="delCar" style="color:var(--danger);margin-left:12px">删除</span></div>
-      ${maintWarn?`<div class="alert-card"><div class="al-icon">⚠️</div><div class="al-text">${maintAlert.note||'保养'} · ${maintAlert.nextDate}<span class="alert-badge">到期</span></div></div>`:''}
-      <div class="summary-row"><div class="summary-card"><div class="sc-label">本月费用</div><div class="sc-val sc-red">${fm(mExp)}</div></div><div class="summary-card"><div class="sc-label">记录数</div><div class="sc-val sc-blue">${filtered.length}</div></div><div class="summary-card"><div class="sc-label">总计</div><div class="sc-val sc-red">${fm(totalExp)}</div></div>${fuelStat}</div>
-      ${fuelChart?`<div class="chart-box"><canvas id="fuelChart"></canvas></div>`:''}
-      <div class="subtabs">${CAR_SUBTABS.map(t=>`<div class="subtab${t.id===carTab?' act':''}" data-tab="${t.id}">${t.id==='fuel'?(isEV?'⚡ 充电':'⛽ 加油'):t.label}</div>`).join('')}</div>
-      <div class="section-title">记录列表</div>
-      ${filtered.length===0?'<div class="empty"><div class="eicon">🚗</div><p>暂无记录</p></div>':''}
-      ${filtered.map(r=>{const icon=r.carType==='fuel'?(isEV?'⚡':'⛽'):r.carType==='maintenance'?'🔧':'📦';return`<div class="list-item" data-id="${r.id}"><div class="cat-dot" style="background:rgba(74,144,217,.1)">${icon}</div><div class="linfo"><div class="ltitle">${r.carType==='fuel'?(isEV?'充电':'加油'):r.carType==='maintenance'?'保养':r.note||'其他'}${r.nextDate?` <span style="font-size:10px;color:var(--text3)">下次:${r.nextDate}</span>`:''}</div><div class="lsub">${fd(r.date)} ${r.mileage?r.mileage+'km ':''}${r.liters?(isEV?r.liters+'kWh ':r.liters+'L '):''}</div></div><div class="lamount la-out">-${fm(r.amount||0)}</div><button class="ldel" data-del="${r.id}">✕</button></div>`}).join('')}
-    </div>`;
-  bindDel();app.querySelectorAll('.subtab').forEach(el=>el.onclick=()=>goCar(el.dataset.tab));
-  $('#editCarInfo')?.addEventListener('click',showCarInfoForm);
-  $('#delCar')?.addEventListener('click',()=>showConfirm(`删除${info.brand} ${info.model}？`,()=>{setCars(getCars().filter(c=>c.id!==selectedCarId));selectedCarId=null;render()}));
-  if(fuelChart)setTimeout(()=>drawFuelChart(fuelRecs,isEV),100);
-}
-function drawFuelChart(r,ev){const c=$('#fuelChart');if(!c)return;const l=r.slice(-10);if(l.length<2)return;const d=[];for(let i=1;i<l.length;i++){const k=l[i].mileage-l[i-1].mileage,lt=l[i].liters||0;d.push({label:fd(l[i].date).slice(5),val:k>0?(lt/k*100).toFixed(1):0})}const ctx=c.getContext('2d');const dpr=window.devicePixelRatio||1;const W=c.parentElement.clientWidth-28,H=160;c.width=W*dpr;c.height=H*dpr;c.style.width=W+'px';c.style.height=H+'px';ctx.scale(dpr,dpr);const pad={t:16,r:12,b:28,l:36},pw=W-pad.l-pad.r,ph=H-pad.t-pad.b;const mx=Math.max(...d.map(x=>parseFloat(x.val)))+2,mn=Math.max(0,Math.min(...d.map(x=>parseFloat(x.val)))-2);for(let i=0;i<=4;i++){const v=mn+(mx-mn)*i/4,y=pad.t+ph*(1-i/4);ctx.strokeStyle='#eee';ctx.beginPath();ctx.moveTo(pad.l,y);ctx.lineTo(W-pad.r,y);ctx.stroke();ctx.fillStyle='#999';ctx.font='8px sans-serif';ctx.textAlign='right';ctx.fillText(v.toFixed(1),pad.l-3,y+3)}ctx.strokeStyle='#F39C12';ctx.lineWidth=2.5;ctx.lineJoin='round';ctx.beginPath();d.forEach((p,i)=>{const x=pad.l+(i/(d.length-1))*pw,y=pad.t+ph-((parseFloat(p.val)-mn)/(mx-mn))*ph;i===0?ctx.moveTo(x,y):ctx.lineTo(x,y)});ctx.stroke();d.forEach((p,i)=>{const x=pad.l+(i/(d.length-1))*pw,y=pad.t+ph-((parseFloat(p.val)-mn)/(mx-mn))*ph;ctx.fillStyle='#F39C12';ctx.beginPath();ctx.arc(x,y,3,0,Math.PI*2);ctx.fill();ctx.fillStyle='#666';ctx.font='8px sans-serif';ctx.textAlign='center';ctx.fillText(p.label,x,H-pad.b+14)});ctx.fillStyle='#666';ctx.font='9px sans-serif';ctx.textAlign='center';ctx.fillText(`百公里${ev?'电耗(kWh)':'油耗(L)'}趋势`,W/2,8);c.classList.add('ready');}
-
-function showCarInfoForm(editId){
-  const info=editId?(getCars().find(c=>c.id===editId)||{}):(selectedCarId?getCarInfo()||{}:{});
-  const isNew=!info.id;
-  showModal(isNew?'添加车辆':'编辑车辆信息',`
-    <div class="fg"><label>类型</label><select id="ciFuelType" style="width:100%;padding:10px;border:1px solid #e0e0e0;border-radius:10px;font-size:14px;background:#f8f9fa"><option value="gasoline" ${info.fuelType!=='electric'?'selected':''}>⛽ 燃油车</option><option value="electric" ${info.fuelType==='electric'?'selected':''}>⚡ 电动车</option></select></div>
-    <div class="fg"><label>品牌</label><input type="text" id="ciBrand" placeholder="例如：丰田" value="${info.brand||''}"></div>
-    <div class="fg"><label>型号</label><input type="text" id="ciModel" placeholder="例如：卡罗拉" value="${info.model||''}"></div>
-    <div class="fg"><label>车牌号</label><input type="text" id="ciPlate" placeholder="例如：京A12345" value="${info.plate||''}"></div>
-    <div class="fg"><label>购车日期</label><input type="date" id="ciBuyDate" value="${info.buyDate||''}"></div>
-    <div class="fg"><label>当前里程 (km)</label><input type="number" id="ciMileage" placeholder="50000" value="${info.currentMileage||''}"></div>
-    <div class="fg"><label>交强险到期日</label><input type="date" id="ciInsurance" value="${info.insuranceExpiry||''}"></div>
-  `,async()=>{const d={id:info.id||'car_'+Date.now(),brand:$('#ciBrand').value.trim(),model:$('#ciModel').value.trim(),plate:$('#ciPlate').value.trim(),buyDate:$('#ciBuyDate').value,currentMileage:parseInt($('#ciMileage').value)||0,fuelType:$('#ciFuelType').value,insuranceExpiry:$('#ciInsurance').value};if(!d.brand||!d.model){toast('请填写品牌和型号');throw new Error()}setCarInfo(d);if(isNew)selectedCarId=d.id;render()});
-}
-function showCarForm(){
-  const info=getCarInfo();const ev=info?.fuelType==='electric';const isF=carTab==='fuel',isM=carTab==='maintenance',tp=isF?'fuel':isM?'maintenance':'other';
-  showModal('添加用车记录',`
-    <div class="fg"><label>类型</label><select id="fCarType" style="width:100%;padding:10px;border:1px solid #e0e0e0;border-radius:10px;font-size:14px;background:#f8f9fa"><option value="fuel" ${tp==='fuel'?'selected':''}>${ev?'⚡ 充电':'⛽ 加油'}</option><option value="maintenance" ${tp==='maintenance'?'selected':''}>🔧 保养</option><option value="other" ${tp==='other'?'selected':''}>📦 其他</option></select></div>
-    ${isF?`<div class="fg"><label>当前里程 (km)</label><input type="number" id="fMileage" placeholder="50000"></div><div class="fg-row"><div class="fg"><label>${ev?'电价 (元/kWh)':'油价 (元/L)'}</label><input type="number" id="fPrice" placeholder="${ev?'0.80':'8.00'}" step="0.01"></div><div class="fg"><label>${ev?'充电量 (kWh)':'加油量 (L)'}</label><input type="number" id="fLiters" placeholder="${ev?'50':'45'}" step="0.01"></div></div><div class="fg"><label>金额</label><input type="number" id="fAmt" placeholder="自动计算" step="0.01"></div>`:isM?`<div class="fg"><label>保养项目</label><input type="text" id="fNote" placeholder="例如：更换机油"></div><div class="fg-row"><div class="fg"><label>费用</label><input type="number" id="fAmt" placeholder="0.00" step="0.01"></div><div class="fg"><label>下次里程</label><input type="number" id="fNextKm" placeholder="60000"></div></div><div class="fg"><label>下次保养日期</label><input type="date" id="fNextDate"></div>`:`<div class="fg"><label>类别</label><div class="cat-grid" id="ocg">${OTHER_CATS.map((c,i)=>`<span class="cat-chip${i===0?' sel':''}" data-cat="${c}">${c}</span>`).join('')}</div></div><div class="fg"><label>金额</label><input type="number" id="fAmt" placeholder="0.00" step="0.01"></div><div class="fg"><label>备注</label><input type="text" id="fNote" placeholder="可选"></div>`}
-    <div class="fg"><label>日期</label><input type="date" id="fDate" value="${today()}"></div>
-  `,async()=>{
-    const ct=$('#fCarType').value,date=$('#fDate').value,rec={carType:ct,amount:parseFloat($('#fAmt').value)||0,date,note:'',createdAt:Date.now()};
-    if(ct==='fuel'){rec.mileage=parseFloat($('#fMileage').value)||0;const pr=parseFloat($('#fPrice').value)||0,lt=parseFloat($('#fLiters').value)||0;if(pr&&lt)rec.amount=pr*lt;else if(rec.amount&&pr)rec.liters=rec.amount/pr;else if(rec.amount&&lt)rec.unitPrice=rec.amount/lt;rec.liters=lt||rec.liters||0;rec.unitPrice=pr||rec.unitPrice||0;if(rec.mileage){const i=getCarInfo();if(i){i.currentMileage=rec.mileage;setCarInfo(i)}}}
-    else if(ct==='maintenance'){rec.note=$('#fNote').value.trim();rec.nextMileage=parseInt($('#fNextKm').value)||0;rec.nextDate=$('#fNextDate').value||''}
-    else{const cat=document.querySelector('#ocg .sel')?.dataset.cat||OTHER_CATS[0];rec.note=cat+' '+($('#fNote')?.value?.trim()||'')}
-    rec.carId=selectedCarId;
-    if(!date){toast('请选择日期');throw new Error()}await dbAdd('car',rec);render();
-  });
-  if(isF){['#fPrice','#fLiters'].forEach(s=>{const el=document.querySelector(s);if(el)el.oninput=()=>{const p=parseFloat($('#fPrice').value)||0,l=parseFloat($('#fLiters').value)||0;if(p&&l)$('#fAmt').value=(p*l).toFixed(2)}});$('#fAmt').oninput=()=>{const a=parseFloat($('#fAmt').value)||0,p=parseFloat($('#fPrice').value)||0,l=parseFloat($('#fLiters').value)||0;if(a&&p&&!l)$('#fLiters').value=(a/p).toFixed(2);else if(a&&l&&!p)$('#fPrice').value=(a/l).toFixed(2)}}
-  if(!isF&&!isM){document.querySelectorAll('#ocg .cat-chip').forEach(c=>c.onclick=()=>{document.querySelectorAll('#ocg .cat-chip').forEach(x=>x.classList.remove('sel'));c.classList.add('sel')})}
-  $('#fCarType').onchange=function(){carTab=this.value;showCarForm()};
-}
-
 // ==================== DEEPSEEK ====================
-async function renderDeepSeek(app,fab){
-  fab.classList.add('hidden');
+async function renderDeepSeek(app){
   const key=localStorage.getItem('wb_dsKey')||'';
-  if(!key){app.innerHTML=`<div class="header"><button class="back" onclick="go('home')">←</button><h1>DeepSeek</h1></div><div class="main"><div class="widget" style="text-align:center"><p style="color:var(--text3);margin-bottom:10px">未设置 API Key</p><span class="ci-edit" onclick="go('settings')" style="font-size:14px">去设置页填写 →</span></div></div>`;return}
+  if(!key){app.innerHTML=`<div class="header"><button class="back" onclick="go('home')">←</button><h1>DeepSeek</h1></div><div class="main"><div class="widget" style="text-align:center"><p style="color:var(--text3);margin-bottom:10px">未设置 API Key</p><span class="si-btn" onclick="go('settings')" style="font-size:14px">去设置页填写 →</span></div></div>`;return}
   const history=JSON.parse(localStorage.getItem('wb_dsHistory')||'[]');
   const last=history[0];
   app.innerHTML=`
@@ -880,19 +449,13 @@ async function renderDeepSeek(app,fab){
 }
 
 // ==================== SETTINGS ====================
-async function renderSettings(app,fab){
-  const info=getCarInfo(),pf=getProfile();
-  const expCats=getExpCats(),incCats=getIncCats(),accts=getAccounts();
+async function renderSettings(app){
+  const pf=getProfile();
+  const dsKey=localStorage.getItem('wb_dsKey')||'';
   app.innerHTML=`
     <div class="header"><button class="back" onclick="go('home')">←</button><h1>设置</h1></div>
     <div class="main">
-      <div class="setting-group"><h4>🤖 DeepSeek</h4><div class="setting-item"><span class="si-label">API Key</span><span class="si-val">${(localStorage.getItem('wb_dsKey')||'').slice(0,10)}...</span><span class="si-btn" id="setDsKeyBtn">设置</span></div></div>
-      <div class="setting-group"><h4>💰 记账设置</h4>
-        <div class="setting-item"><span class="si-label">支出分类</span><span class="si-val">${expCats.length}个</span><span class="si-btn" id="mngExpBtn">管理</span></div>
-        <div class="setting-item"><span class="si-label">收入分类</span><span class="si-val">${incCats.length}个</span><span class="si-btn" id="mngIncBtn">管理</span></div>
-        <div class="setting-item"><span class="si-label">账户</span><span class="si-val">${accts.length}个</span><span class="si-btn" id="mngAccBtn">管理</span></div>
-      </div>
-      <div class="setting-group"><h4>🚗 车辆信息</h4>${getCars().map(c=>`<div class="setting-item"><span class="si-label">${c.brand} ${c.model}</span><span class="si-val">${c.plate}</span><span class="si-btn" onclick="selectedCarId='${c.id}';showCarInfoForm('${c.id}')">编辑</span></div>`).join('')}<div class="setting-item"><span class="si-label">+ 添加车辆</span><span class="si-btn" id="setCarBtn">添加</span></div></div>
+      <div class="setting-group"><h4>🤖 DeepSeek</h4><div class="setting-item"><span class="si-label">API Key</span><span class="si-val">${dsKey?dsKey.slice(0,10)+'...':'未设置'}</span><span class="si-btn" id="setDsKeyBtn">${dsKey?'修改':'设置'}</span></div></div>
       <div class="setting-group"><h4>⚖️ 体重设置</h4>
         <div class="setting-item"><span class="si-label">性别</span><span class="si-val">${pf.gender==='male'?'男 ♂':'女 ♀'}</span><span class="si-btn" id="setGenderBtn">切换</span></div>
         <div class="setting-item"><span class="si-label">年龄</span><span class="si-val">${pf.age||'--'} 岁</span><span class="si-btn" id="setAgeBtn">修改</span></div>
@@ -900,82 +463,37 @@ async function renderSettings(app,fab){
         <div class="setting-item"><span class="si-label">初始体重</span><span class="si-val">${pf.initWeight?j(pf.initWeight)+' 斤':'未设置'}</span><span class="si-btn" id="setIwBtn">${pf.initWeight?'修改':'设置'}</span></div>
         <div class="setting-item"><span class="si-label">目标体重</span><span class="si-val">${pf.targetWeight?j(pf.targetWeight)+' 斤':'未设置'}</span><span class="si-btn" id="setTwBtn">${pf.targetWeight?'修改':'设置'}</span></div>
       </div>
-      <div class="setting-group"><h4>📦 数据</h4><div class="setting-item"><span class="si-label">导出 JSON</span><span class="si-btn" id="expBtn">导出</span></div><div class="setting-item"><span class="si-label">导入 JSON</span><span class="si-btn" id="impBtn">导入</span></div><div class="setting-item"><span class="si-label">清除所有数据</span><span class="si-btn danger" id="clrBtn">清除</span></div></div>
+      <div class="setting-group"><h4>📦 数据</h4><div class="setting-item"><span class="si-label">导出 JSON</span><span class="si-btn" id="expBtn">导出</span></div><div class="setting-item"><span class="si-label">导入 JSON</span><span class="si-btn" id="impBtn">导入</span></div><div class="setting-item"><span class="si-label">恢复备份</span><span class="si-val" style="font-size:10px">从浏览器恢复</span><span class="si-btn" id="restoreBtn">恢复</span></div><div class="setting-item"><span class="si-label">清除所有数据</span><span class="si-btn danger" id="clrBtn">清除</span></div></div>
     </div>
   `;
   $('#setDsKeyBtn')?.addEventListener('click',()=>{const v=prompt('DeepSeek API Key (sk-...)',localStorage.getItem('wb_dsKey')||'');if(v&&v.trim()){localStorage.setItem('wb_dsKey',v.trim());render()}});
-  $('#setCarBtn')?.addEventListener('click',showCarInfoForm);
   $('#setGenderBtn')?.addEventListener('click',()=>{const p=getProfile();p.gender=p.gender==='male'?'female':'male';setProfile(p);render()});
   $('#setAgeBtn')?.addEventListener('click',()=>{const v=parseInt(prompt('年龄',pf.age||''));if(v&&v>0&&v<120){const p=getProfile();p.age=v;setProfile(p);render()}});
   $('#setHtBtn')?.addEventListener('click',()=>{const v=parseFloat(prompt('身高 (cm)',pf.height));if(v&&v>50&&v<250){const p=getProfile();p.height=v;setProfile(p);render()}});
   $('#setIwBtn')?.addEventListener('click',()=>{const v=parseFloat(prompt('初始体重 (斤)',pf.initWeight?j(pf.initWeight):''));if(v&&v>40&&v<600){const p=getProfile();p.initWeight=jr(v);setProfile(p);render()}});
   $('#setTwBtn')?.addEventListener('click',()=>{const v=parseFloat(prompt('目标体重 (斤)',pf.targetWeight?j(pf.targetWeight):''));if(v&&v>40&&v<600){const p=getProfile();p.targetWeight=jr(v);p.startDate=today();setProfile(p);render()}});
   $('#expBtn')?.addEventListener('click',expCSV);
-  $('#impBtn')?.addEventListener('click',()=>{const inp=document.createElement('input');inp.type='file';inp.accept='.json';inp.onchange=async()=>{const f=inp.files[0];if(!f)return;const text=await f.text();try{const data=JSON.parse(text);await Promise.all(['ledger','weight','car'].map(s=>dbAll(s).then(rs=>Promise.all(rs.map(r=>dbDel(s,r.id))))));for(const r of data.ledger||[])await dbAdd('ledger',r);for(const r of data.weight||[])await dbAdd('weight',r);for(const r of data.car||[])await dbAdd('car',r);if(data.settings){for(const[k,v]of Object.entries(data.settings)){if(v)localStorage.setItem('wb_'+k.replace('settings.',''),v);}}render();toast('导入完成')}catch{toast('文件格式错误')}};inp.click()});
-  $('#clrBtn')?.addEventListener('click',()=>showConfirm('确定清除所有数据？不可恢复！',async()=>{await Promise.all(['ledger','weight','car'].map(s=>dbAll(s).then(rs=>Promise.all(rs.map(r=>dbDel(s,r.id))))));localStorage.clear();toast('已清除');render()}));
-  // Category/Account management
-  $('#mngExpBtn')?.addEventListener('click',()=>showCatManager('支出分类',getExpCats,setExpCats));
-  $('#mngIncBtn')?.addEventListener('click',()=>showCatManager('收入分类',getIncCats,setIncCats));
-  $('#mngAccBtn')?.addEventListener('click',()=>showAccManager());
+  $('#impBtn')?.addEventListener('click',()=>{const inp=document.createElement('input');inp.type='file';inp.accept='.json';inp.onchange=async()=>{const f=inp.files[0];if(!f)return;const text=await f.text();try{const data=JSON.parse(text);const ws=await dbAll('weight');await Promise.all(ws.map(r=>dbDel('weight',r.id)));for(const r of data.weight||[])await dbAdd('weight',r);if(data.settings){for(const[k,v]of Object.entries(data.settings)){if(v)localStorage.setItem('wb_'+k.replace('settings.',''),v);}}render();toast('导入完成')}catch{toast('文件格式错误')}};inp.click()});
+  $('#clrBtn')?.addEventListener('click',()=>showConfirm('确定清除所有数据？不可恢复！',async()=>{const ws=await dbAll('weight');await Promise.all(ws.map(r=>dbDel('weight',r.id)));localStorage.clear();toast('已清除');render()}));
+  $('#restoreBtn')?.addEventListener('click',()=>showConfirm('将从浏览器备份恢复数据，当前数据将被覆盖。确定？',async()=>{const ok=await restoreFromBackup(true);toast(ok?'恢复成功 ✅':'无备份数据或恢复失败');render()}));
 }
 async function expCSV(){
-  const l=await dbAll('ledger'),w=await dbAll('weight'),c=await dbAll('car');
-  // Export as JSON (full backup format)
-  const json={ledger:l,weight:w,car:c,time:Date.now(),settings:{profile:localStorage.getItem('wb_profile'),accounts:localStorage.getItem('wb_accounts'),expCats:localStorage.getItem('wb_expCats'),incCats:localStorage.getItem('wb_incCats'),cars:localStorage.getItem('wb_cars'),dsKey:localStorage.getItem('wb_dsKey')}};
+  const w=await dbAll('weight');
+  const json={weight:w,time:Date.now(),settings:{profile:localStorage.getItem('wb_profile'),dsKey:localStorage.getItem('wb_dsKey'),dsHistory:localStorage.getItem('wb_dsHistory')}};
   const jb=new Blob([JSON.stringify(json,null,2)],{type:'application/json'});
   const ja=document.createElement('a');ja.href=URL.createObjectURL(jb);ja.download='workbench_backup.json';ja.click();
   setTimeout(()=>toast('JSON备份文件已下载'),200);
-}
-
-function showCatManager(title,getFn,setFn){
-  const items=getFn();
-  showModal('管理'+title,`
-    <div id="catList">${items.map((c,i)=>`<div style="display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid #f0f0f0"><span style="flex:1;font-size:14px">${c}</span><button class="cat-del-btn" data-idx="${i}" style="border:none;background:rgba(231,76,60,.1);color:var(--danger);width:28px;height:28px;border-radius:50%;font-size:14px;cursor:pointer">✕</button></div>`).join('')}</div>
-    <div style="margin-top:10px;display:flex;gap:8px"><input type="text" id="newItem" placeholder="输入新名称" style="flex:1;padding:8px 10px;border:1px solid #e0e0e0;border-radius:8px;font-size:13px;outline:none"><button id="addItemBtn" style="padding:8px 16px;border:none;border-radius:8px;background:var(--primary);color:#fff;font-size:13px;cursor:pointer;white-space:nowrap">添加</button></div>
-  `,async()=>{
-    const updated=[];document.querySelectorAll('#catList > div').forEach(d=>{const s=d.querySelector('span');if(s)updated.push(s.textContent)});
-    setFn(updated);render();
-  });
-  // Delete
-  document.querySelectorAll('.cat-del-btn').forEach(b=>b.onclick=()=>{
-    const items=getFn();items.splice(parseInt(b.dataset.idx),1);setFn(items);
-    showCatManager(title,getFn,setFn);
-  });
-  // Add
-  $('#addItemBtn').addEventListener('click',()=>{const v=$('#newItem').value.trim();if(v){const items=getFn();items.push(v);setFn(items);showCatManager(title,getFn,setFn)}});
-  $('#newItem').addEventListener('keydown',e=>{if(e.key==='Enter'){$('#addItemBtn').click()}});
-}
-
-function showAccManager(){
-  const items=getAccounts();
-  showModal('管理账户',`
-    <div id="accMgrList">${items.map((a,i)=>`<div style="display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid #f0f0f0">
-      <span style="font-size:18px;width:30px;text-align:center;cursor:pointer" onclick="const p=prompt('修改图标(emoji):','${a.icon||a.name.slice(0,2)}');if(p){const ac=getAccounts();ac[${i}].icon=p.trim();ac[${i}].name=p.trim()+' '+ac[${i}].name.slice(ac[${i}].name.indexOf(' ')+1);setAccounts(ac);showAccManager()}">${a.icon||a.name.slice(0,2)}</span>
-      <span style="flex:1;font-size:14px">${accRaw(a)}</span>
-      <button class="cat-del-btn" data-idx="${i}" style="border:none;background:rgba(231,76,60,.1);color:var(--danger);width:28px;height:28px;border-radius:50%;font-size:14px;cursor:pointer">✕</button>
-    </div>`).join('')}</div>
-    <div style="margin-top:10px;display:flex;gap:8px"><input type="text" id="accIcon" placeholder="图标" style="width:50px;padding:8px;border:1px solid #e0e0e0;border-radius:8px;font-size:14px;outline:none;text-align:center" value="💰"><input type="text" id="newAccName" placeholder="账户名称" style="flex:1;padding:8px 10px;border:1px solid #e0e0e0;border-radius:8px;font-size:13px;outline:none"><button id="addAccBtn" style="padding:8px 12px;border:none;border-radius:8px;background:var(--primary);color:#fff;font-size:13px;cursor:pointer;white-space:nowrap">添加</button></div>
-  `,async()=>{
-    const updated=[];document.querySelectorAll('#accMgrList > div').forEach(d=>{const s=d.querySelector('span:nth-child(2)');if(s)updated.push(s.textContent)});
-    const old=getAccounts();
-    const merged=updated.map((name,i)=>({...old.find(a=>accRaw(a)===name)||{},name:(old.find(a=>accRaw(a)===name)||{}).name||name,order:i}));
-    setAccounts(merged);render();
-  });
-  document.querySelectorAll('.cat-del-btn').forEach(b=>b.onclick=()=>{const a=getAccounts();a.splice(parseInt(b.dataset.idx),1);setAccounts(a);showAccManager()});
-  $('#addAccBtn').addEventListener('click',()=>{const icon=$('#accIcon').value.trim()||'📦',nm=$('#newAccName').value.trim();if(nm){const a=getAccounts();a.push({name:icon+' '+nm,icon,order:a.length});setAccounts(a);showAccManager()}});
-  $('#newAccName').addEventListener('keydown',e=>{if(e.key==='Enter'){$('#addAccBtn').click()}});
 }
 
 // ==================== Shared ====================
 function showModal(t,c,f){const o=$('#modalOverlay');o.innerHTML=`<div class="modal"><h3>${t}</h3>${c}<button class="btn-primary" id="modalSubmit">确定</button></div>`;o.classList.remove('hidden');o.onclick=e=>{if(e.target===o)closeModal()};$('#modalSubmit').onclick=async()=>{try{await f();closeModal()}catch(e){}}}
 function closeModal(){$('#modalOverlay').classList.add('hidden')}
 function showConfirm(m,f){const o=$('#confirmOverlay');o.innerHTML=`<div class="confirm-box"><p>${m}</p><div class="cbtns"><button class="btn-cancel" id="cfmCancel">取消</button><button class="btn-danger" id="cfmOk">确定</button></div></div>`;o.classList.remove('hidden');$('#cfmCancel').onclick=()=>o.classList.add('hidden');$('#cfmOk').onclick=async()=>{o.classList.add('hidden');await f()}}
-function bindDel(){document.querySelectorAll('[data-del]').forEach(b=>b.onclick=e=>{e.stopPropagation();showConfirm('确定删除？',async()=>{const s=page==='car'?'car':page;await dbDel(s,Number(b.dataset.del));render()})})}
+function bindDel(){document.querySelectorAll('[data-del]').forEach(b=>b.onclick=e=>{e.stopPropagation();showConfirm('确定删除？',async()=>{await dbDel('weight',Number(b.dataset.del));render()})})}
 
 // Init
-async function init(){await openDB();const restored=await restoreFromBackup();if(restored){render();toast('数据已自动恢复')}else render();if('serviceWorker'in navigator){navigator.serviceWorker.getRegistrations().then(regs=>regs.forEach(r=>r.unregister()));navigator.serviceWorker.register('sw.js?v=3.1').catch(()=>{})}window.addEventListener('resize',()=>{if(page!=='home')render()})}
+async function init(){await openDB();const restored=await restoreFromBackup();if(restored){render();toast('数据已自动恢复')}else render();if('serviceWorker'in navigator){navigator.serviceWorker.getRegistrations().then(regs=>regs.forEach(r=>r.unregister()));navigator.serviceWorker.register('sw.js?v=4.0').catch(()=>{})}window.addEventListener('resize',()=>{if(page!=='home')render()})}
 document.addEventListener('DOMContentLoaded',init);
 </script>
 </body>
 </html>
-
