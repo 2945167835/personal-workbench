@@ -594,7 +594,7 @@ async function expCSV(){
 }
 
 // ==================== Shared ====================
-function showModal(t,c,f){const o=$('#modalOverlay');o.innerHTML=`<div class="modal"><h3>${t}</h3>${c}<button class="btn-primary" id="modalSubmit">确定</button></div>`;o.classList.remove('hidden');o.onclick=e=>{if(e.target===o)closeModal()};$('#modalSubmit').onclick=async()=>{try{await f();closeModal()}catch(e){}}}
+function showModal(t,c,f){const o=$('#modalOverlay');o.innerHTML=`<div class="modal"><h3>${t}</h3>${c}<button class="btn-primary" id="modalSubmit">确定</button></div>`;o.classList.remove('hidden');o.onclick=e=>{if(e.target===o)closeModal()};$('#modalSubmit').onclick=async()=>{if(!f){closeModal();return}try{await f();closeModal()}catch(e){}}}
 function closeModal(){$('#modalOverlay').classList.add('hidden')}
 function showConfirm(m,f){const o=$('#confirmOverlay');o.innerHTML=`<div class="confirm-box"><p>${m}</p><div class="cbtns"><button class="btn-cancel" id="cfmCancel">取消</button><button class="btn-danger" id="cfmOk">确定</button></div></div>`;o.classList.remove('hidden');$('#cfmCancel').onclick=()=>o.classList.add('hidden');$('#cfmOk').onclick=async()=>{o.classList.add('hidden');await f()}}
 function bindDel(){document.querySelectorAll('[data-del]').forEach(b=>b.onclick=e=>{e.stopPropagation();showConfirm('确定删除？',async()=>{await dbDel('weight',Number(b.dataset.del));render()})})}
