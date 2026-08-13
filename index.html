@@ -15,7 +15,13 @@
   --primary:#4A90D9;--danger:#E74C3C;--success:#27AE60;--warning:#F39C12;--purple:#9B59B6;
   --bg:#f2f3f7;--card:#fff;--text:#2c3e50;--text2:#7f8c8d;--text3:#bdc3c7;
   --shadow:0 2px 16px rgba(0,0,0,0.06);--radius:16px;
+  --line:#f0f0f0;--input-bg:#f8f9fa;--hover:#fafafa;--border:#e0e0e0;
   --header-h:56px;--safe-top:env(safe-area-inset-top,0px);--safe-bottom:env(safe-area-inset-bottom,0px);
+}
+[data-theme="dark"]{
+  --bg:#15171a;--card:#222528;--text:#e6e6e6;--text2:#9aa0a6;--text3:#6b7075;
+  --shadow:0 2px 16px rgba(0,0,0,0.4);
+  --line:#32363a;--input-bg:#2b2f33;--hover:#2b2f33;--border:#3a3f44;
 }
 body{
   font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC','Microsoft YaHei',sans-serif;
@@ -65,7 +71,7 @@ body{
 /* Recent List */
 .recent-item{
   display:flex;align-items:center;gap:10px;padding:10px 0;
-  border-bottom:1px solid #f0f0f0;
+  border-bottom:1px solid var(--line);
 }
 .recent-item:last-child{border-bottom:none;}
 .recent-item .ri-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
@@ -99,7 +105,7 @@ body{
   margin-bottom:5px;box-shadow:0 1px 2px rgba(0,0,0,0.03);
   display:flex;align-items:center;gap:8px;transition:.1s;
 }
-.list-item:active{background:#fafafa;}
+.list-item:active{background:var(--hover);}
 .list-item .cat-dot{
   width:34px;height:34px;border-radius:10px;display:flex;align-items:center;
   justify-content:center;font-size:16px;flex-shrink:0;
@@ -159,10 +165,10 @@ body{
 .fg{margin-bottom:12px;}
 .fg label{display:block;font-size:12px;color:var(--text2);margin-bottom:4px;font-weight:500;}
 .fg input,.fg select,.fg textarea{
-  width:100%;padding:10px 12px;border:1px solid #e0e0e0;border-radius:10px;
-  font-size:14px;outline:none;background:#f8f9fa;font-family:inherit;
+  width:100%;padding:10px 12px;border:1px solid var(--border);border-radius:10px;
+  font-size:14px;outline:none;background:var(--input-bg);font-family:inherit;
 }
-.fg input:focus,.fg select:focus,.fg textarea:focus{border-color:var(--primary);background:#fff;}
+.fg input:focus,.fg select:focus,.fg textarea:focus{border-color:var(--primary);background:var(--card);}
 .btn-primary{display:block;width:100%;padding:12px;border:none;border-radius:10px;background:var(--primary);color:#fff;font-size:15px;font-weight:600;cursor:pointer;font-family:inherit;margin-top:8px;}
 .btn-primary:active{opacity:.85;}
 
@@ -172,7 +178,7 @@ body{
 .confirm-box p{margin-bottom:18px;font-size:15px;}
 .confirm-box .cbtns{display:flex;gap:10px;}
 .confirm-box button{flex:1;padding:10px;border-radius:10px;border:none;font-size:14px;cursor:pointer;font-family:inherit;}
-.btn-cancel{background:#f0f0f0;color:var(--text);}
+.btn-cancel{background:var(--line);color:var(--text);}
 .btn-danger{background:var(--danger);color:#fff;}
 
 /* Settings */
@@ -181,7 +187,7 @@ body{
 .setting-item{background:var(--card);border-radius:12px;padding:12px 14px;margin-bottom:6px;display:flex;justify-content:space-between;align-items:center;box-shadow:0 1px 3px rgba(0,0,0,0.03);}
 .setting-item .si-label{font-size:14px;}
 .setting-item .si-val{font-size:12px;color:var(--text2);}
-.setting-item .si-btn{padding:6px 14px;border-radius:14px;border:none;font-size:12px;cursor:pointer;font-family:inherit;background:#f0f0f0;color:var(--text);}
+.setting-item .si-btn{padding:6px 14px;border-radius:14px;border:none;font-size:12px;cursor:pointer;font-family:inherit;background:var(--line);color:var(--text);}
 .setting-item .si-btn.danger{background:rgba(231,76,60,.08);color:var(--danger);}
 
 /* Toast */
@@ -190,6 +196,7 @@ body{
 
 .hidden{display:none!important;}
 </style>
+<script>try{var _t=localStorage.getItem('wb_theme')||'auto';var _d=_t==='dark'||(_t==='auto'&&matchMedia('(prefers-color-scheme: dark)').matches);document.documentElement.setAttribute('data-theme',_d?'dark':'light')}catch(e){}</script>
 </head>
 <body>
 <div class="app" id="app"></div>
@@ -249,6 +256,11 @@ function j(kg){return(kg*2).toFixed(1)} // kg → 斤 for display
 function jr(jin){return parseFloat((jin/2).toFixed(2))} // 斤 → kg for storage
 function toast(m){const t=$('#toast');t.textContent=m;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),1800)}
 
+// ==================== Theme ====================
+function isDark(){const t=localStorage.getItem('wb_theme')||'auto';if(t==='dark')return true;if(t==='light')return false;return window.matchMedia('(prefers-color-scheme: dark)').matches}
+function themeLabel(){const t=localStorage.getItem('wb_theme')||'auto';return t==='auto'?'跟随系统':t==='dark'?'深色':'浅色'}
+function applyTheme(){const d=isDark();document.documentElement.setAttribute('data-theme',d?'dark':'light');const mc=document.querySelector('meta[name=theme-color]');if(mc)mc.setAttribute('content',d?'#15171a':'#f5f5f5')}
+
 // ==================== Render ====================
 async function render(){
   const app=$('#app');
@@ -281,7 +293,7 @@ async function renderHome(app){
         <div style="font-size:44px;font-weight:700;color:var(--primary);margin:6px 0">${latest?j(latest.weight)+' 斤':'-- 斤'}</div>
         <div style="font-size:12px;color:var(--text3)">${latest?'记录于 '+fd(latest.date):'暂无记录，点击开始'}</div>
         ${bmi?`<div style="margin-top:6px;font-size:12px;color:var(--text2)">BMI ${bmi} · ${bl}${goal?' · 目标 '+j(goal)+' 斤':''}</div>`:(goal?`<div style="margin-top:6px;font-size:12px;color:var(--text2)">目标 ${j(goal)} 斤</div>`:'')}
-        ${progress!==null?`<div style="margin-top:10px;height:6px;background:#eee;border-radius:3px;overflow:hidden"><div style="height:100%;width:${progress.toFixed(1)}%;background:linear-gradient(90deg,var(--primary),#357ABD);border-radius:3px"></div></div><div style="font-size:11px;color:var(--text2);margin-top:4px">目标完成 ${progress.toFixed(1)}%</div>`:''}
+        ${progress!==null?`<div style="margin-top:10px;height:6px;background:var(--line);border-radius:3px;overflow:hidden"><div style="height:100%;width:${progress.toFixed(1)}%;background:linear-gradient(90deg,var(--primary),#357ABD);border-radius:3px"></div></div><div style="font-size:11px;color:var(--text2);margin-top:4px">目标完成 ${progress.toFixed(1)}%</div>`:''}
       </div>
 
       <div class="widget">
@@ -376,36 +388,38 @@ function pred(r,g){const l=r.slice(-5);if(l.length<2)return'数据不足';let sx
 
 function drawWtChart(records,h){
   const c=$('#wtChart');if(!c)return;const ctx=c.getContext('2d');const dpr=window.devicePixelRatio||1;
+  const dark=isDark(),gridC=dark?'#33373b':'#eee',tickC=dark?'#8a9096':'#999',labelC=dark?'#9aa0a6':'#666',dotC=dark?'#222528':'#fff';
   const W=c.parentElement.clientWidth-28,H=200;c.width=W*dpr;c.height=H*dpr;c.style.width=W+'px';c.style.height=H+'px';ctx.scale(dpr,dpr);
   const pad={t:16,r:12,b:28,l:40},pw=W-pad.l-pad.r,ph=H-pad.t-pad.b;
   const wts=records.map(r=>r.weight),bmis=h?records.map(r=>(r.weight/((h/100)**2)).toFixed(1)):[];
   const minW=Math.floor(Math.min(...wts)-2),maxW=Math.ceil(Math.max(...wts)+2);
-  ctx.strokeStyle='#eee';ctx.lineWidth=1;
-  for(let i=minW;i<=maxW;i+=2){const y=pad.t+ph-((i-minW)/(maxW-minW))*ph;ctx.beginPath();ctx.moveTo(pad.l,y);ctx.lineTo(W-pad.r,y);ctx.stroke();ctx.fillStyle='#999';ctx.font='9px sans-serif';ctx.textAlign='right';ctx.fillText((i*2).toFixed(0),pad.l-4,y+3)}
+  ctx.strokeStyle=gridC;ctx.lineWidth=1;
+  for(let i=minW;i<=maxW;i+=2){const y=pad.t+ph-((i-minW)/(maxW-minW))*ph;ctx.beginPath();ctx.moveTo(pad.l,y);ctx.lineTo(W-pad.r,y);ctx.stroke();ctx.fillStyle=tickC;ctx.font='9px sans-serif';ctx.textAlign='right';ctx.fillText((i*2).toFixed(0),pad.l-4,y+3)}
   ctx.strokeStyle='#4A90D9';ctx.lineWidth=2.5;ctx.lineJoin='round';ctx.beginPath();
   records.forEach((r,i)=>{const x=pad.l+(i/(records.length-1))*pw;const y=pad.t+ph-((r.weight-minW)/(maxW-minW))*ph;i===0?ctx.moveTo(x,y):ctx.lineTo(x,y)});ctx.stroke();
   if(bmis.length){const minB=Math.floor(Math.min(...bmis.map(Number))-2),maxB=Math.ceil(Math.max(...bmis.map(Number))+2);ctx.strokeStyle='#F39C12';ctx.lineWidth=2;ctx.setLineDash([4,3]);ctx.beginPath();records.forEach((r,i)=>{const x=pad.l+(i/(records.length-1))*pw;const bmi=parseFloat(bmis[i]);const y=pad.t+ph-((bmi-minB)/(maxB-minB))*ph;i===0?ctx.moveTo(x,y):ctx.lineTo(x,y)});ctx.stroke();ctx.setLineDash([])}
-  ctx.fillStyle='#999';ctx.font='9px sans-serif';ctx.textAlign='center';const step=Math.max(1,Math.floor(records.length/6));
+  ctx.fillStyle=tickC;ctx.font='9px sans-serif';ctx.textAlign='center';const step=Math.max(1,Math.floor(records.length/6));
   records.forEach((r,i)=>{if(i%step===0||i===records.length-1)ctx.fillText(fd(r.date).slice(5),pad.l+(i/(records.length-1))*pw,H-pad.b+14)});
-  records.forEach((r,i)=>{const x=pad.l+(i/(records.length-1))*pw;const y=pad.t+ph-((r.weight-minW)/(maxW-minW))*ph;ctx.fillStyle='#4A90D9';ctx.beginPath();ctx.arc(x,y,3,0,Math.PI*2);ctx.fill();ctx.fillStyle='#fff';ctx.beginPath();ctx.arc(x,y,1.5,0,Math.PI*2);ctx.fill()});
-  ctx.fillStyle='#4A90D9';ctx.fillRect(pad.l,4,10,2);ctx.fillStyle='#666';ctx.font='9px sans-serif';ctx.textAlign='left';ctx.fillText('体重(斤)',pad.l+14,8);
+  records.forEach((r,i)=>{const x=pad.l+(i/(records.length-1))*pw;const y=pad.t+ph-((r.weight-minW)/(maxW-minW))*ph;ctx.fillStyle='#4A90D9';ctx.beginPath();ctx.arc(x,y,3,0,Math.PI*2);ctx.fill();ctx.fillStyle=dotC;ctx.beginPath();ctx.arc(x,y,1.5,0,Math.PI*2);ctx.fill()});
+  ctx.fillStyle='#4A90D9';ctx.fillRect(pad.l,4,10,2);ctx.fillStyle=labelC;ctx.font='9px sans-serif';ctx.textAlign='left';ctx.fillText('体重(斤)',pad.l+14,8);
   if(bmis.length){ctx.fillStyle='#F39C12';ctx.fillRect(pad.l+66,4,10,2);ctx.fillText('BMI',pad.l+80,8)}
   c.classList.add('ready');
 }
 function drawSmooth(records){
   const c=$('#wtSmooth');if(!c)return;const ctx=c.getContext('2d');const dpr=window.devicePixelRatio||1;
+  const dark=isDark(),gridC=dark?'#33373b':'#eee',tickC=dark?'#8a9096':'#999',labelC=dark?'#9aa0a6':'#666',dotC=dark?'#222528':'#fff';
   const W=c.parentElement.clientWidth-28,H=180;c.width=W*dpr;c.height=H*dpr;c.style.width=W+'px';c.style.height=H+'px';ctx.scale(dpr,dpr);
   const pad={t:16,r:12,b:28,l:40},pw=W-pad.l-pad.r,ph=H-pad.t-pad.b;
   const smooth=[];for(let i=0;i<records.length;i++){const s=records.slice(Math.max(0,i-1),Math.min(records.length,i+2));smooth.push(s.reduce((a,r)=>a+r.weight,0)/s.length)}
   const all=[...records.map(r=>r.weight),...smooth];const minV=Math.floor(Math.min(...all)-2),maxV=Math.ceil(Math.max(...all)+2);
-  ctx.strokeStyle='#eee';ctx.lineWidth=1;for(let i=minV;i<=maxV;i+=2){const y=pad.t+ph-((i-minV)/(maxV-minV))*ph;ctx.beginPath();ctx.moveTo(pad.l,y);ctx.lineTo(W-pad.r,y);ctx.stroke();ctx.fillStyle='#999';ctx.font='9px sans-serif';ctx.textAlign='right';ctx.fillText((i*2).toFixed(0),pad.l-4,y+3)}
+  ctx.strokeStyle=gridC;ctx.lineWidth=1;for(let i=minV;i<=maxV;i+=2){const y=pad.t+ph-((i-minV)/(maxV-minV))*ph;ctx.beginPath();ctx.moveTo(pad.l,y);ctx.lineTo(W-pad.r,y);ctx.stroke();ctx.fillStyle=tickC;ctx.font='9px sans-serif';ctx.textAlign='right';ctx.fillText((i*2).toFixed(0),pad.l-4,y+3)}
   ctx.strokeStyle='rgba(74,144,217,.2)';ctx.lineWidth=1.5;ctx.beginPath();records.forEach((r,i)=>{const x=pad.l+(i/(records.length-1))*pw;const y=pad.t+ph-((r.weight-minV)/(maxV-minV))*ph;i===0?ctx.moveTo(x,y):ctx.lineTo(x,y)});ctx.stroke();
   ctx.strokeStyle='#4A90D9';ctx.lineWidth=3;ctx.lineJoin='round';ctx.beginPath();smooth.forEach((v,i)=>{const x=pad.l+(i/(smooth.length-1))*pw;const y=pad.t+ph-((v-minV)/(maxV-minV))*ph;i===0?ctx.moveTo(x,y):ctx.lineTo(x,y)});ctx.stroke();
   ctx.fillStyle='rgba(74,144,217,.07)';ctx.beginPath();smooth.forEach((v,i)=>{const x=pad.l+(i/(smooth.length-1))*pw;const y=pad.t+ph-((v-minV)/(maxV-minV))*ph;i===0?ctx.moveTo(x,y):ctx.lineTo(x,y)});ctx.lineTo(pad.l+pw,pad.t+ph);ctx.lineTo(pad.l,pad.t+ph);ctx.fill();
-  ctx.fillStyle='#999';ctx.font='9px sans-serif';ctx.textAlign='center';const step=Math.max(1,Math.floor(records.length/6));
+  ctx.fillStyle=tickC;ctx.font='9px sans-serif';ctx.textAlign='center';const step=Math.max(1,Math.floor(records.length/6));
   records.forEach((r,i)=>{if(i%step===0||i===records.length-1)ctx.fillText(fd(r.date).slice(5),pad.l+(i/(records.length-1))*pw,H-pad.b+14)});
-  ctx.fillStyle='#666';ctx.font='9px sans-serif';ctx.textAlign='center';ctx.fillText('平滑趋势 (3日移动均线)',W/2,8);
-  ctx.fillStyle='rgba(74,144,217,.2)';ctx.fillRect(pad.l,4,12,2);ctx.fillStyle='#4A90D9';ctx.fillRect(pad.l,10,12,3);ctx.fillStyle='#666';ctx.font='9px sans-serif';ctx.textAlign='left';ctx.fillText('原始 / 平滑',pad.l+16,12);
+  ctx.fillStyle=labelC;ctx.font='9px sans-serif';ctx.textAlign='center';ctx.fillText('平滑趋势 (3日移动均线)',W/2,8);
+  ctx.fillStyle='rgba(74,144,217,.2)';ctx.fillRect(pad.l,4,12,2);ctx.fillStyle='#4A90D9';ctx.fillRect(pad.l,10,12,3);ctx.fillStyle=labelC;ctx.font='9px sans-serif';ctx.textAlign='left';ctx.fillText('原始 / 平滑',pad.l+16,12);
   c.classList.add('ready');
 }
 
@@ -428,7 +442,7 @@ async function renderDeepSeek(app){
     <div class="main">
       <div class="widget" style="text-align:center"><div id="dsBalance">${last?`<div style="font-size:36px;font-weight:700;color:${last.total>0?'var(--success)':'var(--danger)'}">¥${last.total.toFixed(2)}</div><div style="font-size:11px;color:var(--text3);margin-top:2px">${last.time.slice(0,16)} 查询</div>`:'<div style="font-size:14px;color:var(--text3);padding:10px">点击下方按钮查询</div>'}</div></div>
       <button class="btn-primary" id="dsQueryBtn" style="margin-bottom:12px">🔄 查询余额</button>
-      ${history.length>1?`<div class="widget"><div class="widget-title">📈 用量记录</div>${history.slice(1).map(h=>`<div style="display:flex;justify-content:space-between;padding:4px 0;font-size:12px;border-bottom:1px solid #f5f5f5"><span style="color:var(--text3)">${h.time.slice(0,16)}</span><span style="font-weight:600;color:${h.total>0?'var(--success)':'var(--danger)'}">¥${h.total.toFixed(2)}</span></div>`).join('')}</div>`:''}
+      ${history.length>1?`<div class="widget"><div class="widget-title">📈 用量记录</div>${history.slice(1).map(h=>`<div style="display:flex;justify-content:space-between;padding:4px 0;font-size:12px;border-bottom:1px solid var(--line)"><span style="color:var(--text3)">${h.time.slice(0,16)}</span><span style="font-weight:600;color:${h.total>0?'var(--success)':'var(--danger)'}">¥${h.total.toFixed(2)}</span></div>`).join('')}</div>`:''}
     </div>`;
   $('#dsQueryBtn').addEventListener('click',async()=>{
     const el=$('#dsBalance');el.innerHTML='查询中...';
@@ -455,6 +469,7 @@ async function renderSettings(app){
   app.innerHTML=`
     <div class="header"><button class="back" onclick="go('home')">←</button><h1>设置</h1></div>
     <div class="main">
+      <div class="setting-group"><h4>🎨 外观</h4><div class="setting-item"><span class="si-label">主题</span><span class="si-val" id="themeVal">${themeLabel()}</span><span class="si-btn" id="themeBtn">切换</span></div></div>
       <div class="setting-group"><h4>🤖 DeepSeek</h4><div class="setting-item"><span class="si-label">API Key</span><span class="si-val">${dsKey?dsKey.slice(0,10)+'...':'未设置'}</span><span class="si-btn" id="setDsKeyBtn">${dsKey?'修改':'设置'}</span></div></div>
       <div class="setting-group"><h4>⚖️ 体重设置</h4>
         <div class="setting-item"><span class="si-label">性别</span><span class="si-val">${pf.gender==='male'?'男 ♂':'女 ♀'}</span><span class="si-btn" id="setGenderBtn">切换</span></div>
@@ -467,6 +482,7 @@ async function renderSettings(app){
     </div>
   `;
   $('#setDsKeyBtn')?.addEventListener('click',()=>{const v=prompt('DeepSeek API Key (sk-...)',localStorage.getItem('wb_dsKey')||'');if(v&&v.trim()){localStorage.setItem('wb_dsKey',v.trim());render()}});
+  $('#themeBtn')?.addEventListener('click',()=>{const order=['auto','light','dark'];const cur=localStorage.getItem('wb_theme')||'auto';const next=order[(order.indexOf(cur)+1)%order.length];localStorage.setItem('wb_theme',next);applyTheme();render()});
   $('#setGenderBtn')?.addEventListener('click',()=>{const p=getProfile();p.gender=p.gender==='male'?'female':'male';setProfile(p);render()});
   $('#setAgeBtn')?.addEventListener('click',()=>{const v=parseInt(prompt('年龄',pf.age||''));if(v&&v>0&&v<120){const p=getProfile();p.age=v;setProfile(p);render()}});
   $('#setHtBtn')?.addEventListener('click',()=>{const v=parseFloat(prompt('身高 (cm)',pf.height));if(v&&v>50&&v<250){const p=getProfile();p.height=v;setProfile(p);render()}});
@@ -492,7 +508,7 @@ function showConfirm(m,f){const o=$('#confirmOverlay');o.innerHTML=`<div class="
 function bindDel(){document.querySelectorAll('[data-del]').forEach(b=>b.onclick=e=>{e.stopPropagation();showConfirm('确定删除？',async()=>{await dbDel('weight',Number(b.dataset.del));render()})})}
 
 // Init
-async function init(){await openDB();const restored=await restoreFromBackup();if(restored){render();toast('数据已自动恢复')}else render();if('serviceWorker'in navigator){navigator.serviceWorker.getRegistrations().then(regs=>regs.forEach(r=>r.unregister()));navigator.serviceWorker.register('sw.js?v=4.0').catch(()=>{})}window.addEventListener('resize',()=>{if(page!=='home')render()})}
+async function init(){applyTheme();await openDB();const restored=await restoreFromBackup();if(restored){render();toast('数据已自动恢复')}else render();if('serviceWorker'in navigator){navigator.serviceWorker.getRegistrations().then(regs=>regs.forEach(r=>r.unregister()));navigator.serviceWorker.register('sw.js?v=4.0').catch(()=>{})}window.addEventListener('resize',()=>{if(page!=='home')render()})}
 document.addEventListener('DOMContentLoaded',init);
 </script>
 </body>
