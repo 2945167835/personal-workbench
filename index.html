@@ -148,6 +148,7 @@ body{
 .empty{text-align:center;padding:36px 20px;color:var(--text3);}
 .empty .eicon{font-size:40px;margin-bottom:8px;}
 .empty p{font-size:13px;}
+.ai-report{font-size:14px;line-height:1.75;text-align:left;word-break:break-word;}
 
 /* Modal */
 .modal-overlay{
@@ -220,7 +221,7 @@ async function backupAll(){
   clearTimeout(backupTimer);backupTimer=setTimeout(async()=>{
     try{
       const w=await dbAll('weight');
-      const data={weight:w,time:Date.now(),settings:{profile:localStorage.getItem('wb_profile'),dsKey:localStorage.getItem('wb_dsKey'),dsHistory:localStorage.getItem('wb_dsHistory')}};
+      const data={weight:w,time:Date.now(),settings:{profile:localStorage.getItem('wb_profile'),dsKey:localStorage.getItem('wb_dsKey'),dsHistory:localStorage.getItem('wb_dsHistory'),aiReports:localStorage.getItem('wb_aiReports')}};
       localStorage.setItem('wb_backup',JSON.stringify(data));
     }catch{}
   },1000);
@@ -327,6 +328,7 @@ async function renderHome(app){
 // ==================== WEIGHT ====================
 async function renderWeight(app){
   const records=(await dbAll('weight')).sort((a,b)=>a.date.localeCompare(b.date));
+  const aiReports=getAiReports();
   const latest=records[records.length-1];const pf=getProfile();
   const height=pf.height;let bmi='',bl='';
   if(latest&&height){const h=parseFloat(height)/100;bmi=(latest.weight/(h*h)).toFixed(1);bl=bmiTag(bmi,height)}
@@ -354,12 +356,14 @@ async function renderWeight(app){
         <input type="number" id="quickWt" placeholder="${latest?'上次 '+j(latest.weight)+' 斤 — 输入今日体重':''}" step="0.1" min="40" max="600" style="flex:1;border:none;outline:none;font-size:15px;font-family:inherit;background:transparent">
         <button class="add-btn" id="quickWtBtn">记录</button>
       </div>
+      <button class="btn-primary" id="aiBtn" style="margin:0 0 12px">🤖 AI 分析体重</button>
       ${pf.targetWeight?`<div class="summary-row"><div class="summary-card"><div class="sc-label">距目标</div><div class="sc-val ${latest&&latest.weight>pf.targetWeight?'sc-red':'sc-blue'}">${latest?j(Math.abs(latest.weight-pf.targetWeight)):'--'} 斤</div><div style="font-size:10px;color:${latest&&latest.weight>pf.targetWeight?'var(--danger)':'var(--success)'}">${latest&&latest.weight>pf.targetWeight?'还需减 ':'还需增 '}${latest?j(Math.abs(latest.weight-pf.targetWeight)):'--'} 斤</div></div><div class="summary-card"><div class="sc-label">已完成</div><div class="sc-val sc-blue">${progress!==null?progress.toFixed(1):'--'}%</div></div></div>`:''}
       <div class="summary-row"><div class="summary-card"><div class="sc-label">7日均值</div><div class="sc-val sc-blue">${avg7?j(avg7):'--'} 斤</div></div><div class="summary-card"><div class="sc-label">30日均值</div><div class="sc-val sc-blue">${avg30?j(avg30):'--'} 斤</div></div><div class="summary-card"><div class="sc-label">本月变化</div><div class="sc-val ${mChange>0?'sc-red':'sc-blue'}">${mChange!==null?(mChange>=0?'+':'-')+j(Math.abs(mChange)):'--'} 斤</div></div></div>
       ${weeks.length>0?`<div class="summary-row">${weeks.map(w=>`<div class="summary-card"><div class="sc-label">${w.label}</div><div class="sc-val" style="font-size:13px">${w.avg}</div><div class="sc-label">${w.diff}</div></div>`).join('')}</div>`:''}
       ${records.length>=2?`<div class="chart-box"><canvas id="wtChart"></canvas></div>`:''}
       ${records.length>=3?`<div class="chart-box"><canvas id="wtSmooth"></canvas></div>`:''}
       ${pf.targetWeight&&records.length>=5?`<div class="widget" style="text-align:center"><div style="font-size:12px;color:var(--text2)">📈 趋势预测</div><div style="font-size:14px;margin-top:4px">${pred(records,pf.targetWeight)}</div></div>`:''}
+      ${aiReports.length>0?`<div class="section-title">🤖 AI 分析历史</div>${aiReports.slice(0,5).map(r=>`<div class="list-item" onclick="viewAiReport(${r.id})"><div class="cat-dot" style="background:rgba(155,89,182,.12)">🤖</div><div class="linfo"><div class="ltitle">${fd(r.date)} · ${j(r.weight)} 斤</div><div class="lsub">${(r.report||'').replace(/[#*]/g,'').slice(0,36)}...</div></div><div class="lamount" style="color:var(--text3)">查看</div></div>`).join('')}`:''}
       <div class="section-title">历史记录</div>
       ${records.length===0?'<div class="empty"><div class="eicon">⚖️</div><p>暂无记录</p></div>':''}
       ${records.slice().reverse().map(r=>{const idx=records.indexOf(r),prev=records[idx-1];const diff=prev?(r.weight-prev.weight):null;return`<div class="list-item" data-id="${r.id}"><div class="cat-dot" style="background:rgba(74,144,217,.1)">⚖️</div><div class="linfo"><div class="ltitle">${j(r.weight)} 斤</div><div class="lsub">${fd(r.date)} ${r.note||''}</div></div><div class="lamount" style="color:${diff>0?'var(--danger)':diff<0?'var(--success)':'var(--text3)'}">${diff?(diff>0?'↑':'↓')+j(Math.abs(diff))+' 斤':''}</div><button class="ldel" data-del="${r.id}">✕</button></div>`}).join('')}
@@ -378,6 +382,7 @@ async function renderWeight(app){
     render();toast('已记录 '+j(wt)+' 斤');
   });
   $('#quickWt')?.addEventListener('keydown',e=>{if(e.key==='Enter')$('#quickWtBtn')?.click()});
+  $('#aiBtn')?.addEventListener('click',aiAnalyze);
   if(records.length>=2)setTimeout(()=>drawWtChart(records,parseFloat(height)),100);if(records.length>=3)setTimeout(()=>drawSmooth(records),150);
 }
 function bmiTag(b,h){const v=parseFloat(b);if(h>0){if(v<18.5)return'偏瘦';if(v<24)return'正常';if(v<28)return'偏胖';return'肥胖'}if(v<18.5)return'偏瘦';if(v<24)return'正常';if(v<28)return'偏胖';return'肥胖'}
@@ -429,6 +434,92 @@ function showWeightForm(){
     const ex=await dbAll('weight');const dup=ex.find(r=>r.date===date);
     if(dup)await dbPut('weight',{...dup,weight:wt,note:$('#fNote').value.trim()});else await dbAdd('weight',{weight:wt,date,note:$('#fNote').value.trim(),createdAt:Date.now()});render();
   });
+}
+
+// ==================== AI WEIGHT ANALYSIS ====================
+const AI_SYSTEM='你是一位专业的体重健康管理顾问，擅长基于数据做客观、具体的分析。请严格基于用户提供的体重数据进行分析，不要编造数据，不要给出超出数据范围的医疗诊断。使用 Markdown 格式输出，包含以下部分：\n## 📈 趋势判断\n## 📊 波动评估\n## 🎯 目标进度\n## 💡 综合建议\n## ⚠️ 提醒\n最后单独一行注明：以上分析仅供参考，不构成医疗建议。';
+function getAiReports(){try{return JSON.parse(localStorage.getItem('wb_aiReports')||'[]')}catch{return[]}}
+function saveAiReport(r){const a=getAiReports();a.unshift(r);if(a.length>50)a.length=50;localStorage.setItem('wb_aiReports',JSON.stringify(a));backupAll()}
+function buildAiPrompt(records,pf){
+  const latest=records[records.length-1];
+  const height=pf.height;
+  let bmi='',bl='';
+  if(latest&&height){bmi=(latest.weight/((height/100)**2)).toFixed(1);bl=bmiTag(bmi,height)}
+  const initWt=pf.initWeight||(records[0]?records[0].weight:null);
+  const avg7=records.length>=7?avgL(records,7):null,avg30=records.length>=2?avgL(records,30):null;
+  const mRecs=records.filter(r=>r.date.startsWith(month()));
+  const mChange=mRecs.length>=2?parseFloat((mRecs[mRecs.length-1].weight-mRecs[0].weight).toFixed(1)):null;
+  const bmr=latest&&pf.age?calcBMR(latest.weight,pf):null;
+  const recent30=records.slice(-30).map(r=>fd(r.date)+': '+j(r.weight)+' 斤').join('\n');
+  const lines=[
+    '【基础信息】',
+    '性别：'+(pf.gender==='male'?'男':'女'),
+    '年龄：'+(pf.age||'未知')+' 岁',
+    '身高：'+pf.height+' cm',
+    '初始体重：'+(initWt?j(initWt)+' 斤':'未设置'),
+    '目标体重：'+(pf.targetWeight?j(pf.targetWeight)+' 斤':'未设置'),
+    '',
+    '【本次记录】',
+    '日期：'+fd(latest.date),
+    '体重：'+j(latest.weight)+' 斤',
+    '',
+    '【历史记录】（最近30天，按日期升序）',
+    recent30,
+    '',
+    '【计算指标】',
+    'BMI：'+bmi+'（'+bl+'）',
+    '基础代谢：'+(bmr?bmr+' kcal/天':'未知'),
+    '7日均值：'+(avg7?j(avg7)+' 斤':'数据不足'),
+    '30日均值：'+(avg30?j(avg30)+' 斤':'数据不足'),
+    '本月变化：'+(mChange!==null?(mChange>=0?'+':'-')+j(Math.abs(mChange))+' 斤':'数据不足'),
+    '距目标：'+(pf.targetWeight&&latest?j(Math.abs(latest.weight-pf.targetWeight))+' 斤':'未设置目标'),
+    '',
+    '请综合以上数据，给出一份详细的体重分析报告，重点结合历史趋势而非单次数据。'
+  ];
+  return lines.join('\n');
+}
+async function aiAnalyze(){
+  const key=localStorage.getItem('wb_dsKey')||'';
+  if(!key){toast('请先在设置填写 DeepSeek API Key');setTimeout(()=>go('settings'),600);return}
+  const records=(await dbAll('weight')).sort((a,b)=>a.date.localeCompare(b.date));
+  if(!records.length){toast('请先记录体重数据');return}
+  const pf=getProfile();
+  const prompt=buildAiPrompt(records,pf);
+  showModal('🤖 AI 体重分析',`<div style="text-align:center;padding:24px 0"><div style="font-size:36px;margin-bottom:10px">🤖</div><div style="font-size:14px;color:var(--text2)">正在分析你的体重数据…</div><div style="font-size:11px;color:var(--text3);margin-top:8px">约需 5~15 秒，请稍候</div></div>`);
+  try{
+    const ctrl=new AbortController();setTimeout(()=>ctrl.abort(),30000);
+    const r=await fetch('https://api.deepseek.com/chat/completions',{
+      method:'POST',
+      headers:{'Content-Type':'application/json','Authorization':'Bearer '+key},
+      body:JSON.stringify({model:'deepseek-v4-flash',messages:[{role:'system',content:AI_SYSTEM},{role:'user',content:prompt}],temperature:0.6,max_tokens:1500,stream:false}),
+      signal:ctrl.signal
+    });
+    const d=await r.json();
+    const report=d.choices?.[0]?.message?.content;
+    if(!report)throw new Error(d.error?.message||'分析失败');
+    const latest=records[records.length-1];
+    saveAiReport({id:Date.now(),time:Date.now(),date:fd(latest.date),weight:latest.weight,report:report});
+    showAiReport(report);
+  }catch(e){
+    closeModal();
+    if(e.name==='AbortError')toast('分析超时，请重试');
+    else toast('分析失败：'+(e.message||'网络错误'));
+  }
+}
+function showAiReport(report){
+  showModal('🤖 AI 体重分析报告',`<div class="ai-report">${md(report)}</div><div style="margin-top:14px;padding:10px 12px;background:rgba(149,165,166,.1);border-radius:8px;font-size:11px;color:var(--text3);text-align:left">📌 本报告由 AI 生成，仅供参考，不构成医疗建议。如有健康问题请咨询专业医生。</div>`);
+}
+function viewAiReport(id){const r=getAiReports().find(x=>x.id===id);if(r)showAiReport(r.report)}
+function md(s){
+  return (s||'')
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+    .replace(/^### (.*)$/gm,'<div style="font-size:14px;font-weight:700;margin:12px 0 4px">$1</div>')
+    .replace(/^## (.*)$/gm,'<div style="font-size:15px;font-weight:700;margin:14px 0 6px;color:var(--primary)">$1</div>')
+    .replace(/^# (.*)$/gm,'<div style="font-size:16px;font-weight:700;margin:14px 0 6px;color:var(--primary)">$1</div>')
+    .replace(/^- (.*)$/gm,'<div style="padding:3px 0 3px 16px;position:relative"><span style="position:absolute;left:2px;color:var(--primary)">•</span>$1</div>')
+    .replace(/^(\d+)\. (.*)$/gm,'<div style="padding:3px 0 3px 18px;position:relative"><span style="position:absolute;left:2px;color:var(--primary)">$1.</span>$2</div>')
+    .replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>')
+    .replace(/\n/g,'<br>');
 }
 
 // ==================== DEEPSEEK ====================
@@ -495,7 +586,7 @@ async function renderSettings(app){
 }
 async function expCSV(){
   const w=await dbAll('weight');
-  const json={weight:w,time:Date.now(),settings:{profile:localStorage.getItem('wb_profile'),dsKey:localStorage.getItem('wb_dsKey'),dsHistory:localStorage.getItem('wb_dsHistory')}};
+  const json={weight:w,time:Date.now(),settings:{profile:localStorage.getItem('wb_profile'),dsKey:localStorage.getItem('wb_dsKey'),dsHistory:localStorage.getItem('wb_dsHistory'),aiReports:localStorage.getItem('wb_aiReports')}};
   const jb=new Blob([JSON.stringify(json,null,2)],{type:'application/json'});
   const ja=document.createElement('a');ja.href=URL.createObjectURL(jb);ja.download='workbench_backup.json';ja.click();
   setTimeout(()=>toast('JSON备份文件已下载'),200);
