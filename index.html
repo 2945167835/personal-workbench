@@ -770,7 +770,7 @@ function showConfirm(m,f){const o=$('#confirmOverlay');o.innerHTML=`<div class="
 function bindDel(){document.querySelectorAll('[data-del]').forEach(b=>b.onclick=e=>{e.stopPropagation();showConfirm('确定删除？',async()=>{await dbDel('weight',Number(b.dataset.del));render()})})}
 
 // Init
-async function init(){applyTheme();await openDB();const restored=await restoreFromBackup();if(restored){render();toast('数据已自动恢复')}else render();if('serviceWorker'in navigator){navigator.serviceWorker.getRegistrations().then(regs=>regs.forEach(r=>r.unregister()));navigator.serviceWorker.register('sw.js?v=4.0').catch(()=>{})}window.addEventListener('resize',()=>{if(page!=='home')render()})}
+async function init(){applyTheme();await openDB();const restored=await restoreFromBackup();if(restored){render();toast('数据已自动恢复')}else render();if('serviceWorker'in navigator){navigator.serviceWorker.register('sw.js?v=5.0').catch(()=>{})}window.addEventListener('resize',()=>{if(page!=='home')render()})}
 document.addEventListener('DOMContentLoaded',init);
 </script>
 </body>

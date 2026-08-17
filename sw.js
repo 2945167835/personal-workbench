@@ -1,35 +1,23 @@
-// v3 — 强制网络优先，避免旧缓存阻塞
-const CACHE_NAME = 'workbench-v3.1';
-const ASSETS = [
-  '/personal-workbench/index.html',
-  '/personal-workbench/manifest.json'
-];
+// v5 — index.html 强制网络优先（network-only），解决 iOS 主屏幕缓存不更新
+const CACHE_NAME = 'workbench-v5';
 
+// 安装时立即接管，不预缓存 index.html（保证每次都从网络拿最新）
 self.addEventListener('install', e => {
-  e.waitUntil(
-    caches.open(CACHE_NAME).then(cache => cache.addAll(ASSETS))
-  );
   self.skipWaiting();
 });
 
+// 激活时清空所有旧缓存
 self.addEventListener('activate', e => {
   e.waitUntil(
-    caches.keys().then(keys => Promise.all(
-      keys.map(k => caches.delete(k))
-    ))
+    caches.keys().then(keys => Promise.all(keys.map(k => caches.delete(k))))
   );
   self.clients.claim();
 });
 
-// Network-first strategy
+// index.html / manifest.json 强制走网络，不缓存、不降级
 self.addEventListener('fetch', e => {
-  if (e.request.url.includes('index.html') || e.request.url.includes('manifest.json')) {
-    e.respondWith(
-      fetch(e.request).then(res => {
-        const clone = res.clone();
-        caches.open(CACHE_NAME).then(c => c.put(e.request, clone));
-        return res;
-      }).catch(() => caches.match(e.request))
-    );
+  const url = new URL(e.request.url);
+  if (url.pathname.includes('index.html') || url.pathname.includes('manifest.json')) {
+    e.respondWith(fetch(e.request));
   }
 });
