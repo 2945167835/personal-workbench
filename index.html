@@ -228,7 +228,7 @@ async function backupAll(){
   clearTimeout(backupTimer);backupTimer=setTimeout(async()=>{
     try{
       const w=await dbAll('weight');
-      const data={weight:w,time:Date.now(),settings:{profile:localStorage.getItem('wb_profile'),dsKey:localStorage.getItem('wb_dsKey'),dsHistory:localStorage.getItem('wb_dsHistory'),aiReports:localStorage.getItem('wb_aiReports')}};
+      const data={weight:w,time:Date.now(),settings:{profile:localStorage.getItem('wb_profile'),dsKey:localStorage.getItem('wb_dsKey'),dsHistory:localStorage.getItem('wb_dsHistory'),aiReports:localStorage.getItem('wb_aiReports'),periods:localStorage.getItem('wb_periods')}};
       localStorage.setItem('wb_backup',JSON.stringify(data));
     }catch{}
   },1000);
@@ -276,6 +276,7 @@ async function render(){
   if(page==='home')await renderHome(app);
   else if(page==='weight')await renderWeight(app);
   else if(page==='deepseek')await renderDeepSeek(app);
+  else if(page==='period')await renderPeriod(app);
   else if(page==='settings')await renderSettings(app);
 }
 
@@ -292,6 +293,7 @@ async function renderHome(app){
   const progress=initWt&&goal&&initWt!==goal?Math.max(0,Math.min(100,((latest?latest.weight:initWt)-initWt)/(goal-initWt)*100)):null;
   const dsHistory=getDsHistory();
   const dsLast=dsHistory[0];
+  const periodDesc=periodSummary(getPeriods());
   const recent3=weightR.slice().reverse().slice(0,3);
 
   app.innerHTML=`
@@ -312,6 +314,9 @@ async function renderHome(app){
         </div>
         <div class="mod-entry" onclick="go('deepseek')">
           <div class="me-icon" style="background:rgba(52,152,219,.1)">🤖</div><div class="me-info"><div class="me-name">DeepSeek</div><div class="me-desc">${dsLast?'余额 ¥'+Number(dsLast.total||0).toFixed(2):'API 余额查询'}</div></div><div class="me-arrow">›</div>
+        </div>
+        <div class="mod-entry" onclick="go('period')">
+          <div class="me-icon" style="background:rgba(231,76,60,.1)">🌸</div><div class="me-info"><div class="me-name">经期</div><div class="me-desc">${periodDesc}</div></div><div class="me-arrow">›</div>
         </div>
       </div>
 
@@ -574,6 +579,80 @@ function md(s){
     .replace(/\n/g,'<br>');
 }
 
+// ==================== PERIOD ====================
+function getPeriods(){try{return JSON.parse(localStorage.getItem('wb_periods')||'[]')}catch{return[]}}
+function savePeriods(a){a.sort((x,y)=>x.date.localeCompare(y.date));localStorage.setItem('wb_periods',JSON.stringify(a));backupAll()}
+function addPeriod(date){const a=getPeriods();if(a.find(x=>x.date===date)){toast('该日期已记录');return false}a.push({id:Date.now(),date});savePeriods(a);return true}
+function delPeriod(id){savePeriods(getPeriods().filter(x=>x.id!==id))}
+function calcCycle(periods){
+  if(periods.length<2)return null;
+  const gaps=[];
+  for(let i=1;i<periods.length;i++){const gap=Math.round((new Date(periods[i].date)-new Date(periods[i-1].date))/86400000);if(gap>=15&&gap<=45)gaps.push(gap)}
+  if(!gaps.length)return null;
+  const recent=gaps.slice(-6);
+  return Math.round(recent.reduce((a,b)=>a+b,0)/recent.length);
+}
+function predictNext(periods){
+  const last=periods[periods.length-1];
+  const cycle=calcCycle(periods)||28;
+  const d=new Date(last.date);d.setDate(d.getDate()+cycle);
+  return localDate(d);
+}
+function periodSummary(periods){
+  if(!periods.length)return '记录经期 · 预测周期';
+  const last=periods[periods.length-1];
+  const sinceLast=Math.round((new Date(today())-new Date(last.date))/86400000);
+  const daysUntilNext=Math.round((new Date(predictNext(periods))-new Date(today()))/86400000);
+  if(sinceLast<=5)return '经期中 · 第 '+sinceLast+' 天';
+  if(daysUntilNext>0)return '预计 '+daysUntilNext+' 天后经期';
+  return '已延迟 '+Math.abs(daysUntilNext)+' 天';
+}
+async function renderPeriod(app){
+  const periods=getPeriods();
+  const cycle=calcCycle(periods);
+  const last=periods[periods.length-1];
+  const next=last?predictNext(periods):null;
+  const todayDate=today();
+  let bigText='--',status='',statusColor='var(--primary)';
+  if(last){
+    const sinceLast=Math.round((new Date(todayDate)-new Date(last.date))/86400000);
+    const daysUntilNext=Math.round((new Date(next)-new Date(todayDate))/86400000);
+    if(sinceLast<=5){status='经期中';statusColor='var(--danger)';bigText='第 '+sinceLast+' 天'}
+    else if(daysUntilNext>0){status='距离下次';statusColor='var(--primary)';bigText=daysUntilNext+' 天'}
+    else{status='已延迟';statusColor='var(--warning)';bigText=Math.abs(daysUntilNext)+' 天'}
+  }
+  app.innerHTML=`
+    <div class="header"><button class="back" onclick="go('home')">←</button><h1>经期</h1></div>
+    <div class="main">
+      <div class="widget" style="text-align:center">
+        <div class="widget-title">🌸 经期预测</div>
+        ${last?`
+          <div style="font-size:44px;font-weight:700;color:${statusColor};margin:8px 0">${bigText}</div>
+          <div style="font-size:14px;color:var(--text2)">${status} · 下次预计 ${next}</div>
+          <div style="font-size:12px;color:var(--text3);margin-top:6px">平均周期 ${cycle?cycle+' 天':'数据不足 · 暂按 28 天'} · 上次 ${last.date}</div>
+        `:`
+          <div style="font-size:15px;color:var(--text3);padding:24px 0">还没有经期记录</div>
+          <div style="font-size:13px;color:var(--text2)">记录几次后即可预测周期</div>
+        `}
+      </div>
+      <button class="btn-primary" id="periodBtn" style="margin:0 0 12px">🌸 记录本次来潮</button>
+      <div class="section-title">历史记录 · ${periods.length} 次</div>
+      ${periods.length===0?'<div class="empty"><div class="eicon">🌸</div><p>暂无记录</p></div>':''}
+      ${periods.slice().reverse().map(p=>{const idx=periods.indexOf(p);const prev=periods[idx-1];const gap=prev?Math.round((new Date(p.date)-new Date(prev.date))/86400000):null;return`<div class="list-item"><div class="cat-dot" style="background:rgba(231,76,60,.1)">🌸</div><div class="linfo"><div class="ltitle">${p.date}</div><div class="lsub">${gap?'周期 '+gap+' 天':'首次记录'}</div></div><button class="ldel" data-pdel="${p.id}">✕</button></div>`}).join('')}
+      <div style="margin-top:12px;padding:10px 12px;background:rgba(149,165,166,.08);border-radius:8px;font-size:11px;color:var(--text3);text-align:left">📌 预测基于历史周期的平均值，仅供参考。经期受情绪、压力、作息等影响，实际日期可能提前或延后。</div>
+    </div>
+  `;
+  document.querySelectorAll('[data-pdel]').forEach(b=>b.onclick=e=>{e.stopPropagation();showConfirm('删除这条经期记录？',()=>{delPeriod(Number(b.dataset.pdel));render()})});
+  $('#periodBtn')?.addEventListener('click',()=>{
+    showModal('记录本次来潮',`<div class="fg"><label>开始日期</label><input type="date" id="pDate" value="${today()}"></div>`,()=>{
+      const d=$('#pDate').value;
+      if(!d){toast('请选择日期');throw new Error()}
+      if(!addPeriod(d))throw new Error();
+      render();
+    });
+  });
+}
+
 // ==================== DEEPSEEK ====================
 async function renderDeepSeek(app){
   const key=localStorage.getItem('wb_dsKey')||'';
@@ -638,7 +717,7 @@ async function renderSettings(app){
 }
 async function expCSV(){
   const w=await dbAll('weight');
-  const json={weight:w,time:Date.now(),settings:{profile:localStorage.getItem('wb_profile'),dsKey:localStorage.getItem('wb_dsKey'),dsHistory:localStorage.getItem('wb_dsHistory'),aiReports:localStorage.getItem('wb_aiReports')}};
+  const json={weight:w,time:Date.now(),settings:{profile:localStorage.getItem('wb_profile'),dsKey:localStorage.getItem('wb_dsKey'),dsHistory:localStorage.getItem('wb_dsHistory'),aiReports:localStorage.getItem('wb_aiReports'),periods:localStorage.getItem('wb_periods')}};
   const jb=new Blob([JSON.stringify(json,null,2)],{type:'application/json'});
   const ja=document.createElement('a');ja.href=URL.createObjectURL(jb);ja.download='workbench_backup.json';ja.click();
   setTimeout(()=>toast('JSON备份文件已下载'),200);
