@@ -259,10 +259,11 @@ function go(p){page=p;render()}
 
 // Helpers
 const $=s=>document.querySelector(s);
-function fd(d){return d.slice(0,10)}function today(){return new Date().toISOString().slice(0,10)}function month(){const n=new Date();return n.getFullYear()+'-'+String(n.getMonth()+1).padStart(2,'0')}
+function fd(d){return d.slice(0,10)}function localDate(d){return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')}function today(){return localDate(new Date())}function month(){const n=new Date();return n.getFullYear()+'-'+String(n.getMonth()+1).padStart(2,'0')}
 function j(kg){return(kg*2).toFixed(1)} // kg → 斤 for display
 function jr(jin){return parseFloat((jin/2).toFixed(2))} // 斤 → kg for storage
 function toast(m){const t=$('#toast');t.textContent=m;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),1800)}
+function getDsHistory(){try{return JSON.parse(localStorage.getItem('wb_dsHistory')||'[]')}catch{return[]}}
 
 // ==================== Theme ====================
 function isDark(){const t=localStorage.getItem('wb_theme')||'auto';if(t==='dark')return true;if(t==='light')return false;return window.matchMedia('(prefers-color-scheme: dark)').matches}
@@ -289,7 +290,7 @@ async function renderHome(app){
   let bmi='',bl='';
   if(latest&&height){bmi=(latest.weight/((height/100)**2)).toFixed(1);bl=bmiTag(bmi,height)}
   const progress=initWt&&goal&&initWt!==goal?Math.max(0,Math.min(100,((latest?latest.weight:initWt)-initWt)/(goal-initWt)*100)):null;
-  const dsHistory=JSON.parse(localStorage.getItem('wb_dsHistory')||'[]');
+  const dsHistory=getDsHistory();
   const dsLast=dsHistory[0];
   const recent3=weightR.slice().reverse().slice(0,3);
 
@@ -310,7 +311,7 @@ async function renderHome(app){
           <div class="me-icon me-weight">⚖️</div><div class="me-info"><div class="me-name">体重</div><div class="me-desc">${latest?j(latest.weight)+' 斤'+(goal?' · 目标 '+j(goal)+' 斤':''):'记录体重、BMI、趋势'}</div></div><div class="me-arrow">›</div>
         </div>
         <div class="mod-entry" onclick="go('deepseek')">
-          <div class="me-icon" style="background:rgba(52,152,219,.1)">🤖</div><div class="me-info"><div class="me-name">DeepSeek</div><div class="me-desc">${dsLast?'余额 ¥'+dsLast.total.toFixed(2):'API 余额查询'}</div></div><div class="me-arrow">›</div>
+          <div class="me-icon" style="background:rgba(52,152,219,.1)">🤖</div><div class="me-info"><div class="me-name">DeepSeek</div><div class="me-desc">${dsLast?'余额 ¥'+Number(dsLast.total||0).toFixed(2):'API 余额查询'}</div></div><div class="me-arrow">›</div>
         </div>
       </div>
 
@@ -396,7 +397,7 @@ async function renderWeight(app){
 function bmiTag(b,h){const v=parseFloat(b);if(h>0){if(v<18.5)return'偏瘦';if(v<24)return'正常';if(v<28)return'偏胖';return'肥胖'}if(v<18.5)return'偏瘦';if(v<24)return'正常';if(v<28)return'偏胖';return'肥胖'}
 function calcBMR(wt,pf){if(!pf.age||!pf.height)return null;const h=pf.height;return pf.gender==='male'?Math.round(66+13.7*wt+5*h-6.8*pf.age):Math.round(655+9.6*wt+1.8*h-4.7*pf.age)}
 function avgL(r,n){const s=r.slice(-n);return parseFloat((s.reduce((a,r)=>a+r.weight,0)/s.length).toFixed(1))}
-function cW(records){if(records.length<7)return[];const w=[],n=new Date();for(let i=3;i>=0;i--){const e=new Date(n);e.setDate(e.getDate()-i*7);const s=new Date(e);s.setDate(s.getDate()-6);const wk=records.filter(r=>r.date>=s.toISOString().slice(0,10)&&r.date<=e.toISOString().slice(0,10));if(!wk.length)continue;const a=parseFloat((wk.reduce((s,r)=>s+r.weight,0)/wk.length).toFixed(1));const p=w[w.length-1];const d=p!==undefined?(a-p._raw):null;w.push({label:`W${4-i}`,avg:j(a)+'斤',diff:d!==null?(d>=0?'+':'')+j(Math.abs(d))+'斤':'',_raw:a})}return w}
+function cW(records){if(records.length<7)return[];const w=[],n=new Date();for(let i=3;i>=0;i--){const e=new Date(n);e.setDate(e.getDate()-i*7);const s=new Date(e);s.setDate(s.getDate()-6);const wk=records.filter(r=>r.date>=localDate(s)&&r.date<=localDate(e));if(!wk.length)continue;const a=parseFloat((wk.reduce((s,r)=>s+r.weight,0)/wk.length).toFixed(1));const p=w[w.length-1];const d=p!==undefined?(a-p._raw):null;w.push({label:`W${4-i}`,avg:j(a)+'斤',diff:d!==null?(d>=0?'+':'')+j(Math.abs(d))+'斤':'',_raw:a})}return w}
 function pred(r,g){const l=r.slice(-5);if(l.length<2)return'数据不足';let sx=0,sy=0,sxy=0,sx2=0,n=l.length;l.forEach((r,i)=>{sx+=i;sy+=r.weight;sxy+=i*r.weight;sx2+=i*i});const sl=(n*sxy-sx*sy)/(n*sx2-sx*sx);if(Math.abs(sl)<0.001)return'体重趋于稳定';const d=(g-l[n-1].weight)/sl;if(d<=0)return sl<0?'已达成目标！🎉':'体重在上升，暂无法预测';const p=new Date();p.setDate(p.getDate()+Math.round(d));return`预计 ${p.toLocaleDateString('zh-CN')} 达到目标（约${Math.round(d)}天后）`}
 
 function drawWtChart(records,h){
@@ -577,14 +578,14 @@ function md(s){
 async function renderDeepSeek(app){
   const key=localStorage.getItem('wb_dsKey')||'';
   if(!key){app.innerHTML=`<div class="header"><button class="back" onclick="go('home')">←</button><h1>DeepSeek</h1></div><div class="main"><div class="widget" style="text-align:center"><p style="color:var(--text3);margin-bottom:10px">未设置 API Key</p><span class="si-btn" onclick="go('settings')" style="font-size:14px">去设置页填写 →</span></div></div>`;return}
-  const history=JSON.parse(localStorage.getItem('wb_dsHistory')||'[]');
+  const history=getDsHistory();
   const last=history[0];
   app.innerHTML=`
     <div class="header"><button class="back" onclick="go('home')">←</button><h1>DeepSeek</h1></div>
     <div class="main">
-      <div class="widget" style="text-align:center"><div id="dsBalance">${last?`<div style="font-size:36px;font-weight:700;color:${last.total>0?'var(--success)':'var(--danger)'}">¥${last.total.toFixed(2)}</div><div style="font-size:11px;color:var(--text3);margin-top:2px">${last.time.slice(0,16)} 查询</div>`:'<div style="font-size:14px;color:var(--text3);padding:10px">点击下方按钮查询</div>'}</div></div>
+      <div class="widget" style="text-align:center"><div id="dsBalance">${last?`<div style="font-size:36px;font-weight:700;color:${Number(last.total||0)>0?'var(--success)':'var(--danger)'}">¥${Number(last.total||0).toFixed(2)}</div><div style="font-size:11px;color:var(--text3);margin-top:2px">${last.time.slice(0,16)} 查询</div>`:'<div style="font-size:14px;color:var(--text3);padding:10px">点击下方按钮查询</div>'}</div></div>
       <button class="btn-primary" id="dsQueryBtn" style="margin-bottom:12px">🔄 查询余额</button>
-      ${history.length>1?`<div class="widget"><div class="widget-title">📈 用量记录</div>${history.slice(1).map(h=>`<div style="display:flex;justify-content:space-between;padding:4px 0;font-size:12px;border-bottom:1px solid var(--line)"><span style="color:var(--text3)">${h.time.slice(0,16)}</span><span style="font-weight:600;color:${h.total>0?'var(--success)':'var(--danger)'}">¥${h.total.toFixed(2)}</span></div>`).join('')}</div>`:''}
+      ${history.length>1?`<div class="widget"><div class="widget-title">📈 用量记录</div>${history.slice(1).map(h=>`<div style="display:flex;justify-content:space-between;padding:4px 0;font-size:12px;border-bottom:1px solid var(--line)"><span style="color:var(--text3)">${h.time.slice(0,16)}</span><span style="font-weight:600;color:${Number(h.total||0)>0?'var(--success)':'var(--danger)'}">¥${Number(h.total||0).toFixed(2)}</span></div>`).join('')}</div>`:''}
     </div>`;
   $('#dsQueryBtn').addEventListener('click',async()=>{
     const el=$('#dsBalance');el.innerHTML='查询中...';
@@ -596,7 +597,7 @@ async function renderDeepSeek(app){
         const b=d.balance_infos[0];
         el.innerHTML=`<div style="font-size:36px;font-weight:700;color:${parseFloat(b.total_balance)>0?'var(--success)':'var(--danger)'}">¥${parseFloat(b.total_balance).toFixed(2)}</div><div style="font-size:12px;color:var(--text3);margin-top:4px">总余额${b.currency} · 充值 ¥${parseFloat(b.topped_up_balance).toFixed(2)} · 赠送 ¥${parseFloat(b.granted_balance).toFixed(2)}</div>`;
         const now=new Date();const ts=now.getFullYear()+'-'+String(now.getMonth()+1).padStart(2,'0')+'-'+String(now.getDate()).padStart(2,'0')+' '+String(now.getHours()).padStart(2,'0')+':'+String(now.getMinutes()).padStart(2,'0');
-        const hist=[{time:ts,balance:b.total_balance,total:parseFloat(b.total_balance)},...JSON.parse(localStorage.getItem('wb_dsHistory')||'[]')].slice(0,50);
+        const hist=[{time:ts,balance:b.total_balance,total:parseFloat(b.total_balance)},...getDsHistory()].slice(0,50);
         localStorage.setItem('wb_dsHistory',JSON.stringify(hist));
         render();
       }else{el.innerHTML=`<p style="color:var(--danger)">${d.error?.message||'查询失败'}</p>`}
