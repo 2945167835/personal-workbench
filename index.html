@@ -585,12 +585,23 @@ function savePeriods(a){a.sort((x,y)=>x.date.localeCompare(y.date));localStorage
 function addPeriod(date){const a=getPeriods();if(a.find(x=>x.date===date)){toast('该日期已记录');return false}a.push({id:Date.now(),date});savePeriods(a);return true}
 function delPeriod(id){savePeriods(getPeriods().filter(x=>x.id!==id))}
 function calcCycle(periods){
-  if(periods.length<2)return null;
   const gaps=[];
   for(let i=1;i<periods.length;i++){const gap=Math.round((new Date(periods[i].date)-new Date(periods[i-1].date))/86400000);if(gap>=15&&gap<=45)gaps.push(gap)}
   if(!gaps.length)return null;
   const recent=gaps.slice(-6);
-  return Math.round(recent.reduce((a,b)=>a+b,0)/recent.length);
+  // 加权平均：越近的周期权重越高，更能反映当前状态
+  let wsum=0,sum=0;
+  recent.forEach((g,i)=>{const w=i+1;sum+=g*w;wsum+=w});
+  return Math.round(sum/wsum);
+}
+function cycleRange(periods){
+  const gaps=[];
+  for(let i=1;i<periods.length;i++){const gap=Math.round((new Date(periods[i].date)-new Date(periods[i-1].date))/86400000);if(gap>=15&&gap<=45)gaps.push(gap)}
+  if(gaps.length<2)return null;
+  const recent=gaps.slice(-6);
+  const avg=recent.reduce((a,b)=>a+b,0)/recent.length;
+  const sd=Math.sqrt(recent.reduce((a,b)=>a+(b-avg)*(b-avg),0)/recent.length);
+  return Math.max(2,Math.round(sd));
 }
 function cycleStats(periods){
   const gaps=[];
@@ -622,6 +633,13 @@ async function renderPeriod(app){
   const cycle=stats?stats.avg:null;
   const last=periods[periods.length-1];
   const next=last?predictNext(periods):null;
+  const range=last?cycleRange(periods):null;
+  let nextStart=next,nextEnd=next;
+  if(next&&range){
+    const d1=new Date(next);d1.setDate(d1.getDate()-range);nextStart=localDate(d1);
+    const d2=new Date(next);d2.setDate(d2.getDate()+range);nextEnd=localDate(d2);
+  }
+  const nextDisplay=range?`${nextStart} ~ ${nextEnd}`:next;
   const todayDate=today();
   let bigText='--',status='',statusColor='var(--primary)';
   if(last){
@@ -665,7 +683,7 @@ async function renderPeriod(app){
         <div class="widget-title">🌸 经期预测</div>
         ${last?`
           <div style="font-size:44px;font-weight:700;color:${statusColor};margin:8px 0">${bigText}</div>
-          <div style="font-size:14px;color:var(--text2)">${status} · 下次预计 ${next}</div>
+          <div style="font-size:14px;color:var(--text2)">${status} · 预计 ${nextDisplay}</div>
           <div style="font-size:12px;color:var(--text3);margin-top:6px">${cycle?'平均周期 '+cycle+' 天':'数据不足 · 暂按 28 天'} · 上次 ${last.date} · 共 ${periods.length} 次</div>
         `:`
           <div style="font-size:15px;color:var(--text3);padding:24px 0">还没有经期记录</div>
