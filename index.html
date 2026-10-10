@@ -370,6 +370,7 @@ async function renderWeight(app){
         <button class="add-btn" id="quickWtBtn">记录</button>
       </div>
       <button class="btn-primary" id="aiBtn" style="margin:0 0 12px">🤖 AI 分析体重</button>
+      ${records.length>=2?`<button class="btn-primary" id="exportImgBtn" style="margin:0 0 12px;background:linear-gradient(135deg,#27AE60,#2ECC71)">📤 导出体重报告图片</button>`:''}
       ${pf.targetWeight?`<div class="summary-row"><div class="summary-card"><div class="sc-label">距目标</div><div class="sc-val ${latest&&latest.weight>pf.targetWeight?'sc-red':'sc-blue'}">${latest?j(Math.abs(latest.weight-pf.targetWeight)):'--'} 斤</div><div style="font-size:10px;color:${latest&&latest.weight>pf.targetWeight?'var(--danger)':'var(--success)'}">${latest&&latest.weight>pf.targetWeight?'还需减 ':'还需增 '}${latest?j(Math.abs(latest.weight-pf.targetWeight)):'--'} 斤</div></div><div class="summary-card"><div class="sc-label">已完成</div><div class="sc-val sc-blue">${progress!==null?progress.toFixed(1):'--'}%</div></div></div>`:''}
       <div class="summary-row"><div class="summary-card"><div class="sc-label">7日均值</div><div class="sc-val sc-blue">${avg7?j(avg7):'--'} 斤</div></div><div class="summary-card"><div class="sc-label">30日均值</div><div class="sc-val sc-blue">${avg30?j(avg30):'--'} 斤</div></div><div class="summary-card"><div class="sc-label">本月变化</div><div class="sc-val ${mChange>0?'sc-red':'sc-blue'}">${mChange!==null?(mChange>=0?'+':'-')+j(Math.abs(mChange)):'--'} 斤</div></div></div>
       ${weeks.length>0?`<div class="summary-row">${weeks.map(w=>`<div class="summary-card"><div class="sc-label">${w.label}</div><div class="sc-val" style="font-size:13px">${w.avg}</div><div class="sc-label">${w.diff}</div></div>`).join('')}</div>`:''}
@@ -397,6 +398,7 @@ async function renderWeight(app){
   });
   $('#quickWt')?.addEventListener('keydown',e=>{if(e.key==='Enter')$('#quickWtBtn')?.click()});
   $('#aiBtn')?.addEventListener('click',aiAnalyze);
+  $('#exportImgBtn')?.addEventListener('click',()=>exportWeightImage(records,pf));
   if(records.length>=2)setTimeout(()=>drawWtChart(records,parseFloat(height)),100);if(records.length>=3)setTimeout(()=>drawSmooth(records),150);
 }
 function bmiTag(b,h){const v=parseFloat(b);if(h>0){if(v<18.5)return'偏瘦';if(v<24)return'正常';if(v<28)return'偏胖';return'肥胖'}if(v<18.5)return'偏瘦';if(v<24)return'正常';if(v<28)return'偏胖';return'肥胖'}
@@ -448,6 +450,67 @@ function showWeightForm(){
     const ex=await dbAll('weight');const dup=ex.find(r=>r.date===date);
     if(dup)await dbPut('weight',{...dup,weight:wt,note:$('#fNote').value.trim()});else await dbAdd('weight',{weight:wt,date,note:$('#fNote').value.trim(),createdAt:Date.now()});render();
   });
+}
+
+function exportWeightImage(records,pf){
+  const latest=records[records.length-1];
+  const height=pf.height;
+  const bmi=height?(latest.weight/((height/100)**2)).toFixed(1):'';
+  const bl=height?bmiTag(bmi,height):'';
+  const initWt=pf.initWeight||(records[0]?records[0].weight:null);
+  const change=initWt&&latest?parseFloat((latest.weight-initWt).toFixed(1)):null;
+  const dark=isDark();
+  const W=1080,H=1400;
+  const cv=document.createElement('canvas');cv.width=W;cv.height=H;
+  const ctx=cv.getContext('2d');
+  const BG=dark?'#222528':'#ffffff',FG=dark?'#e6e6e6':'#2c3e50',SUB=dark?'#9aa0a6':'#7f8c8d',GRID=dark?'#32363a':'#eeeeee';
+  ctx.fillStyle=BG;ctx.fillRect(0,0,W,H);
+  // 标题
+  ctx.fillStyle=FG;ctx.font='bold 52px sans-serif';ctx.textAlign='center';
+  ctx.fillText('体重记录报告',W/2,90);
+  ctx.fillStyle=SUB;ctx.font='28px sans-serif';
+  ctx.fillText(records[0].date+'  ~  '+latest.date,W/2,140);
+  ctx.strokeStyle=GRID;ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(60,175);ctx.lineTo(W-60,175);ctx.stroke();
+  // 关键数据
+  const dataY=240;
+  const cols=[W/8,W*3/8,W*5/8,W*7/8];
+  const items=[
+    {label:'当前体重',val:j(latest.weight)+' 斤'},
+    {label:'目标体重',val:pf.targetWeight?j(pf.targetWeight)+' 斤':'--'},
+    {label:'BMI',val:bmi?bmi+' · '+bl:'--'},
+    {label:'累计变化',val:change!==null?(change>=0?'+':'-')+j(Math.abs(change))+' 斤':'--'}
+  ];
+  items.forEach((it,i)=>{
+    ctx.fillStyle=SUB;ctx.font='24px sans-serif';ctx.textAlign='center';ctx.fillText(it.label,cols[i],dataY);
+    ctx.fillStyle=FG;ctx.font='bold 34px sans-serif';ctx.fillText(it.val,cols[i],dataY+52);
+  });
+  // 图表区
+  const chartX=90,chartY=380,chartW=W-180,chartH=820;
+  const wts=records.map(r=>r.weight);
+  const minW=Math.floor(Math.min(...wts)-2),maxW=Math.ceil(Math.max(...wts)+2);
+  ctx.textAlign='right';
+  for(let i=minW;i<=maxW;i+=2){
+    const y=chartY+chartH-((i-minW)/(maxW-minW))*chartH;
+    ctx.strokeStyle=GRID;ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(chartX,y);ctx.lineTo(chartX+chartW,y);ctx.stroke();
+    ctx.fillStyle=SUB;ctx.font='22px sans-serif';ctx.fillText((i*2).toFixed(0),chartX-16,y+8);
+  }
+  // 折线
+  ctx.strokeStyle='#4A90D9';ctx.lineWidth=5;ctx.lineJoin='round';ctx.lineCap='round';ctx.beginPath();
+  records.forEach((r,i)=>{const x=chartX+(i/(records.length-1))*chartW;const y=chartY+chartH-((r.weight-minW)/(maxW-minW))*chartH;i===0?ctx.moveTo(x,y):ctx.lineTo(x,y)});
+  ctx.stroke();
+  // 数据点
+  records.forEach((r,i)=>{const x=chartX+(i/(records.length-1))*chartW;const y=chartY+chartH-((r.weight-minW)/(maxW-minW))*chartH;ctx.fillStyle='#4A90D9';ctx.beginPath();ctx.arc(x,y,7,0,Math.PI*2);ctx.fill();ctx.fillStyle=BG;ctx.beginPath();ctx.arc(x,y,3,0,Math.PI*2);ctx.fill()});
+  // X轴日期
+  ctx.fillStyle=SUB;ctx.font='20px sans-serif';ctx.textAlign='center';
+  const step=Math.max(1,Math.floor(records.length/6));
+  records.forEach((r,i)=>{if(i%step===0||i===records.length-1)ctx.fillText(r.date.slice(5),chartX+(i/(records.length-1))*chartW,chartY+chartH+44)});
+  // 脚注
+  ctx.fillStyle=SUB;ctx.font='22px sans-serif';ctx.textAlign='center';ctx.fillText('生成自 · 个人工作台',W/2,H-50);
+  // 导出
+  const url=cv.toDataURL('image/png');
+  const a=document.createElement('a');a.href=url;a.download='体重记录报告_'+today()+'.png';
+  document.body.appendChild(a);a.click();document.body.removeChild(a);
+  toast('报告图片已生成');
 }
 
 // ==================== AI WEIGHT ANALYSIS ====================
