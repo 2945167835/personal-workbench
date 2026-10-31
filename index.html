@@ -202,6 +202,33 @@ body{
 .toast{position:fixed;bottom:90px;left:50%;transform:translateX(-50%);z-index:400;background:rgba(0,0,0,.78);color:#fff;padding:10px 24px;border-radius:20px;font-size:13px;opacity:0;transition:opacity .3s;pointer-events:none;}
 .toast.show{opacity:1;}
 
+/* Fitness */
+.fit-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;}
+.fit-head .fh-month{font-size:16px;font-weight:700;}
+.fit-head .fh-nav{display:flex;gap:6px;}
+.fit-head .fh-btn{width:30px;height:30px;border:none;background:var(--line);border-radius:8px;font-size:14px;cursor:pointer;color:var(--text);}
+.fit-week{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;margin-bottom:4px;}
+.fit-week span{text-align:center;font-size:11px;color:var(--text2);padding:3px 0;}
+.fit-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;}
+.fit-cell{min-height:62px;border-radius:10px;background:var(--input-bg);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:4px 2px;border:1px solid transparent;transition:.1s;}
+.fit-cell .fc-date{font-size:11px;color:var(--text2);line-height:1.2;}
+.fit-cell .fc-ico{font-size:16px;line-height:1;margin:2px 0 1px;}
+.fit-cell .fc-label{font-size:9px;color:var(--text3);line-height:1.2;}
+.fit-cell.out{opacity:.25;}
+.fit-cell.today{border-color:var(--primary);}
+.fit-cell.done{background:rgba(39,174,96,.16);border-color:rgba(39,174,96,.45);}
+.fit-cell.done .fc-label{color:var(--success);font-weight:700;}
+.fit-cell.miss{background:rgba(231,76,60,.12);border-color:rgba(231,76,60,.35);}
+.fit-cell.miss .fc-label{color:var(--danger);}
+.fit-cell.todo{background:rgba(74,144,217,.14);border-color:var(--primary);}
+.fit-cell.todo .fc-label{color:var(--primary);font-weight:700;}
+.fit-cell.plan{background:var(--card);border-color:var(--line);}
+.fit-cell.rest{background:var(--line);opacity:.65;}
+.fit-cell.clickable{cursor:pointer;}
+.fit-cell.clickable:active{transform:scale(.92);}
+.fit-legend{display:flex;flex-wrap:wrap;gap:12px;justify-content:center;font-size:11px;color:var(--text2);margin-top:10px;}
+.fit-legend span{display:inline-flex;align-items:center;gap:5px;}
+.fit-dot{width:10px;height:10px;border-radius:3px;display:inline-block;}
 .hidden{display:none!important;}
 </style>
 <script>try{var _t=localStorage.getItem('wb_theme')||'auto';var _d=_t==='dark'||(_t==='auto'&&matchMedia('(prefers-color-scheme: dark)').matches);document.documentElement.setAttribute('data-theme',_d?'dark':'light')}catch(e){}</script>
@@ -228,7 +255,7 @@ async function backupAll(){
   clearTimeout(backupTimer);backupTimer=setTimeout(async()=>{
     try{
       const w=await dbAll('weight');
-      const data={weight:w,time:Date.now(),settings:{profile:localStorage.getItem('wb_profile'),dsKey:localStorage.getItem('wb_dsKey'),dsHistory:localStorage.getItem('wb_dsHistory'),aiReports:localStorage.getItem('wb_aiReports'),periods:localStorage.getItem('wb_periods')}};
+      const data={weight:w,time:Date.now(),settings:{profile:localStorage.getItem('wb_profile'),dsKey:localStorage.getItem('wb_dsKey'),dsHistory:localStorage.getItem('wb_dsHistory'),aiReports:localStorage.getItem('wb_aiReports'),periods:localStorage.getItem('wb_periods'),fitness:localStorage.getItem('wb_fitness')}};
       localStorage.setItem('wb_backup',JSON.stringify(data));
     }catch{}
   },1000);
@@ -277,6 +304,7 @@ async function render(){
   else if(page==='weight')await renderWeight(app);
   else if(page==='deepseek')await renderDeepSeek(app);
   else if(page==='period')await renderPeriod(app);
+  else if(page==='fitness')await renderFitness(app);
   else if(page==='settings')await renderSettings(app);
 }
 
@@ -294,6 +322,7 @@ async function renderHome(app){
   const dsHistory=getDsHistory();
   const dsLast=dsHistory[0];
   const periodDesc=periodSummary(getPeriods());
+  const fitDesc=fitSummary();
   const recent3=weightR.slice().reverse().slice(0,3);
 
   app.innerHTML=`
@@ -317,6 +346,9 @@ async function renderHome(app){
         </div>
         <div class="mod-entry" onclick="go('period')">
           <div class="me-icon" style="background:rgba(231,76,60,.1)">🌸</div><div class="me-info"><div class="me-name">经期</div><div class="me-desc">${periodDesc}</div></div><div class="me-arrow">›</div>
+        </div>
+        <div class="mod-entry" onclick="go('fitness')">
+          <div class="me-icon" style="background:rgba(39,174,96,.1)">🏃</div><div class="me-info"><div class="me-name">健身</div><div class="me-desc">${fitDesc}</div></div><div class="me-arrow">›</div>
         </div>
       </div>
 
@@ -642,6 +674,168 @@ function md(s){
     .replace(/\n/g,'<br>');
 }
 
+// ==================== FITNESS ====================
+let fitMonth=month();
+const FIT_CYCLE=['walk','walk','strength','rest'];
+const FIT_META={walk:{ico:'🚶',label:'快走'},climb:{ico:'🧗',label:'爬坡'},strength:{ico:'🏋️',label:'力量'},rest:{ico:'😴',label:'休息'}};
+
+function getFitness(){try{const v=JSON.parse(localStorage.getItem('wb_fitness')||'null');if(v&&v.startDate)return v}catch{}return null}
+function saveFitness(cfg){localStorage.setItem('wb_fitness',JSON.stringify(cfg));backupAll()}
+function addDaysStr(ds,n){const d=new Date(ds+'T00:00:00');d.setDate(d.getDate()+n);return localDate(d)}
+function shiftMonth(ym,n){const p=ym.split('-').map(Number);const d=new Date(p[0],p[1]-1+n,1);return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')}
+
+function buildFitnessSchedule(cfg){
+  if(!cfg||!cfg.startDate)return[];
+  const records=cfg.records||{};
+  const todayStr=today();
+  const endStr=addDaysStr(todayStr,45);
+  let pos=0,miss=0,climb=false;
+  const out=[];
+  const d=new Date(cfg.startDate+'T00:00:00');
+  let guard=0;
+  while(localDate(d)<=endStr&&guard<2000){
+    guard++;
+    const ds=localDate(d);
+    const rec=records[ds];
+    if(climb){
+      if(rec==='done'){out.push({date:ds,type:'climb',status:'done'});climb=false;pos=0;miss=0;}
+      else if(rec==='miss'||ds<todayStr){out.push({date:ds,type:'climb',status:'miss'});miss++;}
+      else if(ds===todayStr){out.push({date:ds,type:'climb',status:'todo'});climb=false;pos=0;miss=0;}
+      else{out.push({date:ds,type:'climb',status:'plan'});climb=false;pos=0;}
+      d.setDate(d.getDate()+1);continue;
+    }
+    const type=FIT_CYCLE[pos];
+    if(type==='rest'){
+      out.push({date:ds,type:'rest',status:'rest'});
+      pos=(pos+1)%4;
+    }else{
+      if(rec==='done'){out.push({date:ds,type,status:'done'});miss=0;pos=(pos+1)%4;}
+      else if(rec==='miss'||ds<todayStr){out.push({date:ds,type,status:'miss'});miss++;if(miss>=2){miss=0;climb=true;pos=0;}}
+      else if(ds===todayStr){out.push({date:ds,type,status:'todo'});miss=0;pos=(pos+1)%4;}
+      else{out.push({date:ds,type,status:'plan'});pos=(pos+1)%4;}
+    }
+    d.setDate(d.getDate()+1);
+  }
+  return out;
+}
+
+function fitSummary(){
+  const cfg=getFitness();if(!cfg)return '快走 · 力量 · 休息循环';
+  const s=buildFitnessSchedule(cfg).find(x=>x.date===today());
+  if(!s)return '今日无计划';
+  if(s.type==='rest')return '😴 今日休息';
+  return '今日 '+FIT_META[s.type].label+(s.status==='done'?' · ✅':'');
+}
+
+function fitCycleStatus(date,curStatus){
+  const cfg=getFitness();if(!cfg)return;
+  const records={...cfg.records};
+  if(curStatus==='done'){records[date]='miss';}
+  else if(curStatus==='miss'){
+    if(records[date]){delete records[date];toast('已恢复')}
+    else{records[date]='done';}
+  }else{records[date]='done';}
+  cfg.records=records;saveFitness(cfg);render();
+}
+
+async function renderFitness(app){
+  const cfg=getFitness();
+  if(!cfg){
+    app.innerHTML=`
+      <div class="header"><button class="back" onclick="go('home')">←</button><h1>健身</h1></div>
+      <div class="main">
+        <div class="widget" style="text-align:center;padding:30px 16px">
+          <div style="font-size:44px;margin-bottom:10px">🏃</div>
+          <div style="font-size:15px;font-weight:600;margin-bottom:6px">开始你的健身计划</div>
+          <div style="font-size:12px;color:var(--text2);line-height:1.8;margin-bottom:16px">4 天循环：快走 → 快走 → 力量 → 休息<br>选定开始日期后自动排期</div>
+          <button class="btn-primary" id="fitStartBtn">📅 选择开始日期</button>
+        </div>
+      </div>`;
+    $('#fitStartBtn')?.addEventListener('click',()=>{
+      showModal('开始日期',`<div class="fg"><label>首次运动日期</label><input type="date" id="fitStartDate" value="${today()}"></div>`,()=>{
+        const d=$('#fitStartDate').value;
+        if(!d){toast('请选择日期');throw new Error()}
+        saveFitness({startDate:d,records:{}});fitMonth=d.slice(0,7);render();
+      });
+    });
+    return;
+  }
+  const schedule=buildFitnessSchedule(cfg);
+  const curYm=month();
+  const monthDone=schedule.filter(s=>s.status==='done'&&s.date.startsWith(curYm)).length;
+  const totalDone=schedule.filter(s=>s.status==='done').length;
+  let streak=0;
+  const past=schedule.filter(s=>s.date<=today()&&s.type!=='rest').reverse();
+  for(const s of past){if(s.status==='done')streak++;else if(s.status==='todo')continue;else break;}
+  const todayPlan=schedule.find(s=>s.date===today());
+
+  app.innerHTML=`
+    <div class="header"><button class="back" onclick="go('home')">←</button><h1>健身</h1><div class="h-actions"><button class="h-btn" id="fitSetBtn">⚙️</button></div></div>
+    <div class="main">
+      <div class="summary-row">
+        <div class="summary-card"><div class="sc-label">本月完成</div><div class="sc-val sc-blue">${monthDone} 天</div></div>
+        <div class="summary-card"><div class="sc-label">累计完成</div><div class="sc-val sc-green">${totalDone} 天</div></div>
+        <div class="summary-card"><div class="sc-label">连续训练</div><div class="sc-val sc-warn">${streak} 天</div></div>
+      </div>
+      ${todayPlan?(todayPlan.type==='rest'?`<div class="widget" style="text-align:center"><div style="font-size:20px;font-weight:700">😴 今日休息</div><div style="font-size:11px;color:var(--text3);margin-top:4px">好好恢复，明天继续</div></div>`:`<div class="widget" style="text-align:center"><div style="font-size:13px;color:var(--text2)">📌 今日计划</div><div style="font-size:22px;font-weight:700;margin:4px 0">${FIT_META[todayPlan.type].ico} ${FIT_META[todayPlan.type].label}</div><div style="font-size:11px;color:var(--text3)">${todayPlan.status==='done'?'✅ 已完成':todayPlan.status==='miss'?'❌ 未完成':'点击日历标记完成'}</div></div>`):''}
+      ${renderFitCalendar(schedule)}
+      <div class="fit-legend">
+        <span><i class="fit-dot" style="background:rgba(39,174,96,.5)"></i>完成</span>
+        <span><i class="fit-dot" style="background:rgba(231,76,60,.5)"></i>未完成</span>
+        <span><i class="fit-dot" style="background:rgba(74,144,217,.5)"></i>今日</span>
+        <span><i class="fit-dot" style="background:var(--line)"></i>休息</span>
+      </div>
+      <div style="margin-top:14px;padding:10px 12px;background:rgba(149,165,166,.08);border-radius:8px;font-size:11px;color:var(--text3);text-align:left;line-height:1.8">📌 循环：快走 → 快走 → 力量 → 休息（4天一循环）<br>点击日期循环切换：绿=完成 → 红=未完成 → 恢复<br>中断 ≤1 天自动顺延；中断 ≥2 天先「爬坡」适应 1 天再重启循环</div>
+    </div>`;
+  $('#fitSetBtn')?.addEventListener('click',fitSettings);
+  document.querySelectorAll('[data-fdate]').forEach(el=>{el.onclick=()=>fitCycleStatus(el.dataset.fdate,el.dataset.fstatus)});
+  $('#fitPrev')?.addEventListener('click',()=>{fitMonth=shiftMonth(fitMonth,-1);render()});
+  $('#fitNext')?.addEventListener('click',()=>{fitMonth=shiftMonth(fitMonth,1);render()});
+  $('#fitToday')?.addEventListener('click',()=>{fitMonth=month();render()});
+}
+
+function renderFitCalendar(schedule){
+  const ym=fitMonth;
+  const p=ym.split('-').map(Number);
+  const first=new Date(p[0],p[1]-1,1);
+  const daysInMonth=new Date(p[0],p[1],0).getDate();
+  const startWeekday=(first.getDay()+6)%7;
+  const map={};schedule.forEach(s=>map[s.date]=s);
+  let html=`<div class="widget"><div class="fit-head"><div class="fh-month">${p[0]}年${p[1]}月</div><div class="fh-nav"><button class="fh-btn" id="fitPrev">‹</button><button class="fh-btn" id="fitToday">今</button><button class="fh-btn" id="fitNext">›</button></div></div><div class="fit-week">${['一','二','三','四','五','六','日'].map(x=>`<span>${x}</span>`).join('')}</div><div class="fit-grid">`;
+  for(let i=0;i<startWeekday;i++)html+=`<div class="fit-cell out"></div>`;
+  const todayStr=today();
+  for(let day=1;day<=daysInMonth;day++){
+    const ds=ym+'-'+String(day).padStart(2,'0');
+    const s=map[ds];
+    let cls='fit-cell',ico='',label='',clickable=false;
+    if(s){
+      if(s.type==='rest'){cls+=' rest';ico='😴';label='休息';}
+      else{
+        cls+=' '+s.status;
+        ico=FIT_META[s.type].ico;label=FIT_META[s.type].label;
+        if(s.status!=='plan')clickable=true;
+      }
+    }else{cls+=' out';}
+    if(ds===todayStr)cls+=' today';
+    if(clickable)cls+=' clickable';
+    html+=`<div class="${cls}"${clickable?` data-fdate="${ds}" data-fstatus="${s.status}"`:''}><span class="fc-date">${day}</span>${ico?`<span class="fc-ico">${ico}</span>`:''}${label?`<span class="fc-label">${label}</span>`:''}</div>`;
+  }
+  html+=`</div></div>`;
+  return html;
+}
+
+function fitSettings(){
+  const cfg=getFitness();if(!cfg)return;
+  showModal('健身设置',`<div class="fg"><label>开始日期</label><input type="date" id="fitSetStart" value="${cfg.startDate}"></div><div style="font-size:11px;color:var(--text3);margin:-4px 0 8px">修改开始日期将重新排期并清空打卡记录</div><button id="fitClearRec" style="width:100%;padding:10px;border-radius:10px;border:none;font-size:14px;cursor:pointer;background:rgba(231,76,60,.08);color:var(--danger);font-family:inherit">清空全部打卡记录</button>`,()=>{
+    const d=$('#fitSetStart').value;
+    if(d&&d!==cfg.startDate){saveFitness({startDate:d,records:{}});toast('已重新排期')}
+    render();
+  });
+  $('#fitClearRec')?.addEventListener('click',()=>{
+    showConfirm('清空全部健身打卡记录？',()=>{const c=getFitness();if(c){c.records={};saveFitness(c)}closeModal();render()});
+  });
+}
+
 // ==================== PERIOD ====================
 function getPeriods(){try{return JSON.parse(localStorage.getItem('wb_periods')||'[]')}catch{return[]}}
 function savePeriods(a){a.sort((x,y)=>x.date.localeCompare(y.date));localStorage.setItem('wb_periods',JSON.stringify(a));backupAll()}
@@ -838,7 +1032,7 @@ async function renderSettings(app){
 }
 async function expCSV(){
   const w=await dbAll('weight');
-  const json={weight:w,time:Date.now(),settings:{profile:localStorage.getItem('wb_profile'),dsKey:localStorage.getItem('wb_dsKey'),dsHistory:localStorage.getItem('wb_dsHistory'),aiReports:localStorage.getItem('wb_aiReports'),periods:localStorage.getItem('wb_periods')}};
+  const json={weight:w,time:Date.now(),settings:{profile:localStorage.getItem('wb_profile'),dsKey:localStorage.getItem('wb_dsKey'),dsHistory:localStorage.getItem('wb_dsHistory'),aiReports:localStorage.getItem('wb_aiReports'),periods:localStorage.getItem('wb_periods'),fitness:localStorage.getItem('wb_fitness')}};
   const jb=new Blob([JSON.stringify(json,null,2)],{type:'application/json'});
   const ja=document.createElement('a');ja.href=URL.createObjectURL(jb);ja.download='workbench_backup.json';ja.click();
   setTimeout(()=>toast('JSON备份文件已下载'),200);
