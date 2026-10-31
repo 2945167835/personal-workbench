@@ -230,6 +230,25 @@ body{
 .fit-legend{display:flex;flex-wrap:wrap;gap:12px;justify-content:center;font-size:11px;color:var(--text2);margin-top:10px;}
 .fit-legend span{display:inline-flex;align-items:center;gap:5px;}
 .fit-dot{width:10px;height:10px;border-radius:3px;display:inline-block;}
+/* Fitness Card */
+.fit-stage{perspective:1200px;margin-bottom:12px;}
+.fit-card{position:relative;min-height:300px;border-radius:22px;background:var(--card);box-shadow:var(--shadow);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:28px 20px;cursor:pointer;transition:transform .55s cubic-bezier(.4,0,.2,1);transform-style:preserve-3d;user-select:none;-webkit-user-select:none;}
+.fit-card:active{transform:scale(.97);}
+.fit-card.spinning{transform:rotateY(360deg);}
+.fit-card .fc-tag{font-size:12px;color:var(--text2);margin-bottom:4px;letter-spacing:.3px;}
+.fit-card .fc-ico{font-size:74px;line-height:1;margin:16px 0 8px;}
+.fit-card .fc-name{font-size:32px;font-weight:800;line-height:1.2;}
+.fit-card .fc-sub{font-size:13px;color:var(--text2);margin-top:10px;text-align:center;}
+.fit-card .fc-hint{margin-top:24px;font-size:11px;color:var(--text3);}
+.fit-card.done{background:linear-gradient(160deg,rgba(39,174,96,.16),var(--card));border:2px solid rgba(39,174,96,.5);}
+.fit-card.rest{background:linear-gradient(160deg,rgba(149,165,166,.12),var(--card));cursor:default;}
+.fit-card.rest:active{transform:none;}
+.fit-next{display:flex;align-items:center;gap:12px;background:var(--card);border-radius:14px;padding:14px 16px;margin-bottom:12px;box-shadow:var(--shadow);}
+.fit-next .fn-label{font-size:11px;color:var(--text3);}
+.fit-next .fn-ico{font-size:22px;}
+.fit-next .fn-name{font-size:15px;font-weight:700;}
+.fit-next .fn-tip{margin-left:auto;font-size:11px;color:var(--text3);}
+.fit-toggle{width:100%;padding:11px;border:none;background:var(--card);border-radius:12px;font-size:13px;color:var(--text2);cursor:pointer;font-family:inherit;box-shadow:0 1px 4px rgba(0,0,0,.04);margin-bottom:12px;}
 .hidden{display:none!important;}
 </style>
 <script>try{var _t=localStorage.getItem('wb_theme')||'auto';var _d=_t==='dark'||(_t==='auto'&&matchMedia('(prefers-color-scheme: dark)').matches);document.documentElement.setAttribute('data-theme',_d?'dark':'light')}catch(e){}</script>
@@ -740,6 +759,22 @@ function fitCycleStatus(date,curStatus){
   cfg.records=records;saveFitness(cfg);render();
 }
 
+function fitWeekday(ds){const d=new Date(ds+'T00:00:00');return '周'+'日一二三四五六'[d.getDay()]}
+function fitTapCard(){
+  const card=$('#fitCard');if(!card)return;
+  if(card.dataset.type==='rest'||card.dataset.type==='none')return;
+  if(card.dataset.lock==='1')return;
+  card.dataset.lock='1';
+  card.classList.add('spinning');
+  const date=card.dataset.date,status=card.dataset.status;
+  const cfg=getFitness();if(!cfg)return;
+  const records={...cfg.records};
+  if(status==='done'){delete records[date];toast('已取消完成')}
+  else{records[date]='done';toast('✅ 今日已完成')}
+  cfg.records=records;saveFitness(cfg);
+  setTimeout(()=>render(),560);
+}
+
 async function renderFitness(app){
   const cfg=getFitness();
   if(!cfg){
@@ -763,33 +798,65 @@ async function renderFitness(app){
     return;
   }
   const schedule=buildFitnessSchedule(cfg);
-  const curYm=fitMonth;
-  const monthDone=schedule.filter(s=>s.status==='done'&&s.date.startsWith(curYm)).length;
+  const todayStr=today();
+  const todayPlan=schedule.find(s=>s.date===todayStr);
+  const tomorrowPlan=schedule.find(s=>s.date===addDaysStr(todayStr,1));
+
+  const monthDone=schedule.filter(s=>s.status==='done'&&s.date.startsWith(month())).length;
   const totalDone=schedule.filter(s=>s.status==='done').length;
   let streak=0;
-  const past=schedule.filter(s=>s.date<=today()&&s.type!=='rest').reverse();
+  const past=schedule.filter(s=>s.date<=todayStr&&s.type!=='rest').reverse();
   for(const s of past){if(s.status==='done')streak++;else if(s.status==='todo')continue;else break;}
-  const todayPlan=schedule.find(s=>s.date===today());
+
+  // 主卡片（今天要干什么）
+  let cardType='none',cardCls='fit-card',cardInner='';
+  if(!todayPlan){
+    cardInner=`<div class="fc-tag">健身计划</div><div class="fc-ico">🗓️</div><div class="fc-name">计划待开始</div><div class="fc-sub">首次运动日期 ${cfg.startDate}</div>`;
+  }else if(todayPlan.type==='rest'){
+    cardType='rest';cardCls+=' rest';
+    cardInner=`<div class="fc-tag">今天 · ${todayStr.slice(5)} ${fitWeekday(todayStr)}</div><div class="fc-ico">😴</div><div class="fc-name">休息</div><div class="fc-sub">好好恢复，明天继续</div>`;
+  }else{
+    const meta=FIT_META[todayPlan.type];
+    const done=todayPlan.status==='done';
+    cardType=done?'done':'train';
+    if(done)cardCls+=' done';
+    const tag=`今天 · ${todayStr.slice(5)} ${fitWeekday(todayStr)}`;
+    let sub,hint;
+    if(done){sub='✅ 已完成 · 干得漂亮！';hint='点击卡片可取消完成';}
+    else if(todayPlan.type==='climb'){sub='中断后恢复，先来一次爬坡适应';hint='点击卡片旋转完成';}
+    else{sub='今日训练任务';hint='点击卡片旋转完成';}
+    cardInner=`<div class="fc-tag">${tag}</div><div class="fc-ico">${meta.ico}</div><div class="fc-name">${meta.label}</div><div class="fc-sub">${sub}</div><div class="fc-hint">${hint}</div>`;
+  }
+
+  // 明天预览
+  let nextHtml='';
+  if(tomorrowPlan){
+    const nm=FIT_META[tomorrowPlan.type];
+    nextHtml=`<div class="fit-next"><div class="fn-label">明天</div><div class="fn-ico">${nm.ico}</div><div class="fn-name">${nm.label}</div><div class="fn-tip">${tomorrowPlan.type==='rest'?'休息日':tomorrowPlan.date.slice(5)}</div></div>`;
+  }
 
   app.innerHTML=`
     <div class="header"><button class="back" onclick="go('home')">←</button><h1>健身</h1><div class="h-actions"><button class="h-btn" id="fitSetBtn">⚙️</button></div></div>
     <div class="main">
+      <div class="fit-stage" onclick="fitTapCard()">
+        <div class="${cardCls}" id="fitCard" data-date="${todayPlan?todayPlan.date:''}" data-status="${todayPlan?todayPlan.status:''}" data-type="${cardType}">${cardInner}</div>
+      </div>
+      ${nextHtml}
       <div class="summary-row">
-        <div class="summary-card"><div class="sc-label">${curYm===month()?'本月':'该月'}完成</div><div class="sc-val sc-blue">${monthDone} 天</div></div>
+        <div class="summary-card"><div class="sc-label">本月完成</div><div class="sc-val sc-blue">${monthDone} 天</div></div>
         <div class="summary-card"><div class="sc-label">累计完成</div><div class="sc-val sc-green">${totalDone} 天</div></div>
         <div class="summary-card"><div class="sc-label">连续训练</div><div class="sc-val sc-warn">${streak} 天</div></div>
       </div>
-      ${todayPlan?(todayPlan.type==='rest'?`<div class="widget" style="text-align:center"><div style="font-size:20px;font-weight:700">😴 今日休息</div><div style="font-size:11px;color:var(--text3);margin-top:4px">好好恢复，明天继续</div></div>`:`<div class="widget" style="text-align:center"><div style="font-size:13px;color:var(--text2)">📌 今日计划</div><div style="font-size:22px;font-weight:700;margin:4px 0">${FIT_META[todayPlan.type].ico} ${FIT_META[todayPlan.type].label}</div><div style="font-size:11px;color:var(--text3)">${todayPlan.status==='done'?'✅ 已完成':todayPlan.status==='miss'?'❌ 未完成':'点击日历标记完成'}</div></div>`):''}
-      ${renderFitCalendar(schedule,cfg.records)}
-      <div class="fit-legend">
-        <span><i class="fit-dot" style="background:rgba(39,174,96,.5)"></i>完成</span>
-        <span><i class="fit-dot" style="background:rgba(231,76,60,.5)"></i>未完成</span>
-        <span><i class="fit-dot" style="background:rgba(74,144,217,.5)"></i>今日</span>
-        <span><i class="fit-dot" style="background:var(--line)"></i>休息</span>
-      </div>
-      <div style="margin-top:14px;padding:10px 12px;background:rgba(149,165,166,.08);border-radius:8px;font-size:11px;color:var(--text3);text-align:left;line-height:1.8">📌 循环：快走 → 快走 → 力量 → 休息（4天一循环）<br>点击日期循环切换：绿=完成 → 红=未完成 → 恢复<br>中断 ≤1 天自动顺延；中断 ≥2 天先「爬坡」适应 1 天再重启循环</div>
+      <button class="fit-toggle" id="fitCalBtn">📅 查看完整排期 ▾</button>
+      <div id="fitCalWrap" class="hidden">${renderFitCalendar(schedule,cfg.records)}</div>
+      <div style="margin-top:4px;padding:10px 12px;background:rgba(149,165,166,.08);border-radius:8px;font-size:11px;color:var(--text3);text-align:left;line-height:1.8">📌 循环：快走 → 快走 → 力量 → 休息（4天一循环）<br>中断 ≤1 天自动顺延；中断 ≥2 天先「爬坡」适应 1 天再重启循环</div>
     </div>`;
   $('#fitSetBtn')?.addEventListener('click',fitSettings);
+  $('#fitCalBtn')?.addEventListener('click',()=>{
+    const w=$('#fitCalWrap'),b=$('#fitCalBtn');
+    if(w.classList.contains('hidden')){w.classList.remove('hidden');b.textContent='📅 收起完整排期 ▴';}
+    else{w.classList.add('hidden');b.textContent='📅 查看完整排期 ▾';}
+  });
   document.querySelectorAll('[data-fdate]').forEach(el=>{el.onclick=()=>fitCycleStatus(el.dataset.fdate,el.dataset.fstatus)});
   $('#fitPrev')?.addEventListener('click',()=>{fitMonth=shiftMonth(fitMonth,-1);render()});
   $('#fitNext')?.addEventListener('click',()=>{fitMonth=shiftMonth(fitMonth,1);render()});
