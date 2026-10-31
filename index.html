@@ -116,17 +116,16 @@ body{
 .lsub{font-size:11px;color:var(--text3);margin-top:1px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
 .lamount{font-size:13px;font-weight:600;white-space:nowrap;flex-shrink:0;}
 .list-item .ldel{
-  position:absolute;right:6px;top:50%;transform:translateY(-50%);width:26px;height:26px;
-  border-radius:50%;border:none;background:rgba(231,76,60,.08);color:var(--danger);
-  font-size:12px;cursor:pointer;display:none;align-items:center;justify-content:center;
+  width:26px;height:26px;border-radius:50%;border:none;background:rgba(231,76,60,.08);color:var(--danger);
+  font-size:12px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;
 }
-.list-item:active .ldel{display:flex;}
 
 /* Swipe delete (AI 历史) */
 .swipe-item{position:relative;overflow:hidden;border-radius:10px;margin-bottom:5px;box-shadow:0 1px 2px rgba(0,0,0,0.03);}
 .swipe-item .swipe-del{position:absolute;top:0;right:0;bottom:0;width:70px;background:var(--danger);color:#fff;font-size:13px;display:flex;align-items:center;justify-content:center;cursor:pointer;}
 .swipe-item .swipe-body{display:flex;align-items:center;gap:8px;padding:10px 12px;background:var(--card);position:relative;z-index:1;transition:transform .2s;}
 .swipe-item.swiped .swipe-body{transform:translateX(-70px);}
+.ai-del-btn{width:26px;height:26px;border-radius:50%;border:none;background:rgba(231,76,60,.08);color:var(--danger);font-size:12px;cursor:pointer;flex-shrink:0;display:flex;align-items:center;justify-content:center;}
 
 /* BMI */
 .bmi-box{
@@ -220,6 +219,8 @@ body{
 .fit-cell.done .fc-label{color:var(--success);font-weight:700;}
 .fit-cell.miss{background:rgba(231,76,60,.12);border-color:rgba(231,76,60,.35);}
 .fit-cell.miss .fc-label{color:var(--danger);}
+.fit-cell.miss-auto{background:rgba(231,76,60,.05);border-color:rgba(231,76,60,.15);}
+.fit-cell.miss-auto .fc-label{color:var(--text3);}
 .fit-cell.todo{background:rgba(74,144,217,.14);border-color:var(--primary);}
 .fit-cell.todo .fc-label{color:var(--primary);font-weight:700;}
 .fit-cell.plan{background:var(--card);border-color:var(--line);}
@@ -409,7 +410,7 @@ async function renderWeight(app){
       ${records.length>=2?`<div class="chart-box"><canvas id="wtChart"></canvas></div>`:''}
       ${records.length>=3?`<div class="chart-box"><canvas id="wtSmooth"></canvas></div>`:''}
       ${pf.targetWeight&&records.length>=5?`<div class="widget" style="text-align:center"><div style="font-size:12px;color:var(--text2)">📈 趋势预测</div><div style="font-size:14px;margin-top:4px">${pred(records,pf.targetWeight)}</div></div>`:''}
-      ${aiReports.length>0?`<div class="section-title">🤖 AI 分析历史 · 左滑删除</div>${aiReports.slice(0,5).map(r=>`<div class="swipe-item" data-ai="${r.id}"><div class="swipe-del">删除</div><div class="swipe-body"><div class="cat-dot" style="background:rgba(155,89,182,.12)">🤖</div><div class="linfo"><div class="ltitle">${fd(r.date)} · ${j(r.weight)} 斤</div><div class="lsub">${(r.report||'').replace(/[#*]/g,'').slice(0,36)}...</div></div><div class="lamount" style="color:var(--text3)">查看</div></div></div>`).join('')}`:''}
+      ${aiReports.length>0?`<div class="section-title">🤖 AI 分析历史 · 左滑删除</div>${aiReports.slice(0,5).map(r=>`<div class="swipe-item" data-ai="${r.id}"><div class="swipe-del">删除</div><div class="swipe-body"><div class="cat-dot" style="background:rgba(155,89,182,.12)">🤖</div><div class="linfo"><div class="ltitle">${fd(r.date)} · ${j(r.weight)} 斤</div><div class="lsub">${(r.report||'').replace(/[#*]/g,'').slice(0,36)}...</div></div><div class="lamount" style="color:var(--text3)">查看</div><button class="ai-del-btn" data-aidel="${r.id}">✕</button></div></div>`).join('')}`:''}
       <div class="section-title">历史记录</div>
       ${records.length===0?'<div class="empty"><div class="eicon">⚖️</div><p>暂无记录</p></div>':''}
       ${records.slice().reverse().map(r=>{const idx=records.indexOf(r),prev=records[idx-1];const diff=prev?(r.weight-prev.weight):null;return`<div class="list-item" data-id="${r.id}"><div class="cat-dot" style="background:rgba(74,144,217,.1)">⚖️</div><div class="linfo"><div class="ltitle">${j(r.weight)} 斤</div><div class="lsub">${fd(r.date)} ${r.note||''}</div></div><div class="lamount" style="color:${diff>0?'var(--danger)':diff<0?'var(--success)':'var(--text3)'}">${diff?(diff>0?'↑':'↓')+j(Math.abs(diff))+' 斤':''}</div><button class="ldel" data-del="${r.id}">✕</button></div>`}).join('')}
@@ -417,6 +418,7 @@ async function renderWeight(app){
   `;
   bindDel();
   bindSwipe();
+  document.querySelectorAll('[data-aidel]').forEach(b=>b.onclick=e=>{e.stopPropagation();delAiReport(parseInt(b.dataset.aidel))});
   // Quick weight record
   $('#quickWtBtn')?.addEventListener('click',async()=>{
     const jin=parseFloat($('#quickWt')?.value);
@@ -433,7 +435,7 @@ async function renderWeight(app){
   $('#exportImgBtn')?.addEventListener('click',()=>exportWeightImage(records,pf));
   if(records.length>=2)setTimeout(()=>drawWtChart(records,parseFloat(height)),100);if(records.length>=3)setTimeout(()=>drawSmooth(records),150);
 }
-function bmiTag(b,h){const v=parseFloat(b);if(h>0){if(v<18.5)return'偏瘦';if(v<24)return'正常';if(v<28)return'偏胖';return'肥胖'}if(v<18.5)return'偏瘦';if(v<24)return'正常';if(v<28)return'偏胖';return'肥胖'}
+function bmiTag(b,h){const v=parseFloat(b);if(v<18.5)return'偏瘦';if(v<24)return'正常';if(v<28)return'偏胖';return'肥胖'}
 function calcBMR(wt,pf){if(!pf.age||!pf.height)return null;const h=pf.height;return pf.gender==='male'?Math.round(66+13.7*wt+5*h-6.8*pf.age):Math.round(655+9.6*wt+1.8*h-4.7*pf.age)}
 function avgL(r,n){const s=r.slice(-n);return parseFloat((s.reduce((a,r)=>a+r.weight,0)/s.length).toFixed(1))}
 function cW(records){if(records.length<7)return[];const w=[],n=new Date();for(let i=3;i>=0;i--){const e=new Date(n);e.setDate(e.getDate()-i*7);const s=new Date(e);s.setDate(s.getDate()-6);const wk=records.filter(r=>r.date>=localDate(s)&&r.date<=localDate(e));if(!wk.length)continue;const a=parseFloat((wk.reduce((s,r)=>s+r.weight,0)/wk.length).toFixed(1));const p=w[w.length-1];const d=p!==undefined?(a-p._raw):null;w.push({label:`W${4-i}`,avg:j(a)+'斤',diff:d!==null?(d>=0?'+':'')+j(Math.abs(d))+'斤':'',_raw:a})}return w}
@@ -761,7 +763,7 @@ async function renderFitness(app){
     return;
   }
   const schedule=buildFitnessSchedule(cfg);
-  const curYm=month();
+  const curYm=fitMonth;
   const monthDone=schedule.filter(s=>s.status==='done'&&s.date.startsWith(curYm)).length;
   const totalDone=schedule.filter(s=>s.status==='done').length;
   let streak=0;
@@ -773,12 +775,12 @@ async function renderFitness(app){
     <div class="header"><button class="back" onclick="go('home')">←</button><h1>健身</h1><div class="h-actions"><button class="h-btn" id="fitSetBtn">⚙️</button></div></div>
     <div class="main">
       <div class="summary-row">
-        <div class="summary-card"><div class="sc-label">本月完成</div><div class="sc-val sc-blue">${monthDone} 天</div></div>
+        <div class="summary-card"><div class="sc-label">${curYm===month()?'本月':'该月'}完成</div><div class="sc-val sc-blue">${monthDone} 天</div></div>
         <div class="summary-card"><div class="sc-label">累计完成</div><div class="sc-val sc-green">${totalDone} 天</div></div>
         <div class="summary-card"><div class="sc-label">连续训练</div><div class="sc-val sc-warn">${streak} 天</div></div>
       </div>
       ${todayPlan?(todayPlan.type==='rest'?`<div class="widget" style="text-align:center"><div style="font-size:20px;font-weight:700">😴 今日休息</div><div style="font-size:11px;color:var(--text3);margin-top:4px">好好恢复，明天继续</div></div>`:`<div class="widget" style="text-align:center"><div style="font-size:13px;color:var(--text2)">📌 今日计划</div><div style="font-size:22px;font-weight:700;margin:4px 0">${FIT_META[todayPlan.type].ico} ${FIT_META[todayPlan.type].label}</div><div style="font-size:11px;color:var(--text3)">${todayPlan.status==='done'?'✅ 已完成':todayPlan.status==='miss'?'❌ 未完成':'点击日历标记完成'}</div></div>`):''}
-      ${renderFitCalendar(schedule)}
+      ${renderFitCalendar(schedule,cfg.records)}
       <div class="fit-legend">
         <span><i class="fit-dot" style="background:rgba(39,174,96,.5)"></i>完成</span>
         <span><i class="fit-dot" style="background:rgba(231,76,60,.5)"></i>未完成</span>
@@ -794,7 +796,7 @@ async function renderFitness(app){
   $('#fitToday')?.addEventListener('click',()=>{fitMonth=month();render()});
 }
 
-function renderFitCalendar(schedule){
+function renderFitCalendar(schedule,records){
   const ym=fitMonth;
   const p=ym.split('-').map(Number);
   const first=new Date(p[0],p[1]-1,1);
@@ -811,7 +813,7 @@ function renderFitCalendar(schedule){
     if(s){
       if(s.type==='rest'){cls+=' rest';ico='😴';label='休息';}
       else{
-        cls+=' '+s.status;
+        cls+=s.status==='miss'?(records&&records[ds]==='miss'?' miss':' miss-auto'):' '+s.status;
         ico=FIT_META[s.type].ico;label=FIT_META[s.type].label;
         if(s.status!=='plan')clickable=true;
       }
@@ -828,7 +830,7 @@ function fitSettings(){
   const cfg=getFitness();if(!cfg)return;
   showModal('健身设置',`<div class="fg"><label>开始日期</label><input type="date" id="fitSetStart" value="${cfg.startDate}"></div><div style="font-size:11px;color:var(--text3);margin:-4px 0 8px">修改开始日期将重新排期并清空打卡记录</div><button id="fitClearRec" style="width:100%;padding:10px;border-radius:10px;border:none;font-size:14px;cursor:pointer;background:rgba(231,76,60,.08);color:var(--danger);font-family:inherit">清空全部打卡记录</button>`,()=>{
     const d=$('#fitSetStart').value;
-    if(d&&d!==cfg.startDate){saveFitness({startDate:d,records:{}});toast('已重新排期')}
+    if(d&&d!==cfg.startDate){saveFitness({startDate:d,records:{}});fitMonth=d.slice(0,7);toast('已重新排期')}
     render();
   });
   $('#fitClearRec')?.addEventListener('click',()=>{
@@ -1018,19 +1020,19 @@ async function renderSettings(app){
       <div class="setting-group"><h4>📦 数据</h4><div class="setting-item"><span class="si-label">导出 JSON</span><span class="si-btn" id="expBtn">导出</span></div><div class="setting-item"><span class="si-label">导入 JSON</span><span class="si-btn" id="impBtn">导入</span></div><div class="setting-item"><span class="si-label">恢复备份</span><span class="si-val" style="font-size:10px">从浏览器恢复</span><span class="si-btn" id="restoreBtn">恢复</span></div><div class="setting-item"><span class="si-label">清除所有数据</span><span class="si-btn danger" id="clrBtn">清除</span></div></div>
     </div>
   `;
-  $('#setDsKeyBtn')?.addEventListener('click',()=>{const v=prompt('DeepSeek API Key (sk-...)',localStorage.getItem('wb_dsKey')||'');if(v&&v.trim()){localStorage.setItem('wb_dsKey',v.trim());render()}});
+  $('#setDsKeyBtn')?.addEventListener('click',()=>{showModal('设置 DeepSeek API Key',`<div class="fg"><label>API Key（sk-...）</label><input type="text" id="setDsKeyInput" value="${localStorage.getItem('wb_dsKey')||''}" autocomplete="off" autocapitalize="off" spellcheck="false"></div>`,()=>{const v=$('#setDsKeyInput').value.trim();if(!v){toast('请输入 Key');throw new Error()}localStorage.setItem('wb_dsKey',v);render()})});
   $('#themeBtn')?.addEventListener('click',()=>{const order=['auto','light','dark'];const cur=localStorage.getItem('wb_theme')||'auto';const next=order[(order.indexOf(cur)+1)%order.length];localStorage.setItem('wb_theme',next);applyTheme();render()});
   $('#setGenderBtn')?.addEventListener('click',()=>{const p=getProfile();p.gender=p.gender==='male'?'female':'male';setProfile(p);render()});
-  $('#setAgeBtn')?.addEventListener('click',()=>{const v=parseInt(prompt('年龄',pf.age||''));if(v&&v>0&&v<120){const p=getProfile();p.age=v;setProfile(p);render()}});
-  $('#setHtBtn')?.addEventListener('click',()=>{const v=parseFloat(prompt('身高 (cm)',pf.height));if(v&&v>50&&v<250){const p=getProfile();p.height=v;setProfile(p);render()}});
-  $('#setIwBtn')?.addEventListener('click',()=>{const v=parseFloat(prompt('初始体重 (斤)',pf.initWeight?j(pf.initWeight):''));if(v&&v>40&&v<600){const p=getProfile();p.initWeight=jr(v);setProfile(p);render()}});
-  $('#setTwBtn')?.addEventListener('click',()=>{const v=parseFloat(prompt('目标体重 (斤)',pf.targetWeight?j(pf.targetWeight):''));if(v&&v>40&&v<600){const p=getProfile();p.targetWeight=jr(v);p.startDate=today();setProfile(p);render()}});
-  $('#expBtn')?.addEventListener('click',expCSV);
+  $('#setAgeBtn')?.addEventListener('click',()=>{showModal('修改年龄',`<div class="fg"><label>年龄</label><input type="number" id="setAgeInput" value="${pf.age||''}" min="1" max="120"></div>`,()=>{const v=parseInt($('#setAgeInput').value);if(!v||v<1||v>120){toast('请输入有效年龄(1-120)');throw new Error()}const p=getProfile();p.age=v;setProfile(p);render()})});
+  $('#setHtBtn')?.addEventListener('click',()=>{showModal('修改身高',`<div class="fg"><label>身高（cm）</label><input type="number" id="setHtInput" value="${pf.height||''}" min="50" max="250" step="0.1"></div>`,()=>{const v=parseFloat($('#setHtInput').value);if(!v||v<50||v>250){toast('请输入有效身高(50-250cm)');throw new Error()}const p=getProfile();p.height=v;setProfile(p);render()})});
+  $('#setIwBtn')?.addEventListener('click',()=>{showModal('设置初始体重',`<div class="fg"><label>初始体重（斤）</label><input type="number" id="setIwInput" value="${pf.initWeight?j(pf.initWeight):''}" min="40" max="600" step="0.1" placeholder="留空清除"></div>`,()=>{const p=getProfile();const raw=$('#setIwInput').value;if(raw===''){p.initWeight=null;setProfile(p);render();return}const v=parseFloat(raw);if(!v||v<40||v>600){toast('请输入有效体重(40-600斤)');throw new Error()}p.initWeight=jr(v);setProfile(p);render()})});
+  $('#setTwBtn')?.addEventListener('click',()=>{showModal('设置目标体重',`<div class="fg"><label>目标体重（斤）</label><input type="number" id="setTwInput" value="${pf.targetWeight?j(pf.targetWeight):''}" min="40" max="600" step="0.1" placeholder="留空清除"></div>`,()=>{const p=getProfile();const raw=$('#setTwInput').value;if(raw===''){p.targetWeight=null;setProfile(p);render();return}const v=parseFloat(raw);if(!v||v<40||v>600){toast('请输入有效体重(40-600斤)');throw new Error()}p.targetWeight=jr(v);setProfile(p);render()})});
+  $('#expBtn')?.addEventListener('click',expJSON);
   $('#impBtn')?.addEventListener('click',()=>{const inp=document.createElement('input');inp.type='file';inp.accept='.json';inp.onchange=async()=>{const f=inp.files[0];if(!f)return;const text=await f.text();try{const data=JSON.parse(text);const ws=await dbAll('weight');await Promise.all(ws.map(r=>dbDel('weight',r.id)));for(const r of data.weight||[])await dbAdd('weight',r);if(data.settings){for(const[k,v]of Object.entries(data.settings)){if(v)localStorage.setItem('wb_'+k.replace('settings.',''),v);}}render();toast('导入完成')}catch{toast('文件格式错误')}};inp.click()});
   $('#clrBtn')?.addEventListener('click',()=>showConfirm('确定清除所有数据？不可恢复！',async()=>{const ws=await dbAll('weight');await Promise.all(ws.map(r=>dbDel('weight',r.id)));localStorage.clear();toast('已清除');render()}));
   $('#restoreBtn')?.addEventListener('click',()=>showConfirm('将从浏览器备份恢复数据，当前数据将被覆盖。确定？',async()=>{const ok=await restoreFromBackup(true);toast(ok?'恢复成功 ✅':'无备份数据或恢复失败');render()}));
 }
-async function expCSV(){
+async function expJSON(){
   const w=await dbAll('weight');
   const json={weight:w,time:Date.now(),settings:{profile:localStorage.getItem('wb_profile'),dsKey:localStorage.getItem('wb_dsKey'),dsHistory:localStorage.getItem('wb_dsHistory'),aiReports:localStorage.getItem('wb_aiReports'),periods:localStorage.getItem('wb_periods'),fitness:localStorage.getItem('wb_fitness')}};
   const jb=new Blob([JSON.stringify(json,null,2)],{type:'application/json'});

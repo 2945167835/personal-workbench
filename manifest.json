@@ -1,7 +1,7 @@
 {
   "name": "个人工作台",
   "short_name": "工作台",
-  "description": "记账、体重记录、用车管理 - 个人效率工具 v2.0",
+  "description": "个人工作台：体重记录 · DeepSeek AI 分析 · 经期预测 · 健身打卡",
   "start_url": "/personal-workbench/index.html",
   "scope": "/personal-workbench/",
   "display": "standalone",
