@@ -232,9 +232,10 @@ body{
 .fit-dot{width:10px;height:10px;border-radius:3px;display:inline-block;}
 /* Fitness Card */
 .fit-stage{perspective:1200px;margin-bottom:12px;}
-.fit-card{position:relative;min-height:300px;border-radius:22px;background:var(--card);box-shadow:var(--shadow);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:28px 20px;cursor:pointer;transition:transform .55s cubic-bezier(.4,0,.2,1);transform-style:preserve-3d;user-select:none;-webkit-user-select:none;}
-.fit-card:active{transform:scale(.97);}
-.fit-card.spinning{transform:rotateY(360deg);}
+.fit-card{position:relative;min-height:300px;border-radius:22px;background:var(--card);box-shadow:var(--shadow);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:28px 20px;cursor:pointer;transform-style:preserve-3d;user-select:none;-webkit-user-select:none;-webkit-tap-highlight-color:transparent;}
+.fit-card:active{transform:scale(.96);}
+.fit-card.spinning{animation:fitFlip .65s cubic-bezier(.4,0,.2,1);}
+@keyframes fitFlip{0%{transform:rotateY(0deg)}50%{transform:rotateY(180deg) scale(.9)}100%{transform:rotateY(360deg)}}
 .fit-card .fc-tag{font-size:12px;color:var(--text2);margin-bottom:4px;letter-spacing:.3px;}
 .fit-card .fc-ico{font-size:74px;line-height:1;margin:16px 0 8px;}
 .fit-card .fc-name{font-size:32px;font-weight:800;line-height:1.2;}
@@ -248,6 +249,8 @@ body{
 .fit-next .fn-ico{font-size:22px;}
 .fit-next .fn-name{font-size:15px;font-weight:700;}
 .fit-next .fn-tip{margin-left:auto;font-size:11px;color:var(--text3);}
+.fit-next .fn-tip.t-aerobic{color:var(--success);font-weight:600;}
+.fit-next .fn-tip.t-anaerobic{color:var(--danger);font-weight:600;}
 .diet-card{background:var(--card);border-radius:16px;padding:16px 16px 14px;margin-bottom:12px;box-shadow:var(--shadow);}
 .diet-head{display:flex;align-items:center;gap:8px;margin-bottom:4px;}
 .diet-head .dh-ico{font-size:20px;}
@@ -805,7 +808,7 @@ function fitTapCard(){
   if(status==='done'){delete records[date];toast('已取消完成')}
   else{records[date]='done';toast('✅ 今日已完成')}
   cfg.records=records;saveFitness(cfg);
-  setTimeout(()=>render(),560);
+  setTimeout(()=>render(),680);
 }
 
 async function renderFitness(app){
@@ -876,7 +879,8 @@ async function renderFitness(app){
   let nextHtml='';
   if(tomorrowPlan){
     const nm=FIT_META[tomorrowPlan.type];
-    nextHtml=`<div class="fit-next"><div class="fn-label">明天</div><div class="fn-ico">${nm.ico}</div><div class="fn-name">${nm.label}</div><div class="fn-tip">${tomorrowPlan.type==='rest'?'休息日':tomorrowPlan.date.slice(5)}</div></div>`;
+    const nd=dietForType(tomorrowPlan.type);
+    nextHtml=`<div class="fit-next"><div class="fn-label">明天</div><div class="fn-ico">${nm.ico}</div><div class="fn-name">${nm.label}</div><div class="fn-tip t-${nd.key}">${nd.tag}</div></div>`;
   }
 
   app.innerHTML=`
