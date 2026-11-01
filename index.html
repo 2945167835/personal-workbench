@@ -248,6 +248,21 @@ body{
 .fit-next .fn-ico{font-size:22px;}
 .fit-next .fn-name{font-size:15px;font-weight:700;}
 .fit-next .fn-tip{margin-left:auto;font-size:11px;color:var(--text3);}
+.diet-card{background:var(--card);border-radius:16px;padding:16px 16px 14px;margin-bottom:12px;box-shadow:var(--shadow);}
+.diet-head{display:flex;align-items:center;gap:8px;margin-bottom:4px;}
+.diet-head .dh-ico{font-size:20px;}
+.diet-head .dh-title{font-size:15px;font-weight:700;}
+.diet-head .dh-tag{margin-left:auto;font-size:11px;font-weight:600;color:#fff;padding:3px 10px;border-radius:999px;}
+.diet-head .dh-tag.aerobic{background:rgba(39,174,96,.9);}
+.diet-head .dh-tag.anaerobic{background:rgba(231,76,60,.9);}
+.diet-head .dh-tag.rest{background:rgba(149,165,166,.85);}
+.diet-meal{display:flex;gap:10px;padding:9px 2px;align-items:flex-start;}
+.diet-meal + .diet-meal{border-top:1px solid var(--line);}
+.diet-meal .dm-ico{font-size:18px;flex-shrink:0;line-height:1.4;}
+.diet-meal .dm-name{font-size:12px;color:var(--text3);min-width:38px;padding-top:3px;flex-shrink:0;}
+.diet-meal .dm-text{font-size:13px;color:var(--text);line-height:1.55;}
+.diet-protein{margin-top:10px;padding:10px 12px;background:rgba(155,89,182,.09);border-radius:10px;font-size:12px;color:var(--text2);line-height:1.7;}
+.diet-protein b{color:var(--text);}
 .fit-toggle{width:100%;padding:11px;border:none;background:var(--card);border-radius:12px;font-size:13px;color:var(--text2);cursor:pointer;font-family:inherit;box-shadow:0 1px 4px rgba(0,0,0,.04);margin-bottom:12px;}
 .hidden{display:none!important;}
 </style>
@@ -699,6 +714,24 @@ function md(s){
 let fitMonth=month();
 const FIT_CYCLE=['walk','walk','strength','rest'];
 const FIT_META={walk:{ico:'🚶',label:'快走'},climb:{ico:'🧗',label:'爬坡'},strength:{ico:'🏋️',label:'力量'},rest:{ico:'😴',label:'休息'}};
+const DIET_PROTEIN='蛋白粉合计 4.5 勺';
+const DIET_MEALS_TRAIN=[
+  {ico:'🍳',name:'早餐',text:'甜玉米 200g + 全蛋 4 个'},
+  {ico:'🥗',name:'午餐',text:'甜玉米 200g + 全蛋 3 个 + 水煮青菜 450g'},
+  {ico:'🥬',name:'晚餐',text:'水煮青菜 400g'},
+  {ico:'🥣',name:'加餐',text:'纯干燕麦 130g（温水冲泡）'},
+];
+const DIET_MEALS_REST=[
+  {ico:'🍳',name:'早餐',text:'甜玉米 200g + 全蛋 4 个'},
+  {ico:'🥗',name:'午餐',text:'甜玉米 200g + 全蛋 3 个 + 水煮青菜 450g'},
+  {ico:'🥬',name:'晚餐',text:'水煮青菜 400g'},
+  {ico:'🥣',name:'加餐',text:'纯干燕麦 90g（温水冲泡）'},
+];
+function dietForType(type){
+  if(type==='rest')return {key:'rest',tag:'休息日',meals:DIET_MEALS_REST,protein:DIET_PROTEIN,proteinTip:'搭配燕麦 2.5 勺 + 傍晚 2 勺'};
+  if(type==='strength')return {key:'anaerobic',tag:'无氧日',meals:DIET_MEALS_TRAIN,protein:DIET_PROTEIN,proteinTip:'训练结束后 30–60 分钟一次性喝完'};
+  return {key:'aerobic',tag:'有氧日',meals:DIET_MEALS_TRAIN,protein:DIET_PROTEIN,proteinTip:'训练后 2.5 勺 + 搭配燕麦时 2 勺'};
+}
 
 function getFitness(){try{const v=JSON.parse(localStorage.getItem('wb_fitness')||'null');if(v&&v.startDate)return v}catch{}return null}
 function saveFitness(cfg){localStorage.setItem('wb_fitness',JSON.stringify(cfg));backupAll()}
@@ -828,6 +861,17 @@ async function renderFitness(app){
     cardInner=`<div class="fc-tag">${tag}</div><div class="fc-ico">${meta.ico}</div><div class="fc-name">${meta.label}</div><div class="fc-sub">${sub}</div><div class="fc-hint">${hint}</div>`;
   }
 
+  // 今日饮食
+  let dietHtml='';
+  if(todayPlan){
+    const diet=dietForType(todayPlan.type);
+    dietHtml=`<div class="diet-card">
+      <div class="diet-head"><div class="dh-ico">🍽️</div><div class="dh-title">今日饮食</div><span class="dh-tag ${diet.key}">${diet.tag}</span></div>
+      ${diet.meals.map(m=>`<div class="diet-meal"><div class="dm-ico">${m.ico}</div><div class="dm-name">${m.name}</div><div class="dm-text">${m.text}</div></div>`).join('')}
+      <div class="diet-protein"><b>🥤 ${diet.protein}</b><br>${diet.proteinTip}</div>
+    </div>`;
+  }
+
   // 明天预览
   let nextHtml='';
   if(tomorrowPlan){
@@ -841,6 +885,7 @@ async function renderFitness(app){
       <div class="fit-stage" onclick="fitTapCard()">
         <div class="${cardCls}" id="fitCard" data-date="${todayPlan?todayPlan.date:''}" data-status="${todayPlan?todayPlan.status:''}" data-type="${cardType}">${cardInner}</div>
       </div>
+      ${dietHtml}
       ${nextHtml}
       <div class="summary-row">
         <div class="summary-card"><div class="sc-label">本月完成</div><div class="sc-val sc-blue">${monthDone} 天</div></div>
